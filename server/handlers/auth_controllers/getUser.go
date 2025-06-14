@@ -1,9 +1,9 @@
-package handlers
+package auth_controllers
 
 import (
 	"log"
-	"main/auth/models"
 	"main/db"
+	"main/models"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"

@@ -1,10 +1,10 @@
-package handlers
+package auth_controllers
 
 import (
 	"log"
-	"main/auth/cookies"
-	"main/auth/models"
+	"main/cookies"
 	"main/db"
+	"main/models"
 	"math/rand"
 	"strconv"
 	"strings"

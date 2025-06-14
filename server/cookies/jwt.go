@@ -3,7 +3,7 @@ package cookies
 import (
 	"fmt"
 	"log"
-	"main/auth/models"
+	"main/models"
 	"os"
 	"time"
 
@@ -36,7 +36,7 @@ func SetJwt(payload models.UserRes, exp time.Time) (token string, err error) {
 func VerifyJwt(session string) (valid bool, err error) {
 	var secretKey = []byte(os.Getenv("JWT_SECRET"))
 
-	token, err := jwt.Parse(session, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(session, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
@@ -69,7 +69,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		Secure:   os.Getenv("ENVIRONMENT") == "production",
 		Expires:  expirationTime,
 		HTTPOnly: true,
-		Name:     "auth_template_session_token",
+		Name:     "zendo_session_token",
 		Value:    jwt,
 		SameSite: fiber.CookieSameSiteLaxMode,
 		Path:     "/",
