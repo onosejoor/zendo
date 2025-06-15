@@ -5,6 +5,7 @@ import (
 	"main/db"
 	auth_controllers "main/handlers/auth_controllers"
 	"main/handlers/task_controllers"
+	"main/middlewares"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -33,7 +34,9 @@ func main() {
 
 	// task
 	taskRoute := app.Group("/task")
+	taskRoute.Use(middlewares.AuthMiddleware)
 
+	taskRoute.Get("", task_controllers.GetAllTasksController)
 	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
 	taskRoute.Post("/new", task_controllers.CreateTaskController)
 	taskRoute.Delete("/:id", task_controllers.DeleteTaskController)

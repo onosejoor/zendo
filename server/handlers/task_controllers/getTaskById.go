@@ -20,11 +20,13 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 		})
 	}
 
+	user := ctx.Locals("user").(*models.UserRes)
+
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
 	var task models.Task
-	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId}).Decode(&task)
+	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{

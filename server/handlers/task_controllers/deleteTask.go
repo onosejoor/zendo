@@ -1,10 +1,9 @@
 package task_controllers
 
 import (
-	"fmt"
 	"log"
-	"main/cookies"
 	"main/db"
+	"main/models"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,22 +14,9 @@ import (
 func DeleteTaskController(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	cookie := ctx.Cookies("zendo_session_token")
-
-	userId, err := cookies.VerifyJwt(cookie)
-	if err != nil {
-		return ctx.Status(401).JSON(fiber.Map{
-			"success": false, "message": fmt.Sprintf("Error: %v", err.Error()),
-		})
-	}
+	user := ctx.Locals("user").(*models.UserRes)
 
 	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Invalid Id",
-		})
-	}
-	user, err := primitive.ObjectIDFromHex(userId.(string))
 	if err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
 			"success": false, "message": "Invalid Id",
@@ -40,7 +26,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
-	if err := collection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "userId": user}).Err(); err != nil {
+	if err := collection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Err(); err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "Task not found",
