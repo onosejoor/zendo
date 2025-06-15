@@ -35,7 +35,8 @@ func main() {
 	taskRoute := app.Group("/task")
 
 	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
-	app.Post("/task", task_controllers.CreateTaskController)
+	taskRoute.Post("/new", task_controllers.CreateTaskController)
+	taskRoute.Delete("/:id", task_controllers.DeleteTaskController)
 
 	db.GetClient()
 	log.Println("Server listening on port 8080")

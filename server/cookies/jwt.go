@@ -33,7 +33,7 @@ func SetJwt(payload models.UserRes, exp time.Time) (token string, err error) {
 	return jwt, err
 }
 
-func VerifyJwt(session string) (valid bool, err error) {
+func VerifyJwt(session string) (id any, err error) {
 	var secretKey = []byte(os.Getenv("JWT_SECRET"))
 
 	token, err := jwt.Parse(session, func(t *jwt.Token) (any, error) {
@@ -44,15 +44,16 @@ func VerifyJwt(session string) (valid bool, err error) {
 	})
 	if err != nil {
 		fmt.Println("Error parsing token:", err)
-		return false, err
+		return "", err
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		fmt.Println("Token is valid!")
-		fmt.Println("Claims:", claims)
-		return true, nil
+
+		id := claims["id"]
+		return id, nil
 	} else {
 		fmt.Println("Invalid token")
-		return false, nil
+		return "", nil
 
 	}
 }

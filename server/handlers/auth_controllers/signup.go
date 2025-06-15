@@ -5,6 +5,7 @@ import (
 	"main/cookies"
 	"main/db"
 	"main/models"
+	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +18,13 @@ func HandleSignup(ctx *fiber.Ctx) error {
 		return ctx.Status(400).JSON(fiber.Map{
 			"success": false,
 			"message": "Invalid request body",
+		})
+	}
+
+	if err := utils.Validate.Struct(body); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false,
+			"message": err.Error(),
 		})
 	}
 

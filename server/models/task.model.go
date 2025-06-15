@@ -10,12 +10,12 @@ import (
 
 type Task struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title       string             `json:"title" bson:"title"`
-	Description string             `json:"description" bson:"description"`
-	UserId      string             `json:"userId" bson:"userId"`
-	SubTasks    []SubTasks         `json:"subTasks" bson:"subTasks"`
-	DueDate     time.Time          `json:"dueDate" bson:"dueDate"`
-	Status      string             `json:"status" bson:"status"`
+	Title       string             `json:"title" bson:"title" validate:"required"`
+	Description string             `json:"description" bson:"description" validate:"required"`
+	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
+	SubTasks    []SubTasks         `json:"subTasks" bson:"subTasks" validate:"required"`
+	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status      string             `json:"status" bson:"status" validate:"required"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 }
 

@@ -5,6 +5,7 @@ import (
 	"main/cookies"
 	"main/db"
 	"main/models"
+	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -12,13 +13,25 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type SigninPayload struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}
+
 func HandleSignin(ctx *fiber.Ctx) error {
-	var body models.UserPayload
+	var body SigninPayload
 
 	if err := ctx.BodyParser(&body); err != nil {
 		log.Println("Error parsing body,", err)
 		return ctx.Status(400).JSON(fiber.Map{
 			"success": false, "message": "Error parsing data",
+		})
+	}
+
+	if err := utils.Validate.Struct(body); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false,
+			"message": err.Error(),
 		})
 	}
 

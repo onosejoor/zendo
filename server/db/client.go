@@ -40,7 +40,7 @@ func GetClient() *mongo.Database {
 		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 
-	client = conn.Database("auth-template")
+	client = conn.Database("zendo")
 
 	log.Println("Connected to MongoDB!")
 

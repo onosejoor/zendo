@@ -3,6 +3,7 @@ package task_controllers
 import (
 	"log"
 	"main/models"
+	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,6 +15,13 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		log.Println("Error parsing body: ", err)
 		return ctx.Status(400).JSON(fiber.Map{
 			"success": false, "message": "Error parsing data",
+		})
+	}
+
+	if err := utils.Validate.Struct(body); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false,
+			"message": "All fields must be valid",
 		})
 	}
 
