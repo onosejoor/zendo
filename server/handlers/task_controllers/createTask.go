@@ -25,7 +25,9 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	id, err := models.CreateTask(body, ctx.Context())
+	userId := ctx.Locals("user").(*models.UserRes).ID
+
+	id, err := models.CreateTask(body, ctx.Context(), userId)
 	if err != nil {
 		log.Println("Error creating task: ", err)
 

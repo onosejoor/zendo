@@ -24,14 +24,14 @@ type SubTasks struct {
 	Completed bool   `json:"completed" bson:"completed"`
 }
 
-func CreateTask(p Task, ctx context.Context) (id any, err error) {
+func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any, err error) {
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
 	newTaskId, err := collection.InsertOne(ctx, Task{
 		Title:       p.Title,
 		Description: p.Description,
-		UserId:      p.UserId,
+		UserId:      userId,
 		SubTasks:    p.SubTasks,
 		DueDate:     p.DueDate,
 		Status:      p.Status,

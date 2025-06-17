@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -81,7 +82,7 @@ func createUser(p Payload, collection *mongo.Collection, ctx *fiber.Ctx) (err er
 		log.Println("Insert error:", err)
 		return err
 	}
-	err = cookies.CreateSession(models.UserRes{Username: username, ID: data.InsertedID}, ctx)
+	err = cookies.CreateSession(models.UserRes{Username: username, ID: data.InsertedID.(primitive.ObjectID)}, ctx)
 	if err != nil {
 		return err
 	}

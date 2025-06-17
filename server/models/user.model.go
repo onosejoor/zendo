@@ -25,15 +25,15 @@ type UserPayload struct {
 }
 
 type UserRes struct {
-	Username string `json:"username"`
-	ID       any    `json:"id"`
+	Username string             `json:"username"`
+	ID       primitive.ObjectID `json:"id"`
 }
 
-func CreateUser(p UserPayload, collection *mongo.Collection, ctx context.Context) (id any, err error) {
+func CreateUser(p UserPayload, collection *mongo.Collection, ctx context.Context) (id primitive.ObjectID, err error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(p.Password), 12)
 	if err != nil {
 		log.Println("error hasing password:", err)
-		return "", err
+		return primitive.NilObjectID, err
 	}
 
 	data, err := collection.InsertOne(ctx, User{
@@ -45,8 +45,8 @@ func CreateUser(p UserPayload, collection *mongo.Collection, ctx context.Context
 
 	if err != nil {
 		log.Println("Insert error:", err)
-		return "", err
+		return primitive.NilObjectID, err
 	}
 
-	return data.InsertedID, nil
+	return data.InsertedID.(primitive.ObjectID), nil
 }
