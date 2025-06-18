@@ -1,4 +1,4 @@
-package task_controllers
+package project_controllers
 
 import (
 	"log"
@@ -9,14 +9,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetAllTasksController(ctx *fiber.Ctx) error {
+func GetAllProjectsController(ctx *fiber.Ctx) error {
 
 	client := db.GetClient()
-	collection := client.Collection("tasks")
+	collection := client.Collection("projects")
 
 	user := ctx.Locals("user").(*models.UserRes)
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID})
+	cursor, err := collection.Find(ctx.Context(), bson.M{"ownerId": user.ID})
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
@@ -25,9 +25,9 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	var dbTaks = make([]models.Task, 0)
+	var projects []models.Project
 
-	if err := cursor.All(ctx.Context(), &dbTaks); err != nil {
+	if err := cursor.All(ctx.Context(), &projects); err != nil {
 		log.Println("Error parsing db data to slice: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
@@ -36,8 +36,8 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(200).JSON(bson.M{
-		"success": true,
-		"tasks":   dbTaks,
+		"success":  true,
+		"projects": projects,
 	})
 
 }

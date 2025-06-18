@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"main/db"
-	auth_controllers "main/handlers/auth_controllers"
+	"main/handlers/auth_controllers"
+	"main/handlers/project_controllers"
 	"main/handlers/task_controllers"
 	"main/middlewares"
 
@@ -25,9 +26,10 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	// auth
 	auth := app.Group("/auth")
 
-	auth.Get("/user/:id", auth_controllers.HandleGetUser)
+	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
 	auth.Post("/oauth", auth_controllers.HandleOauth)
@@ -39,7 +41,18 @@ func main() {
 	taskRoute.Get("", task_controllers.GetAllTasksController)
 	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
 	taskRoute.Post("/new", task_controllers.CreateTaskController)
+	taskRoute.Put("/:id", task_controllers.UpdateTaskController)
 	taskRoute.Delete("/:id", task_controllers.DeleteTaskController)
+
+	// projects
+	projectRoute := app.Group("/projects")
+	projectRoute.Use(middlewares.AuthMiddleware)
+
+	projectRoute.Get("", project_controllers.GetAllProjectsController)
+	projectRoute.Get("/:id/tasks", project_controllers.GetTaskInProjectsController)
+	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
+	projectRoute.Post("/new", project_controllers.CreateProjectController)
+	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
 	db.GetClient()
 	log.Println("Server listening on port 8080")

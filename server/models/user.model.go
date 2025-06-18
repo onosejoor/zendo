@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -38,7 +39,7 @@ func CreateUser(p UserPayload, collection *mongo.Collection, ctx context.Context
 
 	data, err := collection.InsertOne(ctx, User{
 		Email:     p.Email,
-		Username:  p.Username,
+		Username:  strings.TrimSpace(p.Username),
 		Password:  string(hashedPassword),
 		CreatedAt: time.Now(),
 	})
