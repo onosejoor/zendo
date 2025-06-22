@@ -23,10 +23,10 @@ func GetProjectByIdController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 
 	client := db.GetClient()
-	collection := client.Collection("tasks")
+	collection := client.Collection("projects")
 
 	var project models.Project
-	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&project)
+	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Decode(&project)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{

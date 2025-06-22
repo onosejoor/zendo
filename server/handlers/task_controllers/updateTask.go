@@ -34,26 +34,46 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 	}
 
 	collection := db.GetClient().Collection("tasks")
-	objectId, _ := primitive.ObjectIDFromHex(taskId)
-
-	err := collection.FindOneAndUpdate(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}, updatePayload).Err()
+	objectId, err := primitive.ObjectIDFromHex(taskId)
 	if err != nil {
-		log.Println("Error deleting task: ", err.Error())
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false,
+			"message": "Invalid task ID",
+		})
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"title":       updatePayload.Title,
+			"description": updatePayload.Description,
+			"subTasks":    updatePayload.SubTasks,
+			"projectId":   updatePayload.ProjectId,
+			"status":      updatePayload.Status,
+		},
+	}
+
+	err = collection.FindOneAndUpdate(
+		ctx.Context(),
+		bson.M{"_id": objectId, "userId": user.ID},
+		update,
+	).Err()
+
+	if err != nil {
+		log.Println("Error updating task:", err.Error())
+		if err == mongo.ErrNoDocuments {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false,
-				"message": fmt.Sprintf("task with id %v not found", taskId),
+				"message": fmt.Sprintf("Task with id %v not found", taskId),
 			})
 		}
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
-			"message": "Error deleting task",
+			"message": "Error updating task",
 		})
 	}
 
-	return ctx.Status(404).JSON(fiber.Map{
-		"success": false,
-		"message": fmt.Sprintf("task with id %v not found", taskId),
+	return ctx.Status(200).JSON(fiber.Map{
+		"success": true,
+		"message": "Task updated",
 	})
-
 }

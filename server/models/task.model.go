@@ -9,15 +9,16 @@ import (
 )
 
 type Task struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title       string             `json:"title" bson:"title" validate:"required"`
-	Description string             `json:"description" bson:"description" validate:"required"`
-	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
-	SubTasks    []SubTasks         `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status      string             `json:"status" bson:"status" validate:"required"`
-	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	ID          primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title       string              `json:"title" bson:"title" validate:"required"`
+	Description string              `json:"description" bson:"description" validate:"required"`
+	UserId      primitive.ObjectID  `json:"userId" bson:"userId"`
+	SubTasks    []SubTasks          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId   *primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+
+	DueDate   time.Time `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status    string    `json:"status" bson:"status" validate:"required"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 }
 
 type SubTasks struct {
@@ -34,6 +35,7 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 		Description: p.Description,
 		UserId:      userId,
 		SubTasks:    p.SubTasks,
+		ProjectId:   p.ProjectId,
 		DueDate:     p.DueDate,
 		Status:      p.Status,
 		CreatedAt:   time.Now(),

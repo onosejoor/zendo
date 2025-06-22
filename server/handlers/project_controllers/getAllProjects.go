@@ -25,7 +25,7 @@ func GetAllProjectsController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	var projects []models.Project
+	var projects = make([]models.Project, 0)
 
 	if err := cursor.All(ctx.Context(), &projects); err != nil {
 		log.Println("Error parsing db data to slice: ", err.Error())
