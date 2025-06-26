@@ -31,6 +31,7 @@ func main() {
 	auth := app.Group("/auth")
 
 	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
+	auth.Post("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
 	auth.Post("/oauth", auth_controllers.HandleOauth)

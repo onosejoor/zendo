@@ -2,12 +2,15 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type RedisStore struct {
@@ -30,7 +33,6 @@ func GetRedisClient() *RedisStore {
 	opts, err := redis.ParseURL(os.Getenv("REDIS_UPSTASH_URL"))
 	if err != nil {
 		log.Fatalln("error parsing redis_upstash_url: ", err.Error())
-		return nil
 	}
 
 	store := redis.NewClient(opts)
@@ -46,25 +48,64 @@ func GetRedisClient() *RedisStore {
 	return client
 }
 
-func (c *RedisStore) GetCacheData(key string, ctx context.Context) ([]byte, error, bool) {
+func (c *RedisStore) GetCacheData(key string, ctx context.Context, v any) (error, bool) {
 	data, err := c.Client.Get(ctx, key).Bytes()
 	if err != nil {
 		if err == redis.Nil || len(data) < 1 {
-			return nil, err, true
+			return err, true
 		} else {
-			return nil, err, false
+			return err, false
 		}
 
 	}
 
-	return data, nil, false
+	_ = json.Unmarshal(data, &v)
+
+	return nil, false
 }
 
-func (c *RedisStore) SetCacheData(key string, ctx context.Context, value string) error {
-	err := c.Client.Set(ctx, key, value, ttl).Err()
+func (c *RedisStore) SetCacheData(key string, ctx context.Context, value any) error {
+	jsonValue, _ := json.Marshal(&value)
+
+	err := c.Client.Set(ctx, key, jsonValue, ttl).Err()
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func DeleteCache(ctx context.Context, key ...string) error {
+	redisClient := GetRedisClient()
+
+	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
+		log.Println("Error deleting data from cache: ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key string, name string) bool {
+
+	err, isEmpty := redisClient.GetCacheData(key, ctx.Context(), &result)
+	if err != nil && !isEmpty {
+		log.Println("Error querying cached data: ", err.Error())
+		ctx.Status(500).JSON(fiber.Map{
+			"success": false,
+			"message": "Internal server error",
+		})
+		return true
+	}
+
+	if !isEmpty {
+		ctx.Status(200).JSON(bson.M{
+			"success": true,
+			name:      result,
+		})
+		log.Println("Returning from cache with key: ", key)
+		return true
+	}
+
+	return false
+
 }

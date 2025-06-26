@@ -3,6 +3,7 @@ package task_controllers
 import (
 	"fmt"
 	"log"
+	redis "main/configs"
 	"main/db"
 	"main/models"
 
@@ -70,6 +71,12 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 			"success": false,
 			"message": "Error updating task",
 		})
+	}
+
+	cacheKey := []string{fmt.Sprintf("user:%s:task:%s", user.ID.Hex(), taskId), fmt.Sprintf("user:%s:tasks", user.ID.Hex())}
+
+	if err := redis.DeleteCache(ctx.Context(), cacheKey...); err != nil {
+		log.Println(err.Error())
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{

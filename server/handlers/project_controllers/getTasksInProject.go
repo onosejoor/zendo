@@ -1,7 +1,9 @@
 package project_controllers
 
 import (
+	"fmt"
 	"log"
+	redis "main/configs"
 	"main/db"
 	"main/models"
 
@@ -20,10 +22,18 @@ func GetTaskInProjectsController(ctx *fiber.Ctx) error {
 		})
 	}
 
+	var tasks = make([]models.Task, 0)
+	user := ctx.Locals("user").(*models.UserRes)
+
+	cacheKey := fmt.Sprintf("user:%s:project:tasks", user.ID.Hex())
+	redisClient := redis.GetRedisClient()
+
+	if redisClient.GetCacheHandler(ctx, &tasks, cacheKey, "tasks") {
+		return nil
+	}
+
 	client := db.GetClient()
 	collection := client.Collection("tasks")
-
-	user := ctx.Locals("user").(*models.UserRes)
 
 	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID, "projectId": objectId})
 	if err != nil {
@@ -34,14 +44,17 @@ func GetTaskInProjectsController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	var tasks = make([]models.Task, 0)
-
 	if err := cursor.All(ctx.Context(), &tasks); err != nil {
 		log.Println("Error parsing db data to slice: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
 			"message": "Internal server error",
 		})
+	}
+
+	err = redisClient.SetCacheData(cacheKey, ctx.Context(), tasks)
+	if err != nil {
+		log.Println("Error caching data: ", err.Error())
 	}
 
 	return ctx.Status(200).JSON(bson.M{

@@ -1,6 +1,9 @@
 package task_controllers
 
 import (
+	"fmt"
+	"log"
+	redis "main/configs"
 	"main/db"
 	"main/models"
 
@@ -21,11 +24,18 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 	}
 
 	user := ctx.Locals("user").(*models.UserRes)
+	var task models.Task
+
+	cacheKey := fmt.Sprintf("user:%s:task:%s", user.ID.Hex(), id)
+	redisClient := redis.GetRedisClient()
+
+	if redisClient.GetCacheHandler(ctx, &task, cacheKey, "task") {
+		return nil
+	}
 
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
-	var task models.Task
 	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
@@ -36,6 +46,10 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false, "message": "Internal error, try again",
 		})
+	}
+
+	if err := redisClient.SetCacheData(cacheKey, ctx.Context(), task); err != nil {
+		log.Println("Error setting cache: ", err.Error())
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{

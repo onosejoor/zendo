@@ -1,7 +1,6 @@
 package task_controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	redis "main/configs"
@@ -16,24 +15,11 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 	var dbTaks = make([]models.Task, 0)
 
-	cacheKey := fmt.Sprintf("user:%s:task", user.ID.Hex())
+	cacheKey := fmt.Sprintf("user:%s:tasks", user.ID.Hex())
 	redisClient := redis.GetRedisClient()
 
-	data, err, isEmpty := redisClient.GetCacheData(cacheKey, ctx.Context())
-	if err != nil && !isEmpty {
-		log.Println("Error querying casched data: ", err.Error())
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": false,
-			"message": "Internal server error",
-		})
-	}
-
-	if !isEmpty {
-		_ = json.Unmarshal(data, &dbTaks)
-		return ctx.Status(200).JSON(bson.M{
-			"success": true,
-			"tasks":   dbTaks,
-		})
+	if redisClient.GetCacheHandler(ctx, &dbTaks, cacheKey, "tasks") {
+		return nil
 	}
 
 	client := db.GetClient()
@@ -56,14 +42,9 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	jsonValue, _ := json.Marshal(&dbTaks)
-	err = redisClient.SetCacheData(cacheKey, ctx.Context(), string(jsonValue))
+	err = redisClient.SetCacheData(cacheKey, ctx.Context(), dbTaks)
 	if err != nil {
-		log.Println("Error storing data in cache: ", err.Error())
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": false,
-			"message": "Internal server error",
-		})
+		log.Println("Error caching data: ", err.Error())
 	}
 
 	return ctx.Status(200).JSON(bson.M{

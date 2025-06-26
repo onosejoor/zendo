@@ -1,7 +1,9 @@
 package project_controllers
 
 import (
+	"fmt"
 	"log"
+	redis "main/configs"
 	"main/db"
 	"main/models"
 
@@ -36,6 +38,12 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false, "message": "Internal error",
 		})
+	}
+
+	cacheKey := []string{fmt.Sprintf("user:%s:projects", user.ID.Hex()), fmt.Sprintf("user:%s:projects:%s", user.ID.Hex(), id)}
+
+	if err := redis.DeleteCache(ctx.Context(), cacheKey...); err != nil {
+		log.Println(err.Error())
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{
