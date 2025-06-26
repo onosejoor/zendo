@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	redis "main/configs"
 	"main/db"
 	"main/handlers/auth_controllers"
 	"main/handlers/project_controllers"
@@ -54,6 +55,7 @@ func main() {
 	projectRoute.Post("/new", project_controllers.CreateProjectController)
 	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
+	redis.GetRedisClient()
 	db.GetClient()
 	log.Println("Server listening on port 8080")
 	app.Listen(":8080")
