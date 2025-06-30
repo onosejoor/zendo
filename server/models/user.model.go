@@ -15,6 +15,7 @@ type User struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
 	Email     string             `bson:"email" json:"email"`
 	Username  string             `bson:"username" json:"username"`
+	Avatar    string             `bson:"avatar" json:"avatar"`
 	Password  string             `bson:"password" json:"-"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
 }
@@ -30,7 +31,14 @@ type UserRes struct {
 	ID       primitive.ObjectID `json:"id"`
 }
 
-func CreateUser(p UserPayload, collection *mongo.Collection, ctx context.Context) (id primitive.ObjectID, err error) {
+func (u *User) ComparePassword(password string) bool {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
+		return false
+	}
+	return true
+}
+
+func (p UserPayload) CreateUser(collection *mongo.Collection, ctx context.Context) (id primitive.ObjectID, err error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(p.Password), 12)
 	if err != nil {
 		log.Println("error hasing password:", err)

@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type SigninPayload struct {
@@ -50,7 +49,7 @@ func HandleSignin(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(body.Password)); err != nil {
+	if !userData.ComparePassword(body.Password) {
 		return ctx.Status(400).JSON(fiber.Map{
 			"success": false, "message": "Incorrect Password",
 		})

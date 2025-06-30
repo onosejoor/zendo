@@ -3,7 +3,7 @@ package project_controllers
 import (
 	"fmt"
 	"log"
-	redis "main/configs"
+	redis "main/configs/redis"
 	"main/db"
 	"main/models"
 

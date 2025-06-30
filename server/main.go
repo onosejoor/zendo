@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	redis "main/configs"
+	oauth_config "main/configs/oauth"
+	redis "main/configs/redis"
 	"main/db"
 	"main/handlers/auth_controllers"
 	"main/handlers/project_controllers"
@@ -27,6 +28,8 @@ func main() {
 		AllowCredentials: true,
 	}))
 
+	oauth := oauth_config.InitializeOauthConfig()
+
 	// auth
 	auth := app.Group("/auth")
 
@@ -34,7 +37,9 @@ func main() {
 	auth.Post("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
-	auth.Post("/oauth", auth_controllers.HandleOauth)
+
+	auth.Get("/oauth/google", oauth.GetOauthController)
+	auth.Get("/callback", oauth.OauthCallBackController)
 
 	// task
 	taskRoute := app.Group("/task")
