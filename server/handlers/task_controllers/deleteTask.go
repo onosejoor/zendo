@@ -1,7 +1,6 @@
 package task_controllers
 
 import (
-	"fmt"
 	"log"
 	redis "main/configs/redis"
 	"main/db"
@@ -40,9 +39,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	cacheKey := []string{fmt.Sprintf("user:%s:task:%s", user.ID.Hex(), id), fmt.Sprintf("user:%s:tasks", user.ID.Hex())}
-
-	if err := redis.DeleteCache(ctx.Context(), cacheKey...); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), id); err != nil {
 		log.Println(err.Error())
 	}
 

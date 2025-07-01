@@ -23,8 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { mutate } from "swr";
-import { SERVER_URl } from "@/lib/utils";
 import { updateTask } from "@/lib/actions/tasks";
+import { toast } from "sonner";
 
 interface EditTaskDialogProps {
   task: ITask;
@@ -41,24 +41,6 @@ export function EditTaskDialog({
   const [isLoading, setIsLoading] = useState(false);
 
   const { title, description, status, dueDate } = formData;
-
-  // useEffect(() => {
-  //   if (task) {
-  //     setTitle(task.title || "");
-  //     setDescription(task.description || "");
-  //     setStatus(task.status || "pending");
-  //     setProjectId(task.projectId || "");
-
-  //     // Format the date properly for datetime-local input
-  //     if (task.dueDate) {
-  //       const date = new Date(task.dueDate);
-  //       const formattedDate = date.toISOString().slice(0, 16);
-  //       setDueDate(formattedDate);
-  //     } else {
-  //       setDueDate("");
-  //     }
-  //   }
-  // }, [task]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -90,9 +72,13 @@ export function EditTaskDialog({
     try {
       const { success, message } = await updateTask(formData);
 
+      const options = success ? "success" : "error";
+
+      toast[options](message);
+
       if (success) {
         onOpenChange(false);
-        mutate(`${SERVER_URl}/task`);
+        mutate(`/task`);
       } else {
         console.error("Failed to update task");
       }
@@ -145,7 +131,8 @@ export function EditTaskDialog({
               <Input
                 id="dueDate"
                 type="datetime-local"
-                value={dueDate}
+                min={new Date().toISOString().slice(0, 16)}
+                value={new Date(dueDate).toISOString().slice(0, 16)}
                 onChange={handleChange}
                 required
               />

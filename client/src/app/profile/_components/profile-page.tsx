@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, Mail, Calendar, LogOut } from "lucide-react";
 
-export default function ProfilePage({ user }: { user: UserData }) {
+export default function ProfilePage({ user }: { user: IUser }) {
   const handleSignOut = () => {
     console.log("Signing out...");
   };

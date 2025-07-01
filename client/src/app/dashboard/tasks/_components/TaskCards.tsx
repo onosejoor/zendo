@@ -27,6 +27,7 @@ export default function TaskCard({
   handleDeleteTask,
   handleEditTask,
 }: Props) {
+
   const handleToggleTask = async (task: ITask) => {
     try {
       const newStatus = task.status === "completed" ? "pending" : "completed";
@@ -38,7 +39,7 @@ export default function TaskCard({
       const options = success ? "success" : "error";
 
       if (success) {
-        mutate("tasks");
+        mutate("/task");
       }
       toast[options](message);
     } catch (error) {
@@ -49,8 +50,8 @@ export default function TaskCard({
     // <Link href={task._id}>
     <Card key={task._id} className="hover:shadow-md h-full !p-0 transition-shadow">
       <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4 flex-1">
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline space-x-4 flex-1">
             <input
               type="checkbox"
               checked={task.status === "completed"}

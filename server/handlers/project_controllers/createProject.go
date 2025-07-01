@@ -1,7 +1,6 @@
 package project_controllers
 
 import (
-	"fmt"
 	"log"
 	redis "main/configs/redis"
 	"main/models"
@@ -37,9 +36,7 @@ func CreateProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	cacheKey := fmt.Sprintf("user:%s:projects", user.ID.Hex())
-
-	if err := redis.DeleteCache(ctx.Context(), cacheKey); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), ""); err != nil {
 		log.Println(err.Error())
 	}
 

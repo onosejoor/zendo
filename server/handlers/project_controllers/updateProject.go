@@ -48,7 +48,7 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 
 	err = collection.FindOneAndUpdate(
 		ctx.Context(),
-		bson.M{"_id": objectId, "userId": user.ID},
+		bson.M{"_id": objectId, "ownerId": user.ID},
 		update,
 	).Err()
 
@@ -66,9 +66,7 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	cacheKey := []string{fmt.Sprintf("user:%s:project:%s", user.ID.Hex(), projectId), fmt.Sprintf("user:%s:projects", user.ID.Hex())}
-
-	if err := redis.DeleteCache(ctx.Context(), cacheKey...); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), projectId); err != nil {
 		log.Println(err.Error())
 	}
 

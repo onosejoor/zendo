@@ -6,6 +6,7 @@ import (
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -19,6 +20,7 @@ type Payload struct {
 	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
 	SubTasks    []models.SubTasks  `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
 	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
 	Status      string             `json:"status" bson:"status,omitempty"`
 }
 
@@ -44,13 +46,7 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 	}
 
 	update := bson.M{
-		"$set": bson.M{
-			"title":       updatePayload.Title,
-			"description": updatePayload.Description,
-			"subTasks":    updatePayload.SubTasks,
-			"projectId":   updatePayload.ProjectId,
-			"status":      updatePayload.Status,
-		},
+		"$set": updatePayload,
 	}
 
 	err = collection.FindOneAndUpdate(
@@ -73,9 +69,7 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	cacheKey := []string{fmt.Sprintf("user:%s:task:%s", user.ID.Hex(), taskId), fmt.Sprintf("user:%s:tasks", user.ID.Hex())}
-
-	if err := redis.DeleteCache(ctx.Context(), cacheKey...); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
 		log.Println(err.Error())
 	}
 

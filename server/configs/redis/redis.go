@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -75,8 +76,20 @@ func (c *RedisStore) SetCacheData(key string, ctx context.Context, value any) er
 	return nil
 }
 
-func DeleteCache(ctx context.Context, key ...string) error {
+func DeleteTaskCache(ctx context.Context, id string, taskId string) error {
 	redisClient := GetRedisClient()
+	key := []string{fmt.Sprintf("user:%s:task:%s", id, taskId), fmt.Sprintf("user:%s:tasks", id), fmt.Sprintf("user:%s:stats", id)}
+
+	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
+		log.Println("Error deleting data from cache: ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func DeleteProjectCache(ctx context.Context, id string, taskId string) error {
+	redisClient := GetRedisClient()
+	key := []string{fmt.Sprintf("user:%s:project:%s", id, taskId), fmt.Sprintf("user:%s:projects", id), fmt.Sprintf("user:%s:stats", id)}
 
 	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())

@@ -15,10 +15,9 @@ type Task struct {
 	UserId      primitive.ObjectID  `json:"userId" bson:"userId"`
 	SubTasks    []SubTasks          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
 	ProjectId   *primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-
-	DueDate   time.Time `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status    string    `json:"status" bson:"status" validate:"required"`
-	CreatedAt time.Time `json:"created_at" bson:"created_at"`
+	DueDate     time.Time           `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status      string              `json:"status" bson:"status" validate:"required"`
+	CreatedAt   time.Time           `json:"created_at" bson:"created_at"`
 }
 
 type SubTasks struct {
@@ -45,4 +44,24 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	}
 
 	return newTaskId.InsertedID, nil
+}
+
+func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
+	isDueToday := 0
+	completedTasks := 0
+
+	for _, task := range t {
+		if time.Time.Equal(task.DueDate, time.Now()) {
+			isDueToday++
+		}
+
+		if task.Status == "completed" {
+			completedTasks++
+		}
+	}
+
+	completionRate := (completedTasks / len(t)) * 100
+
+	return isDueToday, completionRate, completedTasks
+
 }

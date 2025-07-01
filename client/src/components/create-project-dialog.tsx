@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { mutate } from "swr";
 import { createProject } from "@/lib/actions/projects";
-import { SERVER_URl } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface CreateProjectDialogProps {
@@ -43,11 +42,11 @@ export function CreateProjectDialog({
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const { success, message } = await createProject(formData);
 
       const options = success ? "success" : "error";
       toast[options](message);
+      
       if (success) {
         // Reset form
         setFormData({
@@ -56,7 +55,7 @@ export function CreateProjectDialog({
         });
 
         onOpenChange(false);
-        mutate(`${SERVER_URl}/projects`);
+        mutate(`/projects`);
       }
     } catch (error) {
       console.error("Failed to create project:", error);

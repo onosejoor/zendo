@@ -6,7 +6,7 @@ import { decodeJwt } from "./decodeJwt";
 export async function getSession() {
   const cookie = await cookies();
 
-  const session = cookie.get("auth_session_token")?.value;
+  const session = cookie.get("zendo_session_token")?.value;
 
   if (!session) {
     return { isAuth: false, message: "Unauthenticated" };

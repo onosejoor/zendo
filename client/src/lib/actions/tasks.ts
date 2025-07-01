@@ -1,4 +1,3 @@
-
 import { axiosInstance } from "@/api/api";
 import { isAxiosError } from "axios";
 
@@ -9,10 +8,10 @@ type APIRes = {
 
 export async function updateTask(task: Partial<ITask>) {
   try {
-    const { data } = await axiosInstance.put<APIRes>(
-      `/task/${task._id}`,
-      JSON.stringify({ ...task })
-    );
+    const { data } = await axiosInstance.put<APIRes>(`/task/${task._id}`, {
+      ...task,
+      dueDate: new Date(task.dueDate!),
+    });
     return { success: data.success, message: data.message };
   } catch (error) {
     if (isAxiosError(error)) {

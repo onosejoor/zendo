@@ -29,12 +29,15 @@ export default function ProjectCard({
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">{project.name}</CardTitle>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+              <DropdownMenuTrigger onClick={(e) => e.stopPropagation()} asChild>
                 <Button variant="ghost" size="sm">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent
+                onClick={(e) => e.stopPropagation()}
+                align="end"
+              >
                 <DropdownMenuItem onClick={() => handleEditProject(project)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit

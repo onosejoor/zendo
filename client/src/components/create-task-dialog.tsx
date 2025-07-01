@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { mutate } from "swr";
 import { axiosInstance } from "@/api/api";
-import { SERVER_URl } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface CreateTaskDialogProps {
@@ -89,7 +88,7 @@ export function CreateTaskDialog({
       toast[options](data.message);
       if (data.success) {
         onOpenChange(false);
-        mutate(`${SERVER_URl}/task`);
+        mutate(`/task`);
       }
     } catch (error) {
       console.error("Failed to create task:", error);
@@ -134,9 +133,9 @@ export function CreateTaskDialog({
               <Label htmlFor="dueDate">Due Date</Label>
               <Input
                 id="dueDate"
-                type="date"
+                type="datetime-local"
+                min={new Date().toISOString().slice(0, 16)}
                 value={dueDate}
-                min={new Date().toISOString().split("T")[0]}
                 onChange={handleChange}
                 required
               />

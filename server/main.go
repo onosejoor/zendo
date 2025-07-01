@@ -5,6 +5,7 @@ import (
 	oauth_config "main/configs/oauth"
 	redis "main/configs/redis"
 	"main/db"
+	"main/handlers"
 	"main/handlers/auth_controllers"
 	"main/handlers/project_controllers"
 	"main/handlers/task_controllers"
@@ -25,10 +26,14 @@ func main() {
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000",
+		AllowMethods:     "GET, POST, PUT, DELETE",
 		AllowCredentials: true,
 	}))
 
 	oauth := oauth_config.InitializeOauthConfig()
+
+	// stats
+	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
 
 	// auth
 	auth := app.Group("/auth")
@@ -59,7 +64,7 @@ func main() {
 	projectRoute.Get("/:id/tasks", project_controllers.GetTaskInProjectsController)
 	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
 	projectRoute.Post("/new", project_controllers.CreateProjectController)
-	taskRoute.Put("/:id", project_controllers.UpdateProjectController)
+	projectRoute.Put("/:id", project_controllers.UpdateProjectController)
 	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
 	redis.GetRedisClient()

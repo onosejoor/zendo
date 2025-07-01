@@ -37,7 +37,7 @@ export default function ProjectsContainer() {
         });
 
         if (response.ok) {
-          mutate("projects");
+          mutate("/projects");
         }
       } catch (error) {
         console.error("Failed to delete project:", error);

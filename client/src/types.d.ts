@@ -42,16 +42,25 @@ declare global {
     message: string;
   };
 
-  type UserData = {
-    success: boolean;
-    email: string;
-    created_at: Date;
+  interface IUser {
+    _id: string;
     username: string;
-  };
+    email: string;
+    avatar?: string;
+    created_at: Date;
+  }
+
+  interface IStats {
+    total_tasks: number;
+    total_projects: number;
+    completion_rate: number;
+    completed_tasks: number;
+    dueToday: number;
+  }
 
   type UserRes = {
     success: boolean;
-    user: UserData;
+    user: IUser;
   };
 }
 

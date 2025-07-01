@@ -31,7 +31,7 @@ export default function TasksPage() {
         const { success, message } = await deleteTask(taskId);
 
         if (success) {
-          mutate("tasks");
+          mutate("/task");
         }
         const options = success ? "success" : "error";
 
