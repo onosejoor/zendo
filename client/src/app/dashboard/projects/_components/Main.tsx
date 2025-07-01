@@ -1,0 +1,169 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Plus, Search, Filter } from "lucide-react";
+
+import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { EditProjectDialog } from "@/components/edit-project-dialog";
+import { useProjects } from "@/hooks/use-projects";
+import { mutate } from "swr";
+import { SERVER_URl } from "@/lib/utils";
+import ProjectCard from "./ProjectCards";
+
+export default function ProjectsContainer() {
+  const [showCreateProject, setShowCreateProject] = useState(false);
+  const [editingProject, setEditingProject] = useState<IProject | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data, isLoading, error } = useProjects();
+
+  const handleEditProject = (project: IProject) => {
+    setEditingProject(project);
+  };
+
+  const handleDeleteProject = async (projectId: IProject["_id"]) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${SERVER_URl}/projects/${projectId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          mutate("projects");
+        }
+      } catch (error) {
+        console.error("Failed to delete project:", error);
+      }
+    }
+  };
+
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">
+          Failed to load projects. Please try again.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return [...Array(6)].map((_, i) => (
+      <Card key={i}>
+        <CardHeader>
+          <div className="h-6 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-4 bg-gray-100 rounded animate-pulse mb-4" />
+          <div className="h-2 bg-gray-100 rounded animate-pulse" />
+        </CardContent>
+      </Card>
+    ));
+  }
+
+  const { projects } = data!;
+
+  if (projects.length < 1) {
+    return (
+      <div className="col-span-full">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="text-gray-400 mb-4">
+              <Plus className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No projects found
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm
+                ? "Try adjusting your search terms"
+                : "Get started by creating your first project"}
+            </p>
+            <Button onClick={() => setShowCreateProject(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Project
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.description &&
+        project.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+            <p className="text-gray-600 mt-1">
+              Organize your work into projects
+            </p>
+          </div>
+          <Button onClick={() => setShowCreateProject(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Project
+          </Button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex space-x-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter
+          </Button>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+              handleDeleteProject={handleDeleteProject}
+              handleEditProject={handleEditProject}
+            />
+          ))}
+        </div>
+      </div>
+
+      <CreateProjectDialog
+        open={showCreateProject}
+        onOpenChange={setShowCreateProject}
+      />
+      {editingProject && (
+        <EditProjectDialog
+          project={editingProject}
+          open={!!editingProject}
+          onOpenChange={(open) => !open && setEditingProject(null)}
+        />
+      )}
+    </>
+  );
+}

@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProjects } from "@/hooks/use-projects";
 import { mutate } from "swr";
 import { axiosInstance } from "@/api/api";
 import { SERVER_URl } from "@/lib/utils";
@@ -47,7 +46,7 @@ export function CreateTaskDialog({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { title, description, status, projectId, dueDate } = formData;
+  const { title, description, status, dueDate } = formData;
   const isDisabled =
     isLoading || !title.trim() || !description.trim() || !dueDate;
 
@@ -73,7 +72,7 @@ export function CreateTaskDialog({
     });
   };
 
-  const { data, isLoading: loading, error } = useProjects();
+  // const { data, isLoading: loading, error } = useProjects();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +80,13 @@ export function CreateTaskDialog({
 
     setIsLoading(true);
     try {
-      const { data } = await axiosInstance.post<APIRes>("/task/new", formData);
+      const { data } = await axiosInstance.post<APIRes>("/task/new", {
+        ...formData,
+        dueDate: new Date(dueDate),
+      });
 
-      const options = data.success? "success":"error"
-      toast[options](data.message)
+      const options = data.success ? "success" : "error";
+      toast[options](data.message);
       if (data.success) {
         onOpenChange(false);
         mutate(`${SERVER_URl}/task`);
@@ -95,7 +97,6 @@ export function CreateTaskDialog({
       setIsLoading(false);
     }
   };
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,8 +134,9 @@ export function CreateTaskDialog({
               <Label htmlFor="dueDate">Due Date</Label>
               <Input
                 id="dueDate"
-                type="datetime-local"
+                type="date"
                 value={dueDate}
+                min={new Date().toISOString().split("T")[0]}
                 onChange={handleChange}
                 required
               />

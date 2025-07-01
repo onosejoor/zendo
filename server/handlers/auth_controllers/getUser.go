@@ -19,7 +19,8 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 
 	userCtx := ctx.Locals("user").(*models.UserRes)
 
-	cacheKey := fmt.Sprintf("user:%s", user.ID.Hex())
+	cacheKey := fmt.Sprintf("user:%s", userCtx.ID.Hex())
+
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &user, cacheKey, "user") {
