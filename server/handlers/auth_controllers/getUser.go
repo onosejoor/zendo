@@ -1,7 +1,9 @@
 package auth_controllers
 
 import (
+	"fmt"
 	"log"
+	"main/configs/redis"
 	"main/db"
 	"main/models"
 
@@ -17,6 +19,13 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 
 	userCtx := ctx.Locals("user").(*models.UserRes)
 
+	cacheKey := fmt.Sprintf("user:%s", user.ID.Hex())
+	redisClient := redis.GetRedisClient()
+
+	if redisClient.GetCacheHandler(ctx, &user, cacheKey, "user") {
+		return nil
+	}
+
 	err := client.Collection("users").FindOne(ctx.Context(), bson.M{"_id": userCtx.ID}).Decode(&user)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
@@ -31,6 +40,7 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 
 	}
 
+	_ = redisClient.SetCacheData(cacheKey, ctx.Context(), user)
 	ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"user":    user,

@@ -34,7 +34,7 @@ func main() {
 	auth := app.Group("/auth")
 
 	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
-	auth.Post("/refresh-token", auth_controllers.HandleAccessToken)
+	auth.Get("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
 
@@ -59,6 +59,7 @@ func main() {
 	projectRoute.Get("/:id/tasks", project_controllers.GetTaskInProjectsController)
 	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
 	projectRoute.Post("/new", project_controllers.CreateProjectController)
+	taskRoute.Put("/:id", project_controllers.UpdateProjectController)
 	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
 	redis.GetRedisClient()

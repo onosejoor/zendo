@@ -58,7 +58,7 @@ func HandleSignin(ctx *fiber.Ctx) error {
 	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID}, ctx)
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{
-			"success": true,
+			"success": false,
 			"message": "Internal error",
 		})
 	}

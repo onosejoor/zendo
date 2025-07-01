@@ -1,7 +1,6 @@
 package auth_controllers
 
 import (
-	"log"
 	"main/cookies"
 	"os"
 	"time"
@@ -9,21 +8,16 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type AccesTokenPayload struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 func HandleAccessToken(ctx *fiber.Ctx) error {
-	var body AccesTokenPayload
-
-	if err := ctx.BodyParser(&body); err != nil {
-		log.Println("Error parsing body,", err)
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Error parsing data",
+	refreshToken := ctx.Cookies("zendo_session_token")
+	if refreshToken == "" {
+		return ctx.Status(401).JSON(fiber.Map{
+			"success": false,
+			"message": "unauthorized - no valid access or refresh token",
 		})
 	}
 
-	newTokens, err := cookies.RefreshAccessToken(body.RefreshToken)
+	newTokens, err := cookies.RefreshAccessToken(refreshToken)
 	if err != nil {
 		return ctx.Status(401).JSON(fiber.Map{
 			"success": false,
@@ -37,7 +31,7 @@ func HandleAccessToken(ctx *fiber.Ctx) error {
 		Expires:  time.Now().Add(15 * time.Minute),
 		HTTPOnly: true,
 		Secure:   os.Getenv("ENVIRONMENT") == "production",
-		SameSite: "Lax",
+		SameSite: "None",
 		Path:     "/",
 	})
 
