@@ -1,5 +1,5 @@
 declare global {
-  interface Task {
+  interface ITask {
     _id: string;
     title: string;
     description: string;
@@ -8,6 +8,19 @@ declare global {
     projectId?: string;
     dueDate: string;
     status: string;
+    created_at: string;
+  }
+  interface SubTask {
+    title: string;
+    completed: boolean;
+  }
+
+  interface IProject {
+    _id: string;
+    name: string;
+    description?: string;
+    ownerId: string;
+    totalTasks: number;
     created_at: string;
   }
 

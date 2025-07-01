@@ -1,9 +1,7 @@
-"use server";
-
 import { SERVER_URl } from "@/lib/utils";
 import axios from "axios";
 
-export async function signin(formData: SigninFormData) {
+export async function signIn(formData: SigninFormData) {
   try {
     const { data } = await axios.post<APIRes>(
       `${SERVER_URl}/auth/signin`,

@@ -18,7 +18,7 @@ import Link from "next/link";
 import { validateFields } from "@/lib/utils";
 import { toast } from "sonner";
 import axios from "axios";
-import { signup } from "@/actions/signup";
+import { signup } from "@/lib/actions/signup";
 import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
@@ -31,7 +31,7 @@ export default function SignUpForm() {
     agreeToTerms: false,
   });
 
-  const router = useRouter()
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -57,8 +57,8 @@ export default function SignUpForm() {
 
       toast[toastType](message);
 
-            if (success) {
-        router.push("/profile")
+      if (success) {
+        router.push("/dashboard");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {

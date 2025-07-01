@@ -1,25 +1,27 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import { Geist } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"] })
+const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
-  title: "TaskFlow - Task Management Made Simple",
+  title: "Zendo - Task Management Made Simple",
   description: "Organize your tasks and projects with ease",
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${geist.className} font-sans `}>
+        <Toaster />
         {children}
-        </body>
+      </body>
     </html>
-  )
+  );
 }

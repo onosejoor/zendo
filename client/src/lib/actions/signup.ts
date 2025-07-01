@@ -1,4 +1,3 @@
-"use server";
 
 import { SERVER_URl } from "@/lib/utils";
 
@@ -14,7 +13,7 @@ export async function signup(formData: SignUpFormData) {
       }
     );
 
-    return { ...data };
+    return data;
   } catch (error) {
     console.error("Error signing up: ", error);
 

@@ -17,8 +17,8 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import axios from "axios";
-import { validateFields } from "@/lib/utils";
-import { signin } from "@/actions/signin";
+import { SERVER_URl, validateFields } from "@/lib/utils";
+import { signIn } from "@/lib/actions/signin";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
@@ -30,7 +30,7 @@ export default function SignInForm() {
     rememberMe: false,
   });
 
-  const router = useRouter()
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -49,14 +49,14 @@ export default function SignInForm() {
     }
 
     try {
-      const { success, message } = await signin(formData);
+      const { success, message } = await signIn(formData);
 
       const toastType = success ? "success" : "error";
 
       toast[toastType](message);
 
       if (success) {
-        router.push("/profile")
+        router.push("/dashboard");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -177,27 +177,25 @@ export default function SignInForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <a
+            href={`${SERVER_URl}/auth/oauth/google`}
+            className="w-full text-center mx-auto my-4"
+            target="_top"
+          >
             <Button
               variant="outline"
               className="border-auth-input-border text-auth-text-primary hover:bg-auth-button-secondary-hover"
             >
               Google
             </Button>
-            <Button
-              variant="outline"
-              className="border-auth-input-border text-auth-text-primary hover:bg-auth-button-secondary-hover"
-            >
-              GitHub
-            </Button>
-          </div>
+          </a>
 
           <div className="text-center">
             <span className="text-auth-text-secondary">
               Don&apos;t have an account?
             </span>
             <Link
-              href="/signup"
+              href="/auth/signup"
               className="ml-2 text-auth-link hover:text-auth-link-hover font-medium"
             >
               Sign up

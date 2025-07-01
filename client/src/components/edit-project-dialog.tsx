@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { mutate } from "swr"
+import { SERVER_URl } from "@/lib/utils"
 
 interface EditProjectDialogProps {
   project: any
@@ -42,7 +43,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
     setIsLoading(true)
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:8080/projects/${project._id}`, {
+      const response = await fetch(`${SERVER_URl}/projects/${project._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -57,7 +58,7 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
 
       if (response.ok) {
         onOpenChange(false)
-        mutate("http://localhost:8080/projects")
+        mutate("${SERVER_URL}/projects")
       }
     } catch (error) {
       console.error("Failed to update project:", error)

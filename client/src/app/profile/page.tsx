@@ -1,6 +1,6 @@
 import { use } from "react"
 import ProfilePage from "./_components/profile-page"
-import { getUser } from "@/actions/getUser"
+import { getUser } from "@/lib/actions/getUser"
 
 export default function Profile() {
   const user = use(getUser())

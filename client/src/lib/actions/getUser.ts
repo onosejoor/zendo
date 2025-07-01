@@ -1,5 +1,3 @@
-"use server";
-
 import { SERVER_URl } from "@/lib/utils";
 import axios from "axios";
 
@@ -11,7 +9,7 @@ export async function getUser() {
 
     return { ...data };
   } catch (error) {
-    console.error("Error signing up: ", error);
+    console.error("Error getting user ", error);
 
     if (axios.isAxiosError(error)) {
       return {
