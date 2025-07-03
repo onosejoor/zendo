@@ -25,6 +25,7 @@ import {
 import { mutate } from "swr";
 import { axiosInstance } from "@/api/api";
 import { toast } from "sonner";
+import { useProjects } from "@/hooks/use-projects";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -45,7 +46,7 @@ export function CreateTaskDialog({
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { title, description, status, dueDate } = formData;
+  const { title, description, status, dueDate, projectId } = formData;
   const isDisabled =
     isLoading || !title.trim() || !description.trim() || !dueDate;
 
@@ -71,7 +72,7 @@ export function CreateTaskDialog({
     });
   };
 
-  // const { data, isLoading: loading, error } = useProjects();
+  const { data, isLoading: loading } = useProjects();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +97,8 @@ export function CreateTaskDialog({
       setIsLoading(false);
     }
   };
+
+  const { projects = [] } = data || {};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,7 +160,7 @@ export function CreateTaskDialog({
                 </SelectContent>
               </Select>
             </div>
-            {/* <div className="grid gap-2">
+            <div className="grid gap-2">
               <Label htmlFor="project">Project</Label>
               <Select
                 name="projectId"
@@ -168,18 +171,16 @@ export function CreateTaskDialog({
                   <SelectValue placeholder="Select project (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {error
-                    ? "error"
-                    : loading
+                  {loading
                     ? "loading"
-                    : projects.map((project) => (
+                    : projects!.map((project) => (
                         <SelectItem key={project._id} value={project._id}>
                           {project.name}
                         </SelectItem>
                       ))}
                 </SelectContent>
               </Select>
-            </div> */}
+            </div>
           </div>
           <DialogFooter>
             <Button

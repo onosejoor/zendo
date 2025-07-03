@@ -6,9 +6,9 @@ declare global {
     userId: string;
     subTasks?: SubTask[];
     projectId?: string;
-    dueDate: string;
-    status: string;
-    created_at: string;
+    dueDate: Date;
+    status: "in-progress" | "completed" | "pending";
+    created_at: Date;
   }
   interface SubTask {
     title: string;
@@ -21,7 +21,7 @@ declare global {
     description?: string;
     ownerId: string;
     totalTasks: number;
-    created_at: string;
+    created_at: Date;
   }
 
   type SignUpFormData = {

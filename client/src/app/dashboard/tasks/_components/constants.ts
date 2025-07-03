@@ -1,5 +1,10 @@
-export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString();
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+
+export const formatDate = (dateString: Date) => {
+  return dayjs(new Date(dateString)).fromNow();
 };
 
 //    export const formatDate = (dateString: string) => {

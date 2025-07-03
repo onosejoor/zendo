@@ -15,11 +15,11 @@ export default function Dashboard() {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
 
-  const { data } = useUser();
+  const { data, isLoading: userLoading } = useUser();
   const { data: taskData, isLoading: tasksLoading } = useTasks();
   const { data: projectData, isLoading: projectsLoading } = useProjects();
 
-  if (tasksLoading || projectsLoading) {
+  if (tasksLoading || projectsLoading || userLoading) {
     return <p>loading...</p>;
   }
 

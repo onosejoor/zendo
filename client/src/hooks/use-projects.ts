@@ -22,7 +22,7 @@ export function useProject(id: string) {
 }
 
 export function useProjectTasks(projectId: string) {
-  return useSWR(projectId ? `/projects/${projectId}/tasks` : null, fetcher, {
+  return useSWR<{success: boolean, tasks: ITask[]}>(projectId ? `/projects/${projectId}/tasks` : null, fetcher, {
     revalidateOnFocus: false,
   });
 }

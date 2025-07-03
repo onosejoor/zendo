@@ -70,25 +70,31 @@ export default function TasksPage() {
 
   if (tasks.length < 1) {
     return (
-      <Card>
-        <CardContent className="p-12 text-center">
-          <div className="text-gray-400 mb-4">
-            <Plus className="h-12 w-12 mx-auto" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No tasks found
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm
-              ? "Try adjusting your search terms"
-              : "Get started by creating your first task"}
-          </p>
-          <Button onClick={() => setShowCreateTask(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Task
-          </Button>
-        </CardContent>
-      </Card>
+      <>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="text-gray-400 mb-4">
+              <Plus className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No tasks found
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm
+                ? "Try adjusting your search terms"
+                : "Get started by creating your first task"}
+            </p>
+            <Button onClick={() => setShowCreateTask(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Task
+            </Button>
+          </CardContent>
+        </Card>
+        <CreateTaskDialog
+          open={showCreateTask}
+          onOpenChange={setShowCreateTask}
+        />
+      </>
     );
   }
 
