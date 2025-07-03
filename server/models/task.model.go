@@ -5,7 +5,9 @@ import (
 	"main/db"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Task struct {
@@ -26,6 +28,15 @@ type SubTasks struct {
 }
 
 func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any, err error) {
+
+	if p.ProjectId != nil {
+		id, err := p.CreateTaskWithTransaction(ctx, userId)
+		if err != nil {
+			return nil, err
+		}
+		return id, nil
+	}
+
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
@@ -49,9 +60,12 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
 	isDueToday := 0
 	completedTasks := 0
+	now := time.Now().Local().Truncate(24 * time.Hour)
 
 	for _, task := range t {
-		if time.Time.Equal(task.DueDate, time.Now()) {
+		dueDate := task.DueDate.Local().Truncate(24 * time.Hour)
+
+		if dueDate.Equal(now) {
 			isDueToday++
 		}
 
@@ -60,8 +74,87 @@ func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
 		}
 	}
 
-	completionRate := (completedTasks / len(t)) * 100
+	var completionRate int
+	if len(t) > 0 {
+		completionRate = int(float64(completedTasks) / float64(len(t)) * 100)
+	}
 
 	return isDueToday, completionRate, completedTasks
+}
 
+func (task Task) CreateTaskWithTransaction(ctx context.Context, userId primitive.ObjectID) (primitive.ObjectID, error) {
+	client := db.GetClientWithoutDB()
+
+	session, err := client.StartSession()
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+	defer session.EndSession(ctx)
+
+	tasksCollection := client.Database("zendo").Collection("tasks")
+	projectsCollection := client.Database("zendo").Collection("projects")
+
+	callback := func(sessCtx mongo.SessionContext) (any, error) {
+		id, err := tasksCollection.InsertOne(sessCtx, Task{
+			Title:       task.Title,
+			Description: task.Description,
+			UserId:      userId,
+			SubTasks:    task.SubTasks,
+			ProjectId:   task.ProjectId,
+			DueDate:     task.DueDate,
+			Status:      task.Status,
+			CreatedAt:   time.Now(),
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Step 2: Update the project's total task count
+		update := bson.M{"$inc": bson.M{"totalTasks": 1}}
+		filter := bson.M{"_id": task.ProjectId}
+
+		_, err = projectsCollection.UpdateOne(sessCtx, filter, update)
+		if err != nil {
+			return nil, err
+		}
+
+		return id.InsertedID, nil
+	}
+
+	id, err := session.WithTransaction(ctx, callback)
+	return id.(primitive.ObjectID), err
+}
+
+func (task Task) DeleteTaskWithTransaction(ctx context.Context) error {
+	client := db.GetClientWithoutDB()
+	id := task.ID
+
+	session, err := client.StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+
+	tasksCollection := client.Database("zendo").Collection("tasks")
+	projectsCollection := client.Database("zendo").Collection("projects")
+
+	callback := func(sessCtx mongo.SessionContext) (any, error) {
+		_, err := tasksCollection.DeleteOne(sessCtx, bson.M{"_id": id})
+		if err != nil {
+			return nil, err
+		}
+
+		update := bson.M{"$inc": bson.M{"totalTasks": -1}}
+		filter := bson.M{"_id": *task.ProjectId}
+
+		_, err = projectsCollection.UpdateOne(sessCtx, filter, update)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
+	_, err = session.WithTransaction(ctx, callback)
+	return err
 }

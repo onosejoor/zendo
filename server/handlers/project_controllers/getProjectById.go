@@ -15,12 +15,7 @@ import (
 func GetProjectByIdController(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Invalid Id",
-		})
-	}
+	objectId, _ := primitive.ObjectIDFromHex(id)
 
 	user := ctx.Locals("user").(*models.UserRes)
 	var project models.Project
@@ -35,7 +30,7 @@ func GetProjectByIdController(ctx *fiber.Ctx) error {
 	client := db.GetClient()
 	collection := client.Collection("projects")
 
-	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Decode(&project)
+	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Decode(&project)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{

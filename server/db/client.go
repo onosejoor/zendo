@@ -46,3 +46,25 @@ func GetClient() *mongo.Database {
 
 	return client
 }
+
+func GetClientWithoutDB() *mongo.Client {
+	clientMu.Lock()
+	defer clientMu.Unlock()
+
+	MONGODB_URL := os.Getenv("MONGODB_URL")
+
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(MONGODB_URL).SetServerAPIOptions(serverAPI)
+
+	var err error
+	conn, err := mongo.Connect(context.TODO(), opts)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+
+	if err := conn.Ping(context.TODO(), readpref.Primary()); err != nil {
+		log.Fatalf("Failed to ping MongoDB: %v", err)
+	}
+
+	return conn
+}

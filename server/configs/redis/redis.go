@@ -60,8 +60,10 @@ func (c *RedisStore) GetCacheData(key string, ctx context.Context, v any) (error
 
 	}
 
-	_ = json.Unmarshal(data, &v)
-
+	err = json.Unmarshal(data, &v)
+	if err != nil {
+		return err, false
+	}
 	return nil, false
 }
 
@@ -78,7 +80,7 @@ func (c *RedisStore) SetCacheData(key string, ctx context.Context, value any) er
 
 func DeleteTaskCache(ctx context.Context, id string, taskId string) error {
 	redisClient := GetRedisClient()
-	key := []string{fmt.Sprintf("user:%s:task:%s", id, taskId), fmt.Sprintf("user:%s:tasks", id), fmt.Sprintf("user:%s:stats", id)}
+	key := []string{fmt.Sprintf("user:%s:task:%s", id, taskId), fmt.Sprintf("user:%s:tasks", id), fmt.Sprintf("user:%s:stats", id), fmt.Sprintf("user:%s:tasks", id)}
 
 	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())
@@ -87,9 +89,9 @@ func DeleteTaskCache(ctx context.Context, id string, taskId string) error {
 	return nil
 }
 
-func DeleteProjectCache(ctx context.Context, id string, taskId string) error {
+func DeleteProjectCache(ctx context.Context, id string, projectId string) error {
 	redisClient := GetRedisClient()
-	key := []string{fmt.Sprintf("user:%s:project:%s", id, taskId), fmt.Sprintf("user:%s:projects", id), fmt.Sprintf("user:%s:stats", id)}
+	key := []string{fmt.Sprintf("user:%s:project:%s", id, projectId), fmt.Sprintf("user:%s:projects", id), fmt.Sprintf("user:%s:stats", id), fmt.Sprintf("user:%s:project:%s:tasks", id, projectId)}
 
 	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())
@@ -121,4 +123,13 @@ func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key s
 
 	return false
 
+}
+
+func ClearAllCache(ctx context.Context, userId, taskId, projectId string) {
+	if err := DeleteTaskCache(ctx, userId, taskId); err != nil {
+		log.Println(err.Error())
+	}
+	if err := DeleteProjectCache(ctx, userId, projectId); err != nil {
+		log.Println(err.Error())
+	}
 }

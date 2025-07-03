@@ -37,9 +37,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), userId.Hex(), ""); err != nil {
-		log.Println(err.Error())
-	}
+	redis.ClearAllCache(ctx.Context(), userId.Hex(), "", body.ProjectId.Hex())
 
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,

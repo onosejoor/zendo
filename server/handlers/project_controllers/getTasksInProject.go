@@ -25,7 +25,7 @@ func GetTaskInProjectsController(ctx *fiber.Ctx) error {
 	var tasks = make([]models.Task, 0)
 	user := ctx.Locals("user").(*models.UserRes)
 
-	cacheKey := fmt.Sprintf("user:%s:project:tasks", user.ID.Hex())
+	cacheKey := fmt.Sprintf("user:%s:project:%s:tasks", user.ID.Hex(), id)
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &tasks, cacheKey, "tasks") {

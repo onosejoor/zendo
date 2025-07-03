@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
-	"main/configs/redis"
 	"main/db"
 	"main/models"
 
@@ -25,13 +23,6 @@ func GetStatsControllers(ctx *fiber.Ctx) error {
 	var dbTaks = make([]models.Task, 0)
 
 	var stats Stats
-
-	cacheKey := fmt.Sprintf("user:%s:stats", user.ID.Hex())
-	redisClient := redis.GetRedisClient()
-
-	if redisClient.GetCacheHandler(ctx, &stats, cacheKey, "stats") {
-		return nil
-	}
 
 	client := db.GetClient()
 
@@ -73,7 +64,7 @@ func GetStatsControllers(ctx *fiber.Ctx) error {
 		CompletedTasks: completedTasks,
 	}
 
-	_ = redisClient.SetCacheData(cacheKey, ctx.Context(), stats)
+	// _ = redisClient.SetCacheData(cacheKey, ctx.Context(), stats)
 
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
