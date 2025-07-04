@@ -8,32 +8,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateTask } from "@/lib/actions/tasks";
+import { handleDeleteTask, updateTask } from "@/lib/actions/tasks";
 import { Edit, MoreHorizontal, Timer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { formatDate, getStatusColor } from "./constants";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { checkExpired, cn } from "@/lib/utils";
 import Link from "next/link";
+import { getStatusBadge } from "@/lib/functions";
 
 type Props = {
   task: ITask;
   handleEditTask: (task: ITask) => void;
-  handleDeleteTask: (id: string) => void;
 };
 
-const checkExpired = (date: Date) =>
-  new Date(date).toLocaleString() < new Date().toLocaleString();
-
-export default function TaskCard({
-  task,
-  handleDeleteTask,
-  handleEditTask,
-}: Props) {
+export default function TaskCard({ task, handleEditTask }: Props) {
   const handleToggleTask = async (task: ITask) => {
     try {
-      const newStatus = isCompleted ? "pending" : "completed";
+      const newStatus = task.status === "completed" ? "pending" : "completed";
 
       const newTask = { ...task, status: newStatus };
 
@@ -71,7 +64,7 @@ export default function TaskCard({
                 type="checkbox"
                 checked={task.status === "completed"}
                 onChange={() => handleToggleTask(task)}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-accent-blue"
               />
               <div className="flex-1">
                 <h3
@@ -94,10 +87,10 @@ export default function TaskCard({
                     <div
                       className={cn(
                         `size-3 rounded-full`,
-                        getStatusColor(task.status)
+                        getStatusColor(task.status, task.dueDate)
                       )}
                     />
-                    <Badge variant="outline">{task.status}</Badge>
+                    {getStatusBadge(task.status, task.dueDate)}
                   </div>
                   <div className="flex items-center space-x-1 text-sm text-gray-500">
                     <Timer className="size-3" />

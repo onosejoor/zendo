@@ -57,7 +57,7 @@ export default function ProjectHeader({ project }: { project: IProject }) {
                 <p className="text-sm font-medium text-muted-foreground">
                   Status
                 </p>
-                <Badge className="bg-accent text-blue-500 border-0 font-medium">
+                <Badge className="bg-accent text-accent-blue border-0 font-medium">
                   Active
                 </Badge>
               </div>

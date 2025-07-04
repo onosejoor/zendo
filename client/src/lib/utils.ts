@@ -24,3 +24,6 @@ export const SERVER_URl = process.env.NEXT_PUBLIC_SERVER_URL;
 
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);
+
+export const checkExpired = (date: Date) =>
+  new Date(date).toLocaleString() < new Date().toLocaleString();

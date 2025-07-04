@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 
-import { CreateProjectDialog } from "@/components/create-project-dialog";
-import { EditProjectDialog } from "@/components/edit-project-dialog";
+import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
+import { EditProjectDialog } from "@/components/dialogs/edit-project-dialog";
 import { useProjects } from "@/hooks/use-projects";
-import { mutate } from "swr";
-import { SERVER_URl } from "@/lib/utils";
+
 import ProjectCard from "./ProjectCards";
 
 export default function ProjectsContainer() {
@@ -23,28 +22,6 @@ export default function ProjectsContainer() {
   const handleEditProject = (project: IProject) => {
     setEditingProject(project);
   };
-
-  const handleDeleteProject = async (projectId: IProject["_id"]) => {
-    if (window.confirm("Are you sure you want to delete this project?")) {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${SERVER_URl}/projects/${projectId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          mutate("/projects");
-        }
-      } catch (error) {
-        console.error("Failed to delete project:", error);
-      }
-    }
-  };
-
 
   if (error) {
     return (
@@ -146,7 +123,6 @@ export default function ProjectsContainer() {
             <ProjectCard
               key={project._id}
               project={project}
-              handleDeleteProject={handleDeleteProject}
               handleEditProject={handleEditProject}
             />
           ))}

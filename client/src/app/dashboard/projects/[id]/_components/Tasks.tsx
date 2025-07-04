@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 
 import { formatDate } from "@/app/dashboard/tasks/_components/constants";
-import { CreateTaskDialog } from "@/components/create-task-dialog";
+import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { getStatusBadge } from "@/lib/functions";
 
 export default function ProjectTasksTable({
   projectId,
@@ -27,28 +27,6 @@ export default function ProjectTasksTable({
 }) {
   const { data: taskData, isLoading, error } = useProjectTasks(projectId);
   const [showCreateTask, setShowCreateTask] = useState(false);
-
-  //   const handleDeleteTask = async (taskId: string) => {
-  //     if (window.confirm("Are you sure you want to delete this task?")) {
-  //       try {
-  //         const { success, message } = await deleteTask(taskId);
-
-  //         const options = success ? "success" : "error";
-
-  //         toast[options](message);
-
-  //         if (success) {
-  //           mutate(`/projects/${projectId}/tasks`);
-  //         }
-  //       } catch (error) {
-  //         toast.error(
-  //           error instanceof Error ? error.message : "Internal Server Error"
-  //         );
-
-  //         console.error("Failed to delete task:", error);
-  //       }
-  //     }
-  //   };
 
   if (error) {
     return <p>error....</p>;
@@ -69,9 +47,9 @@ export default function ProjectTasksTable({
   return (
     <>
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="px-5">
           {filteredTasks.length > 0 ? (
-            <Table className="px-5">
+            <Table>
               <TableHeader>
                 <TableRow className="border-b">
                   <TableHead className="font-semibold text-foreground">
@@ -101,7 +79,9 @@ export default function ProjectTasksTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(task.status)}</TableCell>
+                    <TableCell>
+                      {getStatusBadge(task.status, task.dueDate)}
+                    </TableCell>
                     <TableCell>
                       <span className="text-sm text-muted-foreground">
                         {formatDate(task.dueDate)}
@@ -144,37 +124,10 @@ const Loader = () => (
   <Card>
     <CardContent>
       <div className="p-6 space-y-4">
-        {[...Array(3)].map((_, i) => (
+        {[...Array<number>(3)].map((_, i) => (
           <div key={i} className="h-12 bg-muted rounded animate-pulse" />
         ))}
       </div>
     </CardContent>
   </Card>
 );
-
-const getStatusBadge = (status: "in-progress" | "completed" | "pending") => {
-  let statusMap: {
-    label: string;
-    className: string;
-  };
-
-  switch (status) {
-    case "completed":
-      statusMap = { label: "Completed", className: "text-green-500" };
-      break;
-    case "in-progress":
-      statusMap = { label: "In Progress", className: "text-blue-500" };
-      break;
-    case "pending":
-      statusMap = { label: "Not Started", className: "text-orange-500" };
-    default:
-      statusMap = { label: "Not Started", className: "text-orange-500" };
-      break;
-  }
-
-  return (
-    <Badge className={`${statusMap.className} bg-accent border-0 font-medium`}>
-      {statusMap.label}
-    </Badge>
-  );
-};

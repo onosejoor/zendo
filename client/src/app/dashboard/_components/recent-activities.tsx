@@ -7,6 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
+import { getStatusColor } from "../tasks/_components/constants";
+import { getStatusBadge } from "@/lib/functions";
 
 type Props = {
   tasks: ITask[];
@@ -57,24 +59,26 @@ export default function RecentActivities({ tasks, projects }: Props) {
   );
 }
 
-const TaskCard = ({ task }: { task: ITask }) => (
-  <div className="flex items-baseline justify-between p-3 border rounded-lg">
-    <div className="flex items-baseline space-x-3">
-      <div
-        className={`size-2 shrink-0 rounded-full ${
-          task.status === "completed" ? "bg-green-500" : "bg-yellow-500"
-        }`}
-      />
-      <div>
-        <p className="font-medium">{task.title}</p>
-        <p className="text-sm text-gray-500">{task.description}</p>
+const TaskCard = ({ task }: { task: ITask }) => {
+  const statusColor = getStatusColor(task.status, task.dueDate);
+
+  return (
+    <Link href={`/dashboard/tasks/${task._id}`} className="block">
+      <div className="flex items-baseline justify-between p-3 border rounded-lg">
+        <div className="flex items-baseline space-x-3 ">
+          <div className={`size-2.5 shrink-0 rounded-full ${statusColor}`} />
+          <div>
+            <p className="font-medium">{task.title}</p>
+            <p className="text-sm text-gray-500 line-clamp-2">
+              {task.description}
+            </p>
+          </div>
+        </div>
+        {getStatusBadge(task.status, task.dueDate)}
       </div>
-    </div>
-    <Badge variant={task.status === "completed" ? "default" : "secondary"}>
-      {task.status}
-    </Badge>
-  </div>
-);
+    </Link>
+  );
+};
 
 const ProjectCard = ({ project }: { project: IProject }) => (
   <Link className="block" href={`/dashboard/projects/${project._id}`}>
@@ -83,7 +87,9 @@ const ProjectCard = ({ project }: { project: IProject }) => (
         <h4 className="font-medium">{project.name}</h4>
         <Badge variant="outline">Active</Badge>
       </div>
-      <p className="text-sm text-gray-500 mb-2">{project.description}</p>
+      <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+        {project.description}
+      </p>
       <div className="flex items-center justify-between text-xs text-gray-400">
         <span>Total Tasks: {project.totalTasks}</span>
         <span>Progress</span>

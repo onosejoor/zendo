@@ -6,12 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 
-import { CreateTaskDialog } from "@/components/create-task-dialog";
-import { EditTaskDialog } from "@/components/edit-task-dialog";
+import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
+import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
 import { useTasks } from "@/hooks/use-tasks";
-import { mutate } from "swr";
-import { deleteTask } from "@/lib/actions/tasks";
-import { toast } from "sonner";
 import TaskCard from "./TaskCards";
 
 export default function TasksPage() {
@@ -25,23 +22,6 @@ export default function TasksPage() {
     setEditingTask(task);
   };
 
-  const handleDeleteTask = async (taskId: ITask["_id"]) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      try {
-        const { success, message } = await deleteTask(taskId);
-
-        if (success) {
-          mutate("/task");
-        }
-        const options = success ? "success" : "error";
-
-        toast[options](message);
-      } catch (error) {
-        console.error("Failed to delete task:", error);
-        toast.error(error instanceof Error ? error.message : "internal error");
-      }
-    }
-  };
 
   if (error) {
     return (
@@ -144,7 +124,6 @@ export default function TasksPage() {
             <TaskCard
               key={task._id}
               task={task}
-              handleDeleteTask={handleDeleteTask}
               handleEditTask={handleEditTask}
             />
           ))}

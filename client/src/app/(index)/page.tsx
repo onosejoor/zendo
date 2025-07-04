@@ -9,8 +9,14 @@ import {
 } from "@/components/ui/card";
 import { CheckSquare, Users, Calendar, ArrowRight } from "lucide-react";
 import Nav from "@/components/Navbar";
+import { getSession } from "@/lib/session/session";
+import { redirect } from "next/navigation";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { isAuth } = await getSession();
+  if (isAuth) {
+    redirect("/dashboard");
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}

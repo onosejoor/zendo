@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { CreateTaskDialog } from "@/components/create-task-dialog";
-import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
+import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
 import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
 import { useUser } from "@/hooks/use-user";
@@ -35,7 +35,7 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               Welcome back,{" "}
-              <span className="text-blue-500">{user?.username || "User"}!</span>
+              <span className="text-accent-blue">{user?.username || "User"}!</span>
             </h1>
             <p className="text-gray-600 mt-1">
               Here&apos;s what&apos;s happening with your tasks today.

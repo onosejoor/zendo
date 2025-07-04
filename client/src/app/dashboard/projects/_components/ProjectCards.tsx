@@ -10,18 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Edit, MoreHorizontal, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { handleDeleteProject } from "@/lib/actions/projects";
 
 type Props = {
   project: IProject;
   handleEditProject: (project: IProject) => void;
-  handleDeleteProject: (id: string) => void;
 };
 
-export default function ProjectCard({
-  project,
-  handleDeleteProject,
-  handleEditProject,
-}: Props) {
+export default function ProjectCard({ project, handleEditProject }: Props) {
   return (
     <Link href={`/dashboard/projects/${project._id}`}>
       <Card className="hover:shadow-md transition-shadow h-full">

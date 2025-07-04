@@ -1,5 +1,7 @@
 import { axiosInstance } from "@/api/api";
 import { isAxiosError } from "axios";
+import { mutate } from "swr";
+import { toast } from "sonner";
 
 type APIRes = {
   success: boolean;
@@ -63,3 +65,19 @@ export async function deleteProject(id: IProject["_id"]) {
     };
   }
 }
+
+export const handleDeleteProject = async (projectId: IProject["_id"]) => {
+  if (window.confirm("Are you sure you want to delete this project?")) {
+    try {
+      const { success, message } = await deleteProject(projectId);
+      const options = success ? "success" : "error";
+
+      toast[options](message);
+      if (success) {
+        mutate(`/projects/${projectId}`);
+      }
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+    }
+  }
+};

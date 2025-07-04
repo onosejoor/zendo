@@ -56,6 +56,8 @@
   --color-auth-icon-hover: var(--auth-icon-hover);
   --color-auth-link: var(--auth-link);
   --color-auth-link-hover: var(--auth-link-hover);
+
+  --color-accent-blue: var(--accent-blue);
 }
 
 :root {
@@ -108,6 +110,8 @@
   --auth-icon-hover: oklch(0.551 0.027 264.364);
   --auth-link: oklch(0.21 0.034 264.665);
   --auth-link-hover: oklch(0.18 0.034 264.665);
+
+  --accent-blue: oklch(62.3% 0.214 259.815);
 }
 
 .dark {
