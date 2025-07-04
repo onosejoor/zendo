@@ -13,6 +13,7 @@ import (
 
 var (
 	client   *mongo.Database
+	DB       *mongo.Client
 	clientMu sync.Mutex
 )
 
@@ -51,20 +52,24 @@ func GetClientWithoutDB() *mongo.Client {
 	clientMu.Lock()
 	defer clientMu.Unlock()
 
+	if DB != nil {
+		return DB
+	}
+
 	MONGODB_URL := os.Getenv("MONGODB_URL")
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(MONGODB_URL).SetServerAPIOptions(serverAPI)
 
 	var err error
-	conn, err := mongo.Connect(context.TODO(), opts)
+	DB, err = mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	if err := conn.Ping(context.TODO(), readpref.Primary()); err != nil {
+	if err := DB.Ping(context.TODO(), readpref.Primary()); err != nil {
 		log.Fatalf("Failed to ping MongoDB: %v", err)
 	}
 
-	return conn
+	return DB
 }
