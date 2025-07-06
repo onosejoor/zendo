@@ -19,6 +19,7 @@ import { useUser } from "@/hooks/use-user";
 import Img from "./Img";
 import { Skeleton } from "./ui/skeleton";
 import UserData from "./UserData";
+import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -42,9 +43,10 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
       <div
-        className={`fixed animate-in  inset-0 z-50 lg:hidden ${
-          sidebarOpen ? "block" : "hidden"
-        }`}
+        className={cn(
+          `fixed animate-in -translate-x-full  inset-0 z-50 `,
+          sidebarOpen && "translate-x-0"
+        )}
       >
         <div
           className="fixed inset-0 bg-gray-600 bg-opacity-75"
@@ -70,15 +72,14 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
           <nav className="flex-1 px-4 py-4 space-y-5">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
+              const activeClass = isActive
+                ? "bg-blue-100 text-blue-700"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900";
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive
-                      ? "bg-blue-100 text-blue-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeClass}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <item.icon className="mr-3 h-5 w-5" />

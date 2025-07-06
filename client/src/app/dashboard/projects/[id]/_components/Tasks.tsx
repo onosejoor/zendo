@@ -17,6 +17,7 @@ import { formatDate } from "@/app/dashboard/tasks/_components/constants";
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useState } from "react";
 import { getStatusBadge } from "@/lib/functions";
+import ErrorDisplay from "@/components/error-display";
 
 export default function ProjectTasksTable({
   projectId,
@@ -29,7 +30,9 @@ export default function ProjectTasksTable({
   const [showCreateTask, setShowCreateTask] = useState(false);
 
   if (error) {
-    return <p>error....</p>;
+    return (
+      <ErrorDisplay message={`Error getting project ${projectId} tasks`} />
+    );
   }
 
   if (isLoading) {
@@ -61,7 +64,6 @@ export default function ProjectTasksTable({
                   <TableHead className="font-semibold text-foreground">
                     Due Date
                   </TableHead>
-                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

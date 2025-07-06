@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
@@ -11,6 +11,8 @@ import { EditProjectDialog } from "@/components/dialogs/edit-project-dialog";
 import { useProjects } from "@/hooks/use-projects";
 
 import ProjectCard from "./ProjectCards";
+import ErrorDisplay from "@/components/error-display";
+import Loader from "@/components/loader-card";
 
 export default function ProjectsContainer() {
   const [showCreateProject, setShowCreateProject] = useState(false);
@@ -25,27 +27,12 @@ export default function ProjectsContainer() {
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">
-          Failed to load projects. Please try again.
-        </p>
-      </div>
+      <ErrorDisplay message=" Failed to load projects. Please try again." />
     );
   }
 
   if (isLoading) {
-    return [...Array(6)].map((_, i) => (
-      <Card key={i}>
-        <CardHeader>
-          <div className="h-6 bg-gray-200 rounded animate-pulse mb-2" />
-          <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-4 bg-gray-100 rounded animate-pulse mb-4" />
-          <div className="h-2 bg-gray-100 rounded animate-pulse" />
-        </CardContent>
-      </Card>
-    ));
+    return <Loader />;
   }
 
   const { projects } = data!;

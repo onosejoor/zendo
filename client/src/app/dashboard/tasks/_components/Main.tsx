@@ -10,6 +10,8 @@ import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
 import { useTasks } from "@/hooks/use-tasks";
 import TaskCard from "./TaskCards";
+import Loader from "@/components/loader-card";
+import ErrorDisplay from "@/components/error-display";
 
 export default function TasksPage() {
   const [showCreateTask, setShowCreateTask] = useState(false);
@@ -22,28 +24,14 @@ export default function TasksPage() {
     setEditingTask(task);
   };
 
-
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Failed to load tasks. Please try again.</p>
-      </div>
+      <ErrorDisplay message="Error Loading tasks, check internet connection and try again" />
     );
   }
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="h-6 bg-gray-200 rounded animate-pulse mb-2" />
-              <div className="h-4 bg-gray-100 rounded animate-pulse w-3/4" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+    return <Loader text="Loading Tasks..." />;
   }
 
   const { tasks } = data!;

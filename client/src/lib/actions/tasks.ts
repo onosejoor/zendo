@@ -59,4 +59,21 @@ export const handleDeleteTask = async (taskId: ITask["_id"]) => {
   }
 };
 
+export  const handleToggleTask = async (task: ITask) => {
+    try {
+      const newStatus = task.status === "completed" ? "pending" : "completed";
 
+      const newTask = { ...task, status: newStatus };
+
+      const { message, success } = await updateTask(newTask as ITask);
+
+      const options = success ? "success" : "error";
+
+      if (success) {
+        mutate("/task");
+      }
+      toast[options](message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "internal error");
+    }
+  };

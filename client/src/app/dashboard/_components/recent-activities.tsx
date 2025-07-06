@@ -9,13 +9,40 @@ import {
 import Link from "next/link";
 import { getStatusColor } from "../tasks/_components/constants";
 import { getStatusBadge } from "@/lib/functions";
+import { useTasks } from "@/hooks/use-tasks";
+import { useProjects } from "@/hooks/use-projects";
+import Loader from "@/components/loader-card";
+import ErrorDisplay from "@/components/error-display";
 
-type Props = {
-  tasks: ITask[];
-  projects: IProject[];
-};
+export default function RecentActivities() {
+  const {
+    data: taskData,
+    isLoading: tasksLoading,
+    error: taskError,
+  } = useTasks();
+  
+  const {
+    data: projectData,
+    isLoading: projectsLoading,
+    error: projectError,
+  } = useProjects();
 
-export default function RecentActivities({ tasks, projects }: Props) {
+  if (taskError || projectError) {
+    return (
+      <ErrorDisplay
+        message="Error getting projects and tasks"
+        title={"Error fetching data"}
+      />
+    );
+  }
+
+  if (tasksLoading || projectsLoading) {
+    return <Loader text="Loading data..." />;
+  }
+
+  const { tasks } = taskData!;
+  const { projects } = projectData!;
+
   const recentTasks = tasks.slice(0, 5);
   const recentProjects = projects.slice(0, 2);
   return (

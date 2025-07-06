@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import NextTopLoader from 'nextjs-toploader';
+import NextTopLoader from "nextjs-toploader";
+import { layoutMetadata } from "./metadata";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
-  title: "Zendo - Task Management Made Simple",
-  description: "Organize your tasks and projects with ease",
+  ...layoutMetadata,
 };
 
 export default function RootLayout({

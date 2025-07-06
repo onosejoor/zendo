@@ -12,6 +12,8 @@ import ProjectHeader from "./Header";
 import ProjectTasksTable from "./Tasks";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import { handleDeleteProject } from "@/lib/actions/projects";
+import ErrorDisplay from "@/components/error-display";
+import Loader from "@/components/loader-card";
 
 export default function ProjectContainer({ projectId }: { projectId: string }) {
   const [editingProject, setEditingProject] = useState(false);
@@ -27,28 +29,18 @@ export default function ProjectContainer({ projectId }: { projectId: string }) {
   if (error) {
     if (error.status === 404) {
       return (
-        <div className="max-w-7xl mx-auto text-center py-12">
-          <h1 className="text-2xl font-semibold text-foreground mb-2">
-            Project not found
-          </h1>
-          <p className="text-muted-foreground">
-            The project you&apos;re looking for doesn&apos;t exist.
-          </p>
-        </div>
+        <ErrorDisplay
+          dontTryAgain
+          title="Project not found"
+          message=" The project you're looking for doesn't exist."
+        />
       );
     }
-    return (
-      <div className="max-w-7xl mx-auto text-center py-12">
-        <h1 className="text-2xl font-semibold text-foreground mb-2">
-          An Error occured
-        </h1>
-        <p className="text-muted-foreground">try again</p>
-      </div>
-    );
+    return <ErrorDisplay />;
   }
 
   if (projectLoading) {
-    return <Loader />;
+    return <Loader text="loading project" />;
   }
 
   const { project } = projectData!;
@@ -132,18 +124,3 @@ export default function ProjectContainer({ projectId }: { projectId: string }) {
     </>
   );
 }
-
-const Loader = () => (
-  <div className="max-w-7xl mx-auto space-y-8">
-    <div className="h-8 bg-muted rounded animate-pulse" />
-    <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
-    <div className="space-y-4">
-      <div className="h-6 bg-muted rounded animate-pulse w-1/4" />
-      <div className="space-y-2">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-4 bg-muted rounded animate-pulse" />
-        ))}
-      </div>
-    </div>
-  </div>
-);

@@ -8,10 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { handleDeleteTask, updateTask } from "@/lib/actions/tasks";
+import { handleDeleteTask, handleToggleTask } from "@/lib/actions/tasks";
 import { Edit, MoreHorizontal, Timer, Trash2 } from "lucide-react";
-import { toast } from "sonner";
-import { mutate } from "swr";
 import { formatDate, getStatusColor } from "./constants";
 import { Badge } from "@/components/ui/badge";
 import { checkExpired, cn } from "@/lib/utils";
@@ -24,25 +22,6 @@ type Props = {
 };
 
 export default function TaskCard({ task, handleEditTask }: Props) {
-  const handleToggleTask = async (task: ITask) => {
-    try {
-      const newStatus = task.status === "completed" ? "pending" : "completed";
-
-      const newTask = { ...task, status: newStatus };
-
-      const { message, success } = await updateTask(newTask as ITask);
-
-      const options = success ? "success" : "error";
-
-      if (success) {
-        mutate("/task");
-      }
-      toast[options](message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "internal error");
-    }
-  };
-
   const isExpired = checkExpired(task.dueDate);
   const isCompleted = task.status === "completed" || isExpired;
 
@@ -53,19 +32,22 @@ export default function TaskCard({ task, handleEditTask }: Props) {
         className="hover:shadow-md relative h-full !p-0 transition-shadow"
       >
         <CardContent className="p-6">
-          {isExpired && (
+          {isExpired && task.status !== "completed" && (
             <Badge className="absolute bg-red-500 text-white -rotate-40 -left-3 top-1">
               Expired
             </Badge>
           )}
           <div className="flex items-baseline justify-between">
             <div className="flex items-baseline space-x-4 flex-1">
-              <input
-                type="checkbox"
-                checked={task.status === "completed"}
-                onChange={() => handleToggleTask(task)}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-accent-blue"
-              />
+              <div onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={task.status === "completed"}
+                  onChange={() => handleToggleTask(task)}
+                  className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-accent-blue"
+                />
+              </div>
+
               <div className="flex-1">
                 <h3
                   className={cn(

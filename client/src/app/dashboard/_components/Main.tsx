@@ -5,43 +5,46 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
-import { useTasks } from "@/hooks/use-tasks";
-import { useProjects } from "@/hooks/use-projects";
 import { useUser } from "@/hooks/use-user";
 import RecentActivities from "./recent-activities";
 import StatCards from "./Stats";
+import Loader from "@/components/loader-card";
 
 export default function Dashboard() {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showCreateProject, setShowCreateProject] = useState(false);
 
-  const { data, isLoading: userLoading } = useUser();
-  const { data: taskData, isLoading: tasksLoading } = useTasks();
-  const { data: projectData, isLoading: projectsLoading } = useProjects();
+  const { data, isLoading: userLoading, error } = useUser();
 
-  if (tasksLoading || projectsLoading || userLoading) {
-    return <p>loading...</p>;
+  if (userLoading) {
+    return <Loader />;
   }
 
-  const { user } = data!;
-  const { tasks } = taskData!;
-  const { projects } = projectData!;
+  const { user } = data || {};
 
   return (
     <>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between sm:flex-row flex-col gap-5 sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back,{" "}
-              <span className="text-accent-blue">{user?.username || "User"}!</span>
+              {error ? (
+                "Error getting user profile, refresh to try again."
+              ) : (
+                <>
+                  Welcome back,{" "}
+                  <span className="text-accent-blue">
+                    {user?.username || "E"}!
+                  </span>
+                </>
+              )}
             </h1>
             <p className="text-gray-600 mt-1">
               Here&apos;s what&apos;s happening with your tasks today.
             </p>
           </div>
-          <div className="space-x-2">
+          <div className="flex *:w-fit gap-2 sm:items-center flex-col sm:flex-row">
             <Button onClick={() => setShowCreateTask(true)}>
               <Plus className="h-4 w-4 mr-2" />
               New Task
@@ -60,7 +63,7 @@ export default function Dashboard() {
         <StatCards />
 
         {/* Recent Tasks and Projects */}
-        <RecentActivities tasks={tasks} projects={projects} />
+        <RecentActivities />
       </div>
 
       <CreateTaskDialog
