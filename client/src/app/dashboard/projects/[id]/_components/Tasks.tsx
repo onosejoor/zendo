@@ -32,7 +32,7 @@ export default function ProjectTasksTable({
   if (error) {
     return (
       <ErrorDisplay message={`Error getting project ${projectId} tasks`} />
-    );
+    ); 
   }
 
   if (isLoading) {
