@@ -145,7 +145,7 @@ func (task Task) DeleteTaskWithTransaction(ctx context.Context) error {
 		}
 
 		update := bson.M{"$inc": bson.M{"totalTasks": -1}}
-		filter := bson.M{"_id": *task.ProjectId}
+		filter := bson.M{"_id": task.ProjectId}
 
 		_, err = projectsCollection.UpdateOne(sessCtx, filter, update)
 		if err != nil {
