@@ -27,16 +27,15 @@ export default function SignInForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    rememberMe: false,
   });
 
   const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
   };
 
@@ -139,25 +138,6 @@ export default function SignInForm() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <input
-                  id="remember"
-                  name="rememberMe"
-                  type="checkbox"
-                  checked={formData.rememberMe}
-                  onChange={handleInputChange}
-                  className="rounded border-auth-input-border text-auth-button-primary focus:ring-auth-input-focus"
-                />
-                <Label
-                  htmlFor="remember"
-                  className="text-sm text-auth-text-muted"
-                >
-                  Remember me
-                </Label>
-              </div>
-            </div>
-
             <Button
               type="submit"
               className="w-full bg-auth-button-primary text-white hover:bg-auth-button-primary-hover"
@@ -179,12 +159,12 @@ export default function SignInForm() {
 
           <a
             href={`${SERVER_URl}/auth/oauth/google`}
-            className="w-full text-center mx-auto my-4"
+            className="w-full text-center mx-auto my-4 block"
             target="_top"
           >
             <Button
               variant="outline"
-              className="border-auth-input-border text-auth-text-primary hover:bg-auth-button-secondary-hover"
+              className="border-auth-input-border text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
             >
               Google
             </Button>

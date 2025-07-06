@@ -37,7 +37,7 @@ const ErrorDisplay = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {dontTryAgain && (
+          {!dontTryAgain && (
             <Button
               onClick={handleRefresh}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"

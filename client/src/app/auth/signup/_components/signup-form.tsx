@@ -28,10 +28,11 @@ export default function SignUpForm() {
     email: "",
     username: "",
     password: "",
-    agreeToTerms: false,
   });
 
   const router = useRouter();
+
+  const oauthURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/oauth/google`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -163,34 +164,6 @@ export default function SignUpForm() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                id="terms"
-                name="agreeToTerms"
-                type="checkbox"
-                checked={formData.agreeToTerms}
-                onChange={handleInputChange}
-                className="rounded border-auth-input-border text-auth-button-primary focus:ring-auth-input-focus"
-                required
-              />
-              <Label htmlFor="terms" className="text-sm text-auth-text-muted">
-                I agree to the{" "}
-                <button
-                  type="button"
-                  className="text-auth-link hover:text-auth-link-hover underline"
-                >
-                  Terms of Service
-                </button>{" "}
-                and{" "}
-                <button
-                  type="button"
-                  className="text-auth-link hover:text-auth-link-hover underline"
-                >
-                  Privacy Policy
-                </button>
-              </Label>
-            </div>
-
             <Button
               type="submit"
               className="w-full bg-auth-button-primary text-white hover:bg-auth-button-primary-hover"
@@ -209,21 +182,14 @@ export default function SignUpForm() {
               </span>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <Link href={oauthURL} target="_blank" className="my-2 block">
             <Button
               variant="outline"
-              className="border-auth-input-border text-auth-text-primary hover:bg-auth-button-secondary-hover"
+              className="border-auth-input-border w-full text-auth-text-primary hover:bg-auth-button-secondary-hover"
             >
               Google
             </Button>
-            <Button
-              variant="outline"
-              className="border-auth-input-border text-auth-text-primary hover:bg-auth-button-secondary-hover"
-            >
-              GitHub
-            </Button>
-          </div>
+          </Link>
 
           <div className="text-center">
             <span className="text-auth-text-secondary">

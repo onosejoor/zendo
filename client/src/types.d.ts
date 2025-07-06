@@ -28,13 +28,11 @@ declare global {
     email: string;
     username: string;
     password: string;
-    agreeToTerms: boolean;
   };
 
   type SigninFormData = {
     email: string;
     password: string;
-    rememberMe: boolean;
   };
 
   type APIRes = {

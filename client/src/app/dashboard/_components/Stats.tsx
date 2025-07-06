@@ -1,3 +1,5 @@
+import ErrorDisplay from "@/components/error-display";
+import Loader from "@/components/loader-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { fetcher } from "@/lib/utils";
@@ -10,12 +12,12 @@ export default function StatCards() {
     success: boolean;
   }>("/stats", fetcher);
 
-  if (error) {
-    return <p>error...</p>;
+  if (!error) {
+    return <ErrorDisplay message="Error loading stats" />
   }
 
   if (isLoading) {
-    return <p>loadin...</p>;
+    return <Loader text="fatching stats" />
   }
 
   const { stats } = data!;
