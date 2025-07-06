@@ -27,11 +27,12 @@ func InitializeOauthConfig() *OauthConfig {
 
 func (conf *OauthConfig) GetOauthController(c *fiber.Ctx) error {
 
-	URL := conf.AuthCodeURL("not-implemented-yet")
+	baseUrl := c.BaseURL()
+
+	URL := conf.AuthCodeURL(baseUrl)
 
 	return c.Redirect(URL)
 }
-
 func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 	code := c.Query("code")
 
@@ -45,13 +46,12 @@ func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	isReturned, status := auth_controllers.HandleOauth(c, *profile)
+	isReturned, _ := auth_controllers.HandleOauth(c, *profile)
 	if !isReturned {
-		return c.Status(status).JSON(fiber.Map{
-			"success": true,
-			"message": "Auth completed",
-		})
+		return c.Redirect(os.Getenv("CLIENT_URL"))
 	}
 
-	return c.JSON(profile)
+	return c.Status(500).JSON(fiber.Map{
+		"success": false, "message": "Internal server error",
+	})
 }
