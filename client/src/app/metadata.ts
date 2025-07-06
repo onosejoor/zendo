@@ -22,7 +22,7 @@ export const layoutMetadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og.png",
+        url: "/og.webp",
         width: 1200,
         height: 630,
         alt: "Zendo Dashboard",

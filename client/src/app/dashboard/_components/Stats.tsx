@@ -12,7 +12,7 @@ export default function StatCards() {
     success: boolean;
   }>("/stats", fetcher);
 
-  if (!error) {
+  if (error) {
     return <ErrorDisplay message="Error loading stats" />
   }
 
