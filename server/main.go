@@ -23,6 +23,12 @@ func main() {
 		log.Fatalln("Error loading .env: ", err.Error())
 	}
 
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = ":8080"
+	}
+
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
@@ -70,6 +76,6 @@ func main() {
 
 	redis.GetRedisClient()
 	db.GetClient()
-	log.Println("Server listening on port 8080")
-	app.Listen(":8080")
+	log.Println("Server listening on port: ", port)
+	app.Listen(port)
 }
