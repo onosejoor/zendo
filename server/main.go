@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	oauth_config "main/configs/oauth"
 	redis "main/configs/redis"
@@ -10,7 +11,9 @@ import (
 	"main/handlers/project_controllers"
 	"main/handlers/task_controllers"
 	"main/middlewares"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -26,7 +29,7 @@ func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		port = ":8080"
+		port = "8080"
 	}
 
 	app := fiber.New()
@@ -36,6 +39,12 @@ func main() {
 		AllowMethods:     "GET, POST, PUT, DELETE",
 		AllowCredentials: true,
 	}))
+
+	app.Get("/health", func(ctx *fiber.Ctx) error {
+		return ctx.JSON(fiber.Map{
+			"success": true, "message": "Healthy",
+		})
+	})
 
 	oauth := oauth_config.InitializeOauthConfig()
 
@@ -76,6 +85,24 @@ func main() {
 
 	redis.GetRedisClient()
 	db.GetClient()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		for {
+			select {
+			case <-time.After(10 * time.Minute):
+				_, err := http.Get("https://zendo-bb0b.onrender.com/health")
+				if err != nil {
+					log.Printf("failed to fetch health status: %v \n", err)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	log.Println("Server listening on port: ", port)
-	app.Listen(port)
+	app.Listen(":" + port)
 }
