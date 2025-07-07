@@ -93,7 +93,7 @@ func main() {
 		for {
 			select {
 			case <-time.After(10 * time.Minute):
-				_, err := http.Get("https://zendo-bb0b.onrender.com/health")
+				_, err := http.Get(os.Getenv("ORIGIN") + "/health")
 				if err != nil {
 					log.Printf("failed to fetch health status: %v \n", err)
 				}
