@@ -35,6 +35,7 @@ func (conf *OauthConfig) GetOauthController(c *fiber.Ctx) error {
 }
 func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 	code := c.Query("code")
+	clientURL := c.Query("state")
 
 	token, err := conf.Exchange(c.Context(), code)
 	if err != nil {
@@ -48,7 +49,7 @@ func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 
 	isReturned, _ := auth_controllers.HandleOauth(c, *profile)
 	if !isReturned {
-		return c.Redirect(os.Getenv("CLIENT_URL"))
+		return c.Redirect(clientURL)
 	}
 
 	return c.Status(500).JSON(fiber.Map{
