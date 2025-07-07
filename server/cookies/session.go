@@ -22,7 +22,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		HTTPOnly: true,
 		Name:     "zendo_session_token",
 		Value:    jwts.RefreshToken,
-		SameSite: fiber.CookieSameSiteLaxMode,
+		SameSite: fiber.CookieSameSiteNoneMode,
 		Path:     "/",
 	})
 
@@ -32,7 +32,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		HTTPOnly: true,
 		Name:     "zendo_access_token",
 		Value:    jwts.AccessToken,
-		SameSite: fiber.CookieSameSiteLaxMode,
+		SameSite: fiber.CookieSameSiteNoneMode,
 		Path:     "/",
 	})
 	return nil

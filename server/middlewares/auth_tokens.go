@@ -51,7 +51,7 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	// 	Expires:  time.Now().Add(15 * time.Minute),
 	// 	HTTPOnly: true,
 	// 	Secure:   os.Getenv("ENVIRONMENT") == "production",
-	// 	SameSite: "Lax",
+	// 	SameSite: "None",
 	// 	Path:     "/",
 	// })
 
