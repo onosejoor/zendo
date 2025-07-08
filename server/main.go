@@ -23,21 +23,26 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalln("Error loading .env: ", err.Error())
+		log.Println("No .env file found, using environment variables")
 	}
 
 	port := os.Getenv("PORT")
-
 	if port == "" {
 		port = "8080"
 	}
 
 	app := fiber.New()
 
+	clientURL := os.Getenv("CLIENT_URL")
+	if clientURL == "" {
+		clientURL = "http://localhost:3000,https://myzendo.vercel.app"
+	}
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     os.Getenv("CLIENT_URL"),
-		AllowMethods:     "GET, POST, PUT, DELETE",
+		AllowOrigins:     clientURL,
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
+		ExposeHeaders:    "Set-Cookie",
 	}))
 
 	app.Get("/health", func(ctx *fiber.Ctx) error {
