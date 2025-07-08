@@ -33,7 +33,7 @@ func (conf *OauthConfig) GetOauthController(c *fiber.Ctx) error {
 }
 func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 	code := c.Query("code")
-	clientURL := c.Get("Origin")
+	clientURL := os.Getenv("FRONTEND_URL")
 
 	token, err := conf.Exchange(c.Context(), code)
 	if err != nil {
