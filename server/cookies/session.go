@@ -2,7 +2,6 @@ package cookies
 
 import (
 	"main/models"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,8 +15,10 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		return err
 	}
 
+	isLocal := ctx.Get("Origin") == "http://localhost:3000"
+
 	ctx.Cookie(&fiber.Cookie{
-		Secure:   os.Getenv("ENVIRONMENT") == "production",
+		Secure:   !isLocal,
 		Expires:  expirationTime,
 		HTTPOnly: true,
 		Name:     "zendo_session_token",
@@ -28,7 +29,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 	})
 
 	ctx.Cookie(&fiber.Cookie{
-		Secure:   os.Getenv("ENVIRONMENT") == "production",
+		Secure:   !isLocal,
 		Expires:  time.Now().Add(15 * time.Minute),
 		HTTPOnly: true,
 		Name:     "zendo_access_token",

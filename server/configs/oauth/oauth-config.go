@@ -27,15 +27,13 @@ func InitializeOauthConfig() *OauthConfig {
 
 func (conf *OauthConfig) GetOauthController(c *fiber.Ctx) error {
 
-	baseUrl := c.BaseURL()
-
-	URL := conf.AuthCodeURL(baseUrl)
+	URL := conf.AuthCodeURL("")
 
 	return c.Redirect(URL)
 }
 func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 	code := c.Query("code")
-	clientURL := c.Query("state")
+	clientURL := os.Getenv("FRONTEND_URL")
 
 	token, err := conf.Exchange(c.Context(), code)
 	if err != nil {
