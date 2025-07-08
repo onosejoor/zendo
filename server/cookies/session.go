@@ -19,9 +19,9 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 
 	site := fiber.CookieSameSiteNoneMode
 
-	if isLocal {
-		site = fiber.CookieSameSiteLaxMode
-	}
+	// if isLocal  {
+	// 	site = fiber.CookieSameSiteLaxMode
+	// }
 
 	ctx.Cookie(&fiber.Cookie{
 		Secure:   !isLocal,
