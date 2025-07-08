@@ -16,7 +16,7 @@ export default function UserData({ user }: { user: IUser }) {
 
   const handleLogout = async () => {
     localStorage.removeItem("token");
-    router.push("/auth/login");
+    router.push("/auth/signin");
   };
 
   return (

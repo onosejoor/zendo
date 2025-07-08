@@ -111,7 +111,6 @@ This project does not currently have an explicit license. Please contact the aut
 
 *   **Onos Ejoor**
     *   GitHub: [@onosejoor](https://github.com/onosejoor)
-    *   LinkedIn: [YourLinkedInProfile](https://www.linkedin.com/in/onose-ojoor/) 
     *   X (Twitter): [@DevText15](https://twitter.com/DevText16)
 
 ---

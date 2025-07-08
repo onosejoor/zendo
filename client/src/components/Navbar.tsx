@@ -14,7 +14,7 @@ export default function Nav() {
           />
         </Link>
         <div className="space-x-4">
-          <Link href="/auth/login">
+          <Link href="/auth/signin">
             <Button variant="ghost">Login</Button>
           </Link>
           <Link href="/auth/signup">
