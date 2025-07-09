@@ -33,13 +33,8 @@ func main() {
 
 	app := fiber.New()
 
-	clientURL := os.Getenv("CLIENT_URL")
-	if clientURL == "" {
-		clientURL = "http://localhost:3000,https://myzendo.vercel.app"
-	}
-
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     clientURL,
+		AllowOrigins:     "http://localhost:3000,https://myzendo.vercel.app",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowCredentials: true,
 		ExposeHeaders:    "Set-Cookie",
