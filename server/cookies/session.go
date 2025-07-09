@@ -16,7 +16,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		return err
 	}
 
-	isLocal := os.Getenv("ENVIRONMENT") != "production"
+	isLocal := os.Getenv("ENVIRONMENT") == "production"
 
 	site := fiber.CookieSameSiteNoneMode
 
