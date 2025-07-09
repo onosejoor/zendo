@@ -25,7 +25,7 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 	}
 
 	client := db.GetClient()
-	collection := client.Collection("tasks")
+	collection := client.Collection("projects")
 
 	if err := collection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Err(); err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
@@ -39,7 +39,7 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), id); err != nil {
+	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex(), id); err != nil {
 		log.Println(err.Error())
 	}
 	return ctx.Status(200).JSON(fiber.Map{
