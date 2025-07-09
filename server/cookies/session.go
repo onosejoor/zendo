@@ -19,7 +19,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 	}
 
 	isLocal := ctx.Get("Origin") == "http://localhost:3000"
-	domain := strings.Split(ctx.Get("Origin"), "//")[0]
+	domain := strings.Split(strings.Split(ctx.Get("Origin"), "//")[1], ":")[0]
 
 	site := fiber.CookieSameSiteNoneMode
 
