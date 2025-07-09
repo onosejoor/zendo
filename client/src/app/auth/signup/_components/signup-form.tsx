@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import Link from "next/link";
 import { validateFields } from "@/lib/utils";
@@ -32,8 +31,6 @@ export default function SignUpForm() {
   });
 
   const router = useRouter();
-
-  // const oauthURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/oauth/google`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -177,24 +174,7 @@ export default function SignUpForm() {
             </Button>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-auth-card px-2 text-auth-text-muted">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          {/* <Button
-            onClick={() => router.push(oauthURL)}
-            disabled={isLoading}
-            variant="outline"
-            className="border-auth-input-border my-4 text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
-          >
-            Google
-          </Button> */}
+          {/* <GoogleBtn isLoading={isLoading} /> */}
 
           <div className="text-center">
             <span className="text-auth-text-secondary">
