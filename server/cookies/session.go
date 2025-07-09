@@ -4,6 +4,7 @@ import (
 	"log"
 	"main/models"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,6 +19,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 	}
 
 	isLocal := ctx.Get("Origin") == "http://localhost:3000"
+	domain := strings.Split(ctx.Get("Origin"), "//")[0]
 
 	site := fiber.CookieSameSiteNoneMode
 
@@ -25,7 +27,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		site = fiber.CookieSameSiteLaxMode
 	}
 
-	log.Println(ctx.Hostname())
+	log.Println(domain)
 
 	ctx.Cookie(&fiber.Cookie{
 		Secure:   !isLocal,
@@ -36,7 +38,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		SameSite: site,
 		Path:     "/",
 		MaxAge:   60 * 60 * 24 * 7,
-		Domain:   ctx.Hostname(),
+		Domain:   domain,
 	})
 
 	ctx.Cookie(&fiber.Cookie{
@@ -47,7 +49,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		Value:    jwts.AccessToken,
 		SameSite: site,
 		Path:     "/",
-		Domain:   ctx.Hostname(),
+		Domain:   domain,
 		MaxAge:   60 * 15,
 	})
 	return nil
