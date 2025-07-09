@@ -41,7 +41,7 @@ export function CreateTaskDialog({
     description: "",
     status: "pending",
     projectId: "",
-    dueDate: "",
+    dueDate: new Date().toISOString().slice(0, 16),
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -139,6 +139,7 @@ export function CreateTaskDialog({
                 type="datetime-local"
                 min={new Date().toISOString().slice(0, 16)}
                 value={dueDate}
+              
                 onChange={handleChange}
                 required
               />

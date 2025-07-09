@@ -56,11 +56,20 @@ export async function updateProject(project: Partial<IProject>) {
 
 export async function deleteProject(id: IProject["_id"]) {
   try {
-    const { data } = await axiosInstance.delete<APIRes>(`/project/${id}`);
+    const { data } = await axiosInstance.delete<APIRes>(`/projects/${id}`);
+    if (data.success) {
+      mutate("/projects");
+      mutate(`/projects/${id}`);
+    }
     return { success: data.success, message: data.message };
   } catch (error) {
+    console.log("Error deleting task: ", error);
+
     if (isAxiosError(error)) {
-      return { success: false, message: error.response?.data.message };
+      return {
+        success: false,
+        message: error.response?.data.message || error.response?.data,
+      };
     }
     return {
       success: false,
@@ -70,7 +79,7 @@ export async function deleteProject(id: IProject["_id"]) {
 }
 
 export const handleDeleteProject = async (projectId: IProject["_id"]) => {
-  if (window.confirm("Are you sure you want to delete this project?")) {
+  if (window.confirm("Are you sure you want to delete this project and all tasks in it?")) {
     try {
       const { success, message } = await deleteProject(projectId);
       const options = success ? "success" : "error";
