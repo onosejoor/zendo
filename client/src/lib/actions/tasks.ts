@@ -45,13 +45,14 @@ export const handleDeleteTask = async (taskId: ITask["_id"]) => {
   if (window.confirm("Are you sure you want to delete this task?")) {
     try {
       const { success, message } = await deleteTask(taskId);
-
-      if (success) {
-        mutate(`/task/${taskId}`);
-      }
       const options = success ? "success" : "error";
 
       toast[options](message);
+      if (success) {
+        mutate(`/task/${taskId}`);
+        mutate(`/task/`);
+        window.location.href = "/dashboard/tasks";
+      }
     } catch (error) {
       console.error("Failed to delete task:", error);
       toast.error(error instanceof Error ? error.message : "internal error");
@@ -59,21 +60,21 @@ export const handleDeleteTask = async (taskId: ITask["_id"]) => {
   }
 };
 
-export  const handleToggleTask = async (task: ITask) => {
-    try {
-      const newStatus = task.status === "completed" ? "pending" : "completed";
+export const handleToggleTask = async (task: ITask) => {
+  try {
+    const newStatus = task.status === "completed" ? "pending" : "completed";
 
-      const newTask = { ...task, status: newStatus };
+    const newTask = { ...task, status: newStatus };
 
-      const { message, success } = await updateTask(newTask as ITask);
+    const { message, success } = await updateTask(newTask as ITask);
 
-      const options = success ? "success" : "error";
+    const options = success ? "success" : "error";
 
-      if (success) {
-        mutate("/task");
-      }
-      toast[options](message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "internal error");
+    if (success) {
+      mutate("/task");
     }
-  };
+    toast[options](message);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "internal error");
+  }
+};

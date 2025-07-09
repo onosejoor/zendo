@@ -79,16 +79,25 @@ export async function deleteProject(id: IProject["_id"]) {
 }
 
 export const handleDeleteProject = async (projectId: IProject["_id"]) => {
-  if (window.confirm("Are you sure you want to delete this project and all tasks in it?")) {
+  if (
+    window.confirm(
+      "Are you sure you want to delete this project and all tasks in it?"
+    )
+  ) {
     try {
       const { success, message } = await deleteProject(projectId);
       const options = success ? "success" : "error";
 
       toast[options](message);
+
       if (success) {
-        mutate(`/projects/${projectId}`);
+        window.location.href = "/dashboard/projects"
       }
     } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
+
       console.error("Failed to delete project:", error);
     }
   }

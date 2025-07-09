@@ -60,6 +60,7 @@ export function CreateProjectDialog({
         mutate(`/projects`);
       }
     } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Internal server error")
       console.error("Failed to create project:", error);
     } finally {
       setIsLoading(false);

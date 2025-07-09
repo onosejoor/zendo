@@ -61,7 +61,7 @@ export default function SignInForm() {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(`Error signing in: ${error.response?.data.message}`);
+        toast.error(`Error signing in: ${error.response?.data.message || error.response?.data}`);
       } else {
         const message =
           error instanceof Error ? error.message : "Internal error";

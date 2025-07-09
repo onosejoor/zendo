@@ -83,6 +83,10 @@ export function EditTaskDialog({
         console.error("Failed to update task");
       }
     } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
+
       console.error("Failed to update task:", error);
     } finally {
       setIsLoading(false);

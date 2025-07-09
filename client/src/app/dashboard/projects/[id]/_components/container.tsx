@@ -67,7 +67,7 @@ export default function ProjectContainer({ projectId }: { projectId: string }) {
               variant="outline"
             >
               <Edit className="h-4 w-4 mr-2" />
-              Edit Task
+              Edit Project
             </Button>
             <Button
               onClick={() => handleDeleteProject(project._id)}

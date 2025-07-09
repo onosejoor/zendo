@@ -63,6 +63,7 @@ export function EditProjectDialog({
       if (success) {
         onOpenChange(false);
         mutate("/projects");
+        mutate(`/projects/${formData._id}`)
       }
     } catch (error) {
       console.error("Failed to update project:", error);

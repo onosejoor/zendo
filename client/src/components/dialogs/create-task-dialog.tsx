@@ -47,6 +47,7 @@ export function CreateTaskDialog({
   const [isLoading, setIsLoading] = useState(false);
 
   const { title, description, status, dueDate, projectId } = formData;
+
   const isDisabled =
     isLoading || !title.trim() || !description.trim() || !dueDate;
 
@@ -89,9 +90,13 @@ export function CreateTaskDialog({
       toast[options](data.message);
       if (data.success) {
         onOpenChange(false);
+        mutate(`/projects/${projectId}/tasks`);
         mutate(`/task`);
       }
     } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
       console.error("Failed to create task:", error);
     } finally {
       setIsLoading(false);
@@ -99,6 +104,8 @@ export function CreateTaskDialog({
   };
 
   const { projects = [] } = data || {};
+
+  const disabledSelect = loading || projects.length < 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,7 +146,6 @@ export function CreateTaskDialog({
                 type="datetime-local"
                 min={new Date().toISOString().slice(0, 16)}
                 value={dueDate}
-              
                 onChange={handleChange}
                 required
               />
@@ -168,7 +174,7 @@ export function CreateTaskDialog({
                 value={projectId}
                 onValueChange={(value) => handleSelect(value, "projectId")}
               >
-                <SelectTrigger>
+                <SelectTrigger disabled={disabledSelect}>
                   <SelectValue placeholder="Select project (optional)" />
                 </SelectTrigger>
                 <SelectContent>

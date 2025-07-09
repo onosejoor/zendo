@@ -62,7 +62,7 @@ export default function SignUpForm() {
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(`Error signing up: ${error.response?.data.message}`);
+        toast.error(`Error signing up: ${error.response?.data.message || error.response?.data}`);
       } else {
         const message =
           error instanceof Error ? error.message : "Internal error";
