@@ -7,7 +7,7 @@ export async function getSession() {
 
   const session = cookie.get("zendo_session_token")?.value;
 
-  if (!session) {
+  if (!session?.trim()) {
     return { isAuth: false, message: "Unauthenticated" };
   }
 
