@@ -36,9 +36,7 @@ func CreateProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex(), ""); err != nil {
-		log.Println(err.Error())
-	}
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"success":   true,

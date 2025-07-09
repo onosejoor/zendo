@@ -14,35 +14,41 @@ import (
 
 func DeleteProjectController(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-
 	user := ctx.Locals("user").(*models.UserRes)
 
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Invalid Id",
-		})
-	}
+	objectId, _ := primitive.ObjectIDFromHex(id)
 
 	client := db.GetClient()
-	collection := client.Collection("projects")
+	projectCollection := client.Collection("projects")
+	taskCollection := client.Collection("tasks") // ✅ Reference to tasks collection
 
-	if err := collection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Err(); err != nil {
+	// Delete the project
+	if err := projectCollection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Err(); err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{
-				"success": false, "message": "Project not found",
+				"success": false,
+				"message": "Project not found",
 			})
 		}
 		log.Println("Error deleting project: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
-			"success": false, "message": "Internal error",
+			"success": false,
+			"message": "Internal error",
 		})
 	}
 
-	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex(), id); err != nil {
-		log.Println(err.Error())
+	_, err := taskCollection.DeleteMany(ctx.Context(), bson.M{
+		"projectId": objectId,
+		"userId":    user.ID,
+	})
+	if err != nil {
+		log.Println("Error deleting related tasks: ", err.Error())
 	}
+
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", id)
+
 	return ctx.Status(200).JSON(fiber.Map{
-		"success": true, "message": "Project deleted",
+		"success": true,
+		"message": "Project and related tasks deleted",
 	})
 }

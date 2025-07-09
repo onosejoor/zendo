@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetAllProjectsController(ctx *fiber.Ctx) error {
@@ -25,7 +26,9 @@ func GetAllProjectsController(ctx *fiber.Ctx) error {
 	client := db.GetClient()
 	collection := client.Collection("projects")
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"ownerId": user.ID})
+	cursor, err := collection.Find(ctx.Context(), bson.M{"ownerId": user.ID}, &options.FindOptions{
+		Sort: bson.M{"created_at": -1},
+	})
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
