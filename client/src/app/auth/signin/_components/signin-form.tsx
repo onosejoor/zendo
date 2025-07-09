@@ -17,7 +17,7 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import axios from "axios";
-import { SERVER_URl, validateFields } from "@/lib/utils";
+import { validateFields } from "@/lib/utils";
 import { signIn } from "@/lib/actions/signin";
 import { useRouter } from "next/navigation";
 
@@ -162,14 +162,14 @@ export default function SignInForm() {
             </div>
           </div>
 
-          <Button
+          {/* <Button
             onClick={() => router.push(`${SERVER_URl}/auth/oauth/google`)}
             disabled={isLoading}
             variant="outline"
             className="border-auth-input-border my-4 text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
           >
             Google
-          </Button>
+          </Button> */}
 
           <div className="text-center">
             <span className="text-auth-text-secondary">

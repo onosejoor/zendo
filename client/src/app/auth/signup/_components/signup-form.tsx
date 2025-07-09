@@ -33,7 +33,7 @@ export default function SignUpForm() {
 
   const router = useRouter();
 
-  const oauthURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/oauth/google`;
+  // const oauthURL = `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/oauth/google`;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -187,14 +187,14 @@ export default function SignUpForm() {
               </span>
             </div>
           </div>
-          <Button
+          {/* <Button
             onClick={() => router.push(oauthURL)}
             disabled={isLoading}
             variant="outline"
             className="border-auth-input-border my-4 text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
           >
             Google
-          </Button>
+          </Button> */}
 
           <div className="text-center">
             <span className="text-auth-text-secondary">
