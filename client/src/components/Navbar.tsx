@@ -14,7 +14,7 @@ export default function Nav() {
           />
         </Link>
         <div className="space-x-4">
-          <Link href="/auth/signin" className="sm:block hidden">
+          <Link href="/auth/signin" className="sm:inline hidden">
             <Button variant="ghost"> Login</Button>
           </Link>
           <Link href="/auth/signup">
