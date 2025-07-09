@@ -1,7 +1,9 @@
 package cookies
 
 import (
+	"log"
 	"main/models"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,9 +21,11 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 
 	site := fiber.CookieSameSiteNoneMode
 
-	// if isLocal  {
-	// 	site = fiber.CookieSameSiteLaxMode
-	// }
+	if os.Getenv("ENVIRONMENT") != "production" {
+		site = fiber.CookieSameSiteLaxMode
+	}
+
+	log.Println(ctx.Hostname())
 
 	ctx.Cookie(&fiber.Cookie{
 		Secure:   !isLocal,
