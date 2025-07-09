@@ -19,10 +19,8 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 	isProd := os.Getenv("ENVIRONMENT") == "production"
 
 	site := fiber.CookieSameSiteNoneMode
-	domain := "myzendo.vercel.app"
 
 	if !isProd {
-		domain = "localhost"
 		site = fiber.CookieSameSiteLaxMode
 	}
 
@@ -34,7 +32,6 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		Value:    jwts.RefreshToken,
 		SameSite: site,
 		Path:     "/",
-		Domain:   domain,
 		MaxAge:   60 * 60 * 24 * 7,
 	})
 
@@ -46,7 +43,6 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		Value:    jwts.AccessToken,
 		SameSite: site,
 		Path:     "/",
-		Domain:   domain,
 		MaxAge:   60 * 15,
 	})
 	return nil

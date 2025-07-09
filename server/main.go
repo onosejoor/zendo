@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	oauth_config "main/configs/oauth"
 	redis "main/configs/redis"
 	"main/db"
 	"main/handlers"
@@ -46,7 +45,7 @@ func main() {
 		})
 	})
 
-	oauth := oauth_config.InitializeOauthConfig()
+	// oauth := oauth_config.InitializeOauthConfig()
 
 	// stats
 	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
@@ -59,8 +58,8 @@ func main() {
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
 
-	auth.Get("/oauth/google", oauth.GetOauthController)
-	auth.Get("/callback", oauth.OauthCallBackController)
+	// auth.Get("/oauth/google", oauth.GetOauthController)
+	// auth.Get("/callback", oauth.OauthCallBackController)
 
 	// task
 	taskRoute := app.Group("/task")
