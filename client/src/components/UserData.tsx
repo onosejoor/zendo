@@ -10,12 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/lib/session/session";
 
 export default function UserData({ user }: { user: IUser }) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    localStorage.removeItem("token");
+    await signOut();
     router.push("/auth/signin");
   };
 
@@ -24,10 +25,7 @@ export default function UserData({ user }: { user: IUser }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={user?.avatar}
-              alt={user?.username}
-            />
+            <AvatarImage src={user?.avatar} alt={user?.username} />
             <AvatarFallback>
               {user?.username.charAt(0).toUpperCase()}
             </AvatarFallback>

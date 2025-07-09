@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -44,7 +45,7 @@ export default function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign up data:", formData);
+    setIsLoading(true);
 
     if (!validateFields(formData)) {
       toast.error("All fields must be filled");
@@ -60,6 +61,7 @@ export default function SignUpForm() {
 
       if (success) {
         router.push("/dashboard");
+        setIsLoading(false);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -71,6 +73,8 @@ export default function SignUpForm() {
       }
 
       console.error("Error signing up: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -166,6 +170,7 @@ export default function SignUpForm() {
 
             <Button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-auth-button-primary text-white hover:bg-auth-button-primary-hover"
             >
               Create Account
@@ -182,14 +187,14 @@ export default function SignUpForm() {
               </span>
             </div>
           </div>
-          <Link href={oauthURL} target="_blank" className="my-2 block">
-            <Button
-              variant="outline"
-              className="border-auth-input-border w-full text-auth-text-primary hover:bg-auth-button-secondary-hover"
-            >
-              Google
-            </Button>
-          </Link>
+          <Button
+            onClick={() => router.push(oauthURL)}
+            disabled={isLoading}
+            variant="outline"
+            className="border-auth-input-border my-4 text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
+          >
+            Google
+          </Button>
 
           <div className="text-center">
             <span className="text-auth-text-secondary">

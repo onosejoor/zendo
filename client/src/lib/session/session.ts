@@ -11,8 +11,17 @@ export async function getSession() {
   if (!session) {
     return { isAuth: false, message: "Unauthenticated" };
   }
-  const decodedData =  decodeJwt(session)
+  const decodedData = decodeJwt(session);
 
-  return {isAuth: true, message: "Authenticated", id: decodedData.payload.id as string}
+  return {
+    isAuth: true,
+    message: "Authenticated",
+    id: decodedData.payload.id as string,
+  };
+}
 
+export async function signOut() {
+  const cookie = await cookies();
+  cookie.delete("zendo_session_token");
+  cookie.delete("zendo_access_token");
 }

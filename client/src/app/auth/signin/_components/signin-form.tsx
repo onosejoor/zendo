@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -41,6 +42,7 @@ export default function SignInForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (!validateFields(formData)) {
       toast.error("All fields must be filled");
@@ -56,6 +58,7 @@ export default function SignInForm() {
 
       if (success) {
         router.push("/dashboard");
+        setIsLoading(false);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -68,6 +71,7 @@ export default function SignInForm() {
 
       console.error("Error signing in: ", error);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -139,10 +143,11 @@ export default function SignInForm() {
             </div>
 
             <Button
+              disabled={isLoading}
               type="submit"
               className="w-full bg-auth-button-primary text-white hover:bg-auth-button-primary-hover"
             >
-              Sign In
+              {isLoading ? "Signing in....." : "Sign in"}
             </Button>
           </form>
 
@@ -157,18 +162,14 @@ export default function SignInForm() {
             </div>
           </div>
 
-          <a
-            href={`${SERVER_URl}/auth/oauth/google`}
-            className="w-full text-center mx-auto my-4 block"
-            target="_top"
+          <Button
+            onClick={() => router.push(`${SERVER_URl}/auth/oauth/google`)}
+            disabled={isLoading}
+            variant="outline"
+            className="border-auth-input-border my-4 text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
           >
-            <Button
-              variant="outline"
-              className="border-auth-input-border text-auth-text-primary w-full hover:bg-auth-button-secondary-hover"
-            >
-              Google
-            </Button>
-          </a>
+            Google
+          </Button>
 
           <div className="text-center">
             <span className="text-auth-text-secondary">
