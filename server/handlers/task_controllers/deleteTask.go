@@ -17,19 +17,14 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 
 	user := ctx.Locals("user").(*models.UserRes)
 
-	objectId, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Invalid Id",
-		})
-	}
+	objectId, _ := primitive.ObjectIDFromHex(id)
 
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
 	var task models.Task
 
-	err = collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
+	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{
@@ -51,6 +46,11 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 				"success": false, "message": "Error parsing data",
 			})
 		}
+		redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
+
+		return ctx.Status(200).JSON(fiber.Map{
+			"success": true, "message": "task deleted",
+		})
 	}
 
 	if _, err := collection.DeleteOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}); err != nil {
@@ -60,7 +60,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), "")
 
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",
