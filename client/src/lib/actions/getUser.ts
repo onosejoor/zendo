@@ -14,7 +14,7 @@ export async function getUser() {
     if (axios.isAxiosError(error)) {
       return {
         success: false,
-        message: error.response?.data.message,
+        message: error.response?.data.message || error.response?.data,
         user: null,
       };
     } else {

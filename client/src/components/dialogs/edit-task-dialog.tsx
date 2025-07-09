@@ -22,8 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mutate } from "swr";
-import { updateTask } from "@/lib/actions/tasks";
+import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
 
 interface EditTaskDialogProps {
@@ -78,7 +77,7 @@ export function EditTaskDialog({
 
       if (success) {
         onOpenChange(false);
-        mutate(`/task`);
+        mutateTasks(task._id, task.projectId);
       } else {
         console.error("Failed to update task");
       }

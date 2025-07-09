@@ -59,6 +59,10 @@ export default function ProjectsContainer() {
             </Button>
           </CardContent>
         </Card>
+        <CreateProjectDialog
+          open={showCreateProject}
+          onOpenChange={setShowCreateProject}
+        />
       </div>
     );
   }

@@ -17,7 +17,10 @@ export async function updateTask(task: Partial<ITask>) {
     return { success: data.success, message: data.message };
   } catch (error) {
     if (isAxiosError(error)) {
-      return { success: false, message: error.response?.data.message };
+      return {
+        success: false,
+        message: error.response?.data.message || error.response?.data,
+      };
     }
     return {
       success: false,
@@ -32,7 +35,10 @@ export async function deleteTask(id: ITask["_id"]) {
     return { success: data.success, message: data.message };
   } catch (error) {
     if (isAxiosError(error)) {
-      return { success: false, message: error.response?.data.message };
+      return {
+        success: false,
+        message: error.response?.data.message || error.response?.data,
+      };
     }
     return {
       success: false,
@@ -49,8 +55,7 @@ export const handleDeleteTask = async (taskId: ITask["_id"]) => {
 
       toast[options](message);
       if (success) {
-        mutate(`/task/${taskId}`);
-        mutate(`/task/`);
+        mutateTasks(taskId);
         window.location.href = "/dashboard/tasks";
       }
     } catch (error) {
@@ -71,10 +76,17 @@ export const handleToggleTask = async (task: ITask) => {
     const options = success ? "success" : "error";
 
     if (success) {
-      mutate("/task");
+      mutateTasks(task._id, task.projectId);
     }
     toast[options](message);
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "internal error");
   }
 };
+
+export function mutateTasks(taskId?: string, projectId?: string) {
+  mutate(`/task/${taskId}`);
+  mutate(`/task`);
+  mutate("/stats");
+  mutate(`/projects/${projectId}/tasks`);
+}

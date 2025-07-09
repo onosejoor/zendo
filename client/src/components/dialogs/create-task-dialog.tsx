@@ -22,10 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { mutate } from "swr";
 import { axiosInstance } from "@/api/api";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
+import { mutateTasks } from "@/lib/actions/tasks";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -90,8 +90,7 @@ export function CreateTaskDialog({
       toast[options](data.message);
       if (data.success) {
         onOpenChange(false);
-        mutate(`/projects/${projectId}/tasks`);
-        mutate(`/task`);
+        mutateTasks("", projectId);
       }
     } catch (error) {
       toast.error(

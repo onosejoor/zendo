@@ -16,7 +16,7 @@ export async function signIn(formData: SigninFormData) {
     console.error("Error signing up: ", error);
 
     if (axios.isAxiosError(error)) {
-      return { success: false, message: error.response?.data.message };
+      return { success: false, message: error.response?.data.message || error.response?.data };
     } else {
       return { success: false, message: "Internal error" };
     }

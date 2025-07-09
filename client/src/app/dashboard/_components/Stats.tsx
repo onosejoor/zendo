@@ -17,7 +17,7 @@ export default function StatCards() {
   }
 
   if (isLoading) {
-    return <Loader text="fatching stats" />
+    return <Loader text="fetching stats" />
   }
 
   const { stats } = data!;

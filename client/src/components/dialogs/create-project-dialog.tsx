@@ -15,8 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { mutate } from "swr";
-import { createProject } from "@/lib/actions/projects";
+import { createProject, mutateProject } from "@/lib/actions/projects";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -56,11 +55,13 @@ export function CreateProjectDialog({
         });
 
         onOpenChange(false);
+        mutateProject();
         router.push(`/dashboard/projects/${id}`);
-        mutate(`/projects`);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Internal server error")
+      toast.error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
       console.error("Failed to create project:", error);
     } finally {
       setIsLoading(false);

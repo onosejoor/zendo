@@ -22,7 +22,10 @@ export async function createProject(project: CreateProps) {
     return { success: data.success, message: data.message, id: data.projectId };
   } catch (error) {
     if (isAxiosError(error)) {
-      return { success: false, message: error.response?.data.message };
+      return {
+        success: false,
+        message: error.response?.data.message || error.response?.data,
+      };
     }
     return {
       success: false,
@@ -58,12 +61,11 @@ export async function deleteProject(id: IProject["_id"]) {
   try {
     const { data } = await axiosInstance.delete<APIRes>(`/projects/${id}`);
     if (data.success) {
-      mutate("/projects");
-      mutate(`/projects/${id}`);
+      mutateProject(id);
     }
     return { success: data.success, message: data.message };
   } catch (error) {
-    console.log("Error deleting task: ", error);
+    console.log("Error deleting project: ", error);
 
     if (isAxiosError(error)) {
       return {
@@ -91,7 +93,8 @@ export const handleDeleteProject = async (projectId: IProject["_id"]) => {
       toast[options](message);
 
       if (success) {
-        window.location.href = "/dashboard/projects"
+        mutateProject(projectId);
+        window.location.href = "/dashboard/projects";
       }
     } catch (error) {
       toast.error(
@@ -102,3 +105,9 @@ export const handleDeleteProject = async (projectId: IProject["_id"]) => {
     }
   }
 };
+
+export function mutateProject(projectId?: string) {
+  mutate(`/projects/${projectId}`);
+  mutate(`/projects`);
+  mutate(`/projects/${projectId}/tasks`);
+}

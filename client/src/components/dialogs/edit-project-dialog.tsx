@@ -15,9 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { mutate } from "swr";
 import { toast } from "sonner";
-import { updateProject } from "@/lib/actions/projects";
+import { mutateProject, updateProject } from "@/lib/actions/projects";
 
 interface EditProjectDialogProps {
   project: IProject;
@@ -62,8 +61,7 @@ export function EditProjectDialog({
 
       if (success) {
         onOpenChange(false);
-        mutate("/projects");
-        mutate(`/projects/${formData._id}`)
+        mutateProject(formData._id);
       }
     } catch (error) {
       console.error("Failed to update project:", error);
