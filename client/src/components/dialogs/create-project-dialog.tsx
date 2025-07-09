@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { mutate } from "swr";
 import { createProject } from "@/lib/actions/projects";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ export function CreateProjectDialog({
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const { name, description } = formData;
 
@@ -42,19 +44,19 @@ export function CreateProjectDialog({
 
     setIsLoading(true);
     try {
-      const { success, message } = await createProject(formData);
+      const { success, message, id } = await createProject(formData);
 
       const options = success ? "success" : "error";
       toast[options](message);
-      
+
       if (success) {
-        // Reset form
         setFormData({
           description: "",
           name: "",
         });
 
         onOpenChange(false);
+        router.push(`/dashboard/projects/${id}`);
         mutate(`/projects`);
       }
     } catch (error) {

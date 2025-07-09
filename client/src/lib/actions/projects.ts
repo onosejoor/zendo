@@ -15,8 +15,11 @@ type CreateProps = {
 
 export async function createProject(project: CreateProps) {
   try {
-    const { data } = await axiosInstance.post<APIRes>(`/projects/new`, project);
-    return { success: data.success, message: data.message };
+    const { data } = await axiosInstance.post<APIRes & { projectId: string }>(
+      `/projects/new`,
+      project
+    );
+    return { success: data.success, message: data.message, id: data.projectId };
   } catch (error) {
     if (isAxiosError(error)) {
       return { success: false, message: error.response?.data.message };
