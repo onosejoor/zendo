@@ -110,4 +110,5 @@ export function mutateProject(projectId?: string) {
   mutate(`/projects/${projectId}`);
   mutate(`/projects`);
   mutate(`/projects/${projectId}/tasks`);
+  mutate("/stats")
 }
