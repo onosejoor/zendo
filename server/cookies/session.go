@@ -16,33 +16,37 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		return err
 	}
 
-	isLocal := os.Getenv("ENVIRONMENT") == "production"
+	isProd := os.Getenv("ENVIRONMENT") == "production"
 
 	site := fiber.CookieSameSiteNoneMode
+	domain := "myzendo.vercel.app"
 
-	if !isLocal {
+	if !isProd {
+		domain = "localhost"
 		site = fiber.CookieSameSiteLaxMode
 	}
 
 	ctx.Cookie(&fiber.Cookie{
-		Secure:   !isLocal,
+		Secure:   !isProd,
 		Expires:  expirationTime,
 		HTTPOnly: true,
 		Name:     "zendo_session_token",
 		Value:    jwts.RefreshToken,
 		SameSite: site,
 		Path:     "/",
+		Domain:   domain,
 		MaxAge:   60 * 60 * 24 * 7,
 	})
 
 	ctx.Cookie(&fiber.Cookie{
-		Secure:   !isLocal,
+		Secure:   !isProd,
 		Expires:  time.Now().Add(15 * time.Minute),
 		HTTPOnly: true,
 		Name:     "zendo_access_token",
 		Value:    jwts.AccessToken,
 		SameSite: site,
 		Path:     "/",
+		Domain:   domain,
 		MaxAge:   60 * 15,
 	})
 	return nil
