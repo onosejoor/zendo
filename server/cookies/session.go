@@ -32,6 +32,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		SameSite: site,
 		Path:     "/",
 		MaxAge:   60 * 60 * 24 * 7,
+		Domain:   ctx.Hostname(),
 	})
 
 	ctx.Cookie(&fiber.Cookie{
@@ -42,6 +43,7 @@ func CreateSession(payload models.UserRes, ctx *fiber.Ctx) error {
 		Value:    jwts.AccessToken,
 		SameSite: site,
 		Path:     "/",
+		Domain:   ctx.Hostname(),
 		MaxAge:   60 * 15,
 	})
 	return nil
