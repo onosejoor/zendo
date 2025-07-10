@@ -20,7 +20,7 @@ export function validateFields(fields: Fields) {
   return { isEmptyFields };
 }
 
-export const SERVER_URl = process.env.NEXT_PUBLIC_SERVER_URL;
+export const SERVER_URl = "/api";
 
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);

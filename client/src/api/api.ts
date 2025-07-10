@@ -4,7 +4,7 @@ import { getCookie } from "@/lib/actions/cookie";
 import { SERVER_URl } from "@/lib/utils";
 
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
