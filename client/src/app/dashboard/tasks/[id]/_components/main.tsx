@@ -7,16 +7,16 @@ import TaskHeader from "./Data";
 import { useTask } from "@/hooks/use-tasks";
 import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import { handleDeleteTask } from "@/lib/actions/tasks";
+import { Edit } from "lucide-react";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import ErrorDisplay from "@/components/error-display";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
-export default function ProjectContainer({ projectId }: { projectId: string }) {
+export default function TaskContainer({ taskId }: { taskId: string }) {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [editingTask, setEditingTask] = useState(false);
 
-  const { data: taskData, isLoading, error } = useTask(projectId);
+  const { data: taskData, isLoading, error } = useTask(taskId);
 
   if (error) {
     if (error.status === 404) {
@@ -61,14 +61,7 @@ export default function ProjectContainer({ projectId }: { projectId: string }) {
               <Edit className="h-4 w-4 mr-2" />
               Edit Task
             </Button>
-            <Button
-              onClick={() => handleDeleteTask(task._id)}
-              className="text-red-600"
-              variant={"outline"}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
+            <DeleteDataDialog id={taskId} type="task" />
           </div>
         </div>
 

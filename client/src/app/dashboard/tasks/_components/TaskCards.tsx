@@ -8,13 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { handleDeleteTask, handleToggleTask } from "@/lib/actions/tasks";
-import { Edit, MoreHorizontal, Timer, Trash2 } from "lucide-react";
+import { handleToggleTask } from "@/lib/actions/tasks";
+import { Edit, MoreHorizontal, Timer } from "lucide-react";
 import { formatDate, getStatusColor } from "./constants";
 import { Badge } from "@/components/ui/badge";
 import { checkExpired, cn } from "@/lib/utils";
 import Link from "next/link";
 import { getStatusBadge } from "@/lib/functions";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 type Props = {
   task: ITask;
@@ -95,12 +96,8 @@ export default function TaskCard({ task, handleEditTask }: Props) {
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDeleteTask(task._id)}
-                  className="text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <DropdownMenuItem asChild>
+                  <DeleteDataDialog card type="task" id={task._id} />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

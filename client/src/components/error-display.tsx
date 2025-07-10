@@ -13,7 +13,7 @@ interface ErrorDisplayProps {
 const ErrorDisplay = ({
   dontTryAgain = false,
   title = "Something went wrong",
-  message = "We encountered an unexpected error. Please try again or return to the home page.",
+  message = "We encountered an unexpected error. Kindly check your internet connection, then try again or return to the home page.",
 }: ErrorDisplayProps) => {
   const handleRefresh = () => {
     window.location.reload();
@@ -47,10 +47,10 @@ const ErrorDisplay = ({
             </Button>
           )}
 
-          <Link href={"/dashboard"}>
+          <Link href={"/dashboard"} className="block">
             <Button
               variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              className="border-gray-300 text-gray-700 w-full hover:bg-gray-50 px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Home
@@ -63,6 +63,9 @@ const ErrorDisplay = ({
           <p className="text-sm text-gray-500">
             If this problem persists, please contact our support team.
           </p>
+          <a href="https://onos-ejoor.vercel.app/contact">
+            <Button variant={"link"}>Contact Form</Button>
+          </a>
         </div>
       </div>
     </div>

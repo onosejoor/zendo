@@ -1,11 +1,11 @@
-import ProjectContainer from "./_components/main";
+import TaskContainer from "./_components/main";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function ProjectDynamicPage({ params }: Props) {
-  const projectId = (await params).id;
+export default async function TaskDynamicPage({ params }: Props) {
+  const taskId = (await params).id;
 
-  return <ProjectContainer projectId={projectId} />;
+  return <TaskContainer taskId={taskId} />;
 }

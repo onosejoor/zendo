@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, Plus, Search } from "lucide-react";
 import { EditProjectDialog } from "@/components/dialogs/edit-project-dialog";
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useProject } from "@/hooks/use-projects";
@@ -11,9 +11,9 @@ import { useProject } from "@/hooks/use-projects";
 import ProjectHeader from "./Header";
 import ProjectTasksTable from "./Tasks";
 import BreadCrumbs from "@/components/BreadCrumbs";
-import { handleDeleteProject } from "@/lib/actions/projects";
 import ErrorDisplay from "@/components/error-display";
 import Loader from "@/components/loader-card";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 export default function ProjectContainer({ projectId }: { projectId: string }) {
   const [editingProject, setEditingProject] = useState(false);
@@ -69,14 +69,7 @@ export default function ProjectContainer({ projectId }: { projectId: string }) {
               <Edit className="h-4 w-4 mr-2" />
               Edit Project
             </Button>
-            <Button
-              onClick={() => handleDeleteProject(project._id)}
-              className="text-red-600"
-              variant={"outline"}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
+            <DeleteDataDialog id={projectId} type="project" />
           </div>
         </div>
 

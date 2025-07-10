@@ -14,12 +14,22 @@ import {
   Settings,
   Menu,
   X,
+  RefreshCcw,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import Img from "./Img";
 import { Skeleton } from "./ui/skeleton";
 import UserData from "./UserData";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { KeyedMutator } from "swr";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -31,11 +41,7 @@ const navigation = [
 export function Sidenav({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { data, error, isLoading } = useUser();
-
-  if (error) {
-    return error;
-  }
+  const { data, error, isLoading, mutate } = useUser();
 
   const { user } = data || {};
 
@@ -139,7 +145,9 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
           </Button>
 
           <div className="flex items-center space-x-4 ml-auto">
-            {isLoading ? (
+            {error ? (
+              <Error mutate={mutate} />
+            ) : isLoading ? (
               <Skeleton className="size-10 rounded-full" />
             ) : (
               <UserData user={user!} />
@@ -153,3 +161,28 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+const Error = ({ mutate }: { mutate: KeyedMutator<UserRes> }) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>E</AvatarFallback>
+        </Avatar>
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuLabel className="font-normal">
+          <p className="text-sm font-medium capitalize leading-none">
+            {"error getting user data"}
+          </p>
+        
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+
+      <Button variant={"ghost"} onClick={() => mutate} className="flex gap-2 items-center !text-accent-blue">
+      <RefreshCcw />  Try again
+      </Button>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);

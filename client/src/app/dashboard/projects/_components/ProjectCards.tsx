@@ -7,10 +7,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import { Calendar, Edit, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { handleDeleteProject } from "@/lib/actions/projects";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 type Props = {
   project: IProject;
@@ -38,12 +38,8 @@ export default function ProjectCard({ project, handleEditProject }: Props) {
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleDeleteProject(project._id)}
-                  className="text-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <DropdownMenuItem asChild>
+                  <DeleteDataDialog card type="project" id={project._id} />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

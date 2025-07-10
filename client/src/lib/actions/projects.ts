@@ -81,28 +81,22 @@ export async function deleteProject(id: IProject["_id"]) {
 }
 
 export const handleDeleteProject = async (projectId: IProject["_id"]) => {
-  if (
-    window.confirm(
-      "Are you sure you want to delete this project and all tasks in it?"
-    )
-  ) {
-    try {
-      const { success, message } = await deleteProject(projectId);
-      const options = success ? "success" : "error";
+  try {
+    const { success, message } = await deleteProject(projectId);
+    const options = success ? "success" : "error";
 
-      toast[options](message);
+    toast[options](message);
 
-      if (success) {
-        mutateProject(projectId);
-        window.location.href = "/dashboard/projects";
-      }
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Internal server error"
-      );
-
-      console.error("Failed to delete project:", error);
+    if (success) {
+      mutateProject(projectId);
+      window.location.href = "/dashboard/projects";
     }
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : "Internal server error"
+    );
+
+    console.error("Failed to delete project:", error);
   }
 };
 
@@ -110,5 +104,5 @@ export function mutateProject(projectId?: string) {
   mutate(`/projects/${projectId}`);
   mutate(`/projects`);
   mutate(`/projects/${projectId}/tasks`);
-  mutate("/stats")
+  mutate("/stats");
 }

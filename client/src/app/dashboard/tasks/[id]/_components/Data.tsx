@@ -2,7 +2,7 @@ import { formatDate } from "@/app/dashboard/tasks/_components/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { updateTask } from "@/lib/actions/tasks";
+import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { getStatusBadge } from "@/lib/functions";
 import { checkExpired, cn } from "@/lib/utils";
 import {
@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { mutate } from "swr";
 
 export default function TaskHeader({ task }: { task: ITask }) {
   const isExpired = checkExpired(task.dueDate);
@@ -31,7 +30,7 @@ export default function TaskHeader({ task }: { task: ITask }) {
       const options = success ? "success" : "error";
 
       if (success) {
-        mutate(`/task/${task._id}`);
+        mutateTasks(task._id, task.projectId);
       }
       toast[options](message);
     } catch (error) {

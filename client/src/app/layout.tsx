@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${geist.className} font-sans `}>
+      <body className={`${geist.className} font-sans overflow-x-hidden`}>
         <NextTopLoader height={5} color="var(--color-accent-blue)" />
         <Toaster />
         {children}
