@@ -84,7 +84,7 @@ export const handleToggleTask = async (task: ITask) => {
 
 export function mutateTasks(taskId?: string, projectId?: string) {
   mutate(`/tasks/${taskId}`);
-  mutate(`/task`);
+  mutate(`/tasks`);
   mutate("/stats");
   mutate(`/projects/${projectId}/tasks`);
 }
