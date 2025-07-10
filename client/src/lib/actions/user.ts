@@ -2,6 +2,7 @@ import { axiosInstance } from "@/api/api";
 import { mutateProject } from "./projects";
 import { toast } from "sonner";
 import { KeyedMutator } from "swr";
+import { AvatarProps } from "@/app/dashboard/settings/_components/main";
 
 export async function deleteAllProjects() {
   try {
@@ -25,7 +26,7 @@ export async function deleteAllProjects() {
 
 export async function deleteAllTasks() {
   try {
-    const { data } = await axiosInstance.delete<APIRes>("/task/all");
+    const { data } = await axiosInstance.delete<APIRes>("/tasks/all");
 
     const options = data.success ? "success" : "error";
     toast[options](data.message);
@@ -44,17 +45,28 @@ export async function deleteAllTasks() {
 }
 
 export async function updateUser(
-  userData: Partial<IUser>,
+  userData: Pick<IUser, "username" | "avatar"> & AvatarProps,
   mutate: KeyedMutator<{ success: boolean; user: IUser }>
 ) {
+
   try {
-    const { data } = await axiosInstance.put<APIRes>("/auth/user", userData);
+    const formData = new FormData();
+    formData.append("username", userData.username!);
+    formData.append("avatar", userData.avatar!);
+    if (userData.avatarFile) formData.append("avatarFile", userData.avatarFile);
+
+    const { data } = await axiosInstance.put<APIRes>("/auth/user", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
 
     const options = data.success ? "success" : "error";
     toast[options](data.message);
 
     if (data.success) {
       mutate();
+    
     }
   } catch (err) {
     toast.error(

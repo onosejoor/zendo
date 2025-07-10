@@ -81,7 +81,7 @@ export function CreateTaskDialog({
 
     setIsLoading(true);
     try {
-      const { data } = await axiosInstance.post<APIRes>("/task/new", {
+      const { data } = await axiosInstance.post<APIRes>("/tasks/new", {
         ...formData,
         dueDate: new Date(dueDate),
       });

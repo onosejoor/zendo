@@ -18,6 +18,7 @@ import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useState } from "react";
 import { getStatusBadge } from "@/lib/functions";
 import ErrorDisplay from "@/components/error-display";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 export default function ProjectTasksTable({
   projectId,
@@ -32,7 +33,7 @@ export default function ProjectTasksTable({
   if (error) {
     return (
       <ErrorDisplay message={`Error getting project ${projectId} tasks`} />
-    ); 
+    );
   }
 
   if (isLoading) {
@@ -64,6 +65,9 @@ export default function ProjectTasksTable({
                   <TableHead className="font-semibold text-foreground">
                     Due Date
                   </TableHead>
+                  <TableHead className="font-semibold text-foreground">
+                    Delete
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -88,6 +92,9 @@ export default function ProjectTasksTable({
                       <span className="text-sm text-muted-foreground">
                         {formatDate(task.dueDate)}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <DeleteDataDialog card type="task" id={task._id} />
                     </TableCell>
                   </TableRow>
                 ))}

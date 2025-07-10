@@ -48,7 +48,7 @@ export default function DeleteAllDataDialog({ type }: Props) {
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" disabled={loading}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete {type}
+          {loading ? "Deleting..." : `Delete ${type}`}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

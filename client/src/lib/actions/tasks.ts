@@ -10,7 +10,7 @@ type APIRes = {
 
 export async function updateTask(task: Partial<ITask>) {
   try {
-    const { data } = await axiosInstance.put<APIRes>(`/task/${task._id}`, {
+    const { data } = await axiosInstance.put<APIRes>(`/tasks/${task._id}`, {
       ...task,
       dueDate: new Date(task.dueDate!),
     });
@@ -31,7 +31,7 @@ export async function updateTask(task: Partial<ITask>) {
 
 export async function deleteTask(id: ITask["_id"]) {
   try {
-    const { data } = await axiosInstance.delete<APIRes>(`/task/${id}`);
+    const { data } = await axiosInstance.delete<APIRes>(`/tasks/${id}`);
     return { success: data.success, message: data.message };
   } catch (error) {
     if (isAxiosError(error)) {
@@ -83,7 +83,7 @@ export const handleToggleTask = async (task: ITask) => {
 };
 
 export function mutateTasks(taskId?: string, projectId?: string) {
-  mutate(`/task/${taskId}`);
+  mutate(`/tasks/${taskId}`);
   mutate(`/task`);
   mutate("/stats");
   mutate(`/projects/${projectId}/tasks`);

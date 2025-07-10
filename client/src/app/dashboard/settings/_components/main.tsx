@@ -21,11 +21,11 @@ import ErrorDisplay from "@/components/error-display";
 import Loader from "@/components/loader-card";
 import DeleteAllDataDialog from "./delete-dialog";
 
+export type AvatarProps = { avatarUrl?: string; avatarFile?: File | null };
+
 export default function Settings() {
   const { data, mutate: mutateUser, isLoading: userLoading, error } = useUser();
-  const [user, setUser] = useState<(IUser & { avatarUrl?: string }) | null>(
-    null
-  );
+  const [user, setUser] = useState<(IUser & AvatarProps) | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +38,8 @@ export default function Settings() {
     e.preventDefault();
     setIsLoading(true);
     await updateUser(user!, mutateUser);
+
+    setUser(data!.user);
     setIsLoading(false);
   };
 
@@ -63,17 +65,13 @@ export default function Settings() {
     const file = e.target.files?.[0];
 
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUser((prev) => {
-          return {
-            ...prev!,
-            avatar: event.target?.result as string,
-            avatarUrl: URL.createObjectURL(file),
-          };
-        });
-      };
-      reader.readAsDataURL(file);
+      setUser((prev) => {
+        return {
+          ...prev!,
+          avatarFile: file,
+          avatarUrl: URL.createObjectURL(file),
+        };
+      });
     } else {
       setUser((prev) => {
         return {
@@ -84,7 +82,7 @@ export default function Settings() {
     }
   };
 
-  const { username, avatarUrl } = user || {};
+  const { username, avatar, avatarUrl } = user || {};
 
   return (
     <>
@@ -113,7 +111,11 @@ export default function Settings() {
               {/* Avatar Section */}
               <div className="flex items-center space-x-6">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={avatarUrl} alt={username} />
+                  <AvatarImage
+                    src={avatarUrl ?? avatar}
+                    className="object-cover"
+                    alt={username}
+                  />
                   <AvatarFallback className="text-lg">
                     {username?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
@@ -188,7 +190,7 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Delete All Tasks */}
-            <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+            <div className="flex sm:items-center gap-5 flex-col sm:flex-row justify-between p-4 border border-red-200 rounded-lg bg-red-50">
               <div>
                 <h3 className="font-medium text-red-900">Delete All Tasks</h3>
                 <p className="text-sm text-red-700">
@@ -200,7 +202,7 @@ export default function Settings() {
             </div>
 
             {/* Delete All Projects */}
-            <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+            <div className="flex flex-col sm:flex-row gap-5 sm:items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
               <div>
                 <h3 className="font-medium text-red-900">
                   Delete All Projects
@@ -227,9 +229,7 @@ export default function Settings() {
                 <Label className="text-sm font-medium text-gray-500">
                   User ID
                 </Label>
-                <p className="text-sm text-gray-900 font-mono">
-                  {user?._id}
-                </p>
+                <p className="text-sm text-gray-900 font-mono">{user?._id}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-500">
