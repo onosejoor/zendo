@@ -158,3 +158,55 @@ func (task Task) DeleteTaskWithTransaction(ctx context.Context) error {
 	_, err = session.WithTransaction(ctx, callback)
 	return err
 }
+
+func DeleteAllTasksWithTransaction(ctx context.Context, user *UserRes) error {
+	client := db.GetClientWithoutDB()
+
+	session, err := client.StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+
+	tasksCollection := client.Database("zendo").Collection("tasks")
+	projectsCollection := client.Database("zendo").Collection("projects")
+
+	callback := func(sessCtx mongo.SessionContext) (any, error) {
+		cursor, err := tasksCollection.Find(sessCtx, bson.M{"userId": user.ID})
+		if err != nil {
+			return nil, err
+		}
+		defer cursor.Close(sessCtx)
+
+		projectTaskCount := make(map[primitive.ObjectID]int)
+		for cursor.Next(sessCtx) {
+			var task Task
+			if err := cursor.Decode(&task); err != nil {
+				return nil, err
+			}
+			if task.ProjectId != nil {
+				projectTaskCount[*task.ProjectId]++
+			}
+		}
+
+		_, err = tasksCollection.DeleteMany(sessCtx, bson.M{"userId": user.ID})
+		if err != nil {
+			return nil, err
+		}
+
+		for projectID, count := range projectTaskCount {
+			filter := bson.M{"_id": projectID}
+			update := bson.M{"$inc": bson.M{"totalTasks": -count}}
+
+			_, err := projectsCollection.UpdateOne(sessCtx, filter, update)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return nil, nil
+	}
+
+	_, err = session.WithTransaction(ctx, callback)
+	return err
+}

@@ -66,3 +66,21 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		"success": true, "message": "Task deleted",
 	})
 }
+
+func DeleteAllTasksController(ctx *fiber.Ctx) error {
+	user := ctx.Locals("user").(*models.UserRes)
+
+	err := models.DeleteAllTasksWithTransaction(ctx.Context(), user)
+	if err != nil {
+		log.Println("Error deleing all tasks: ", err)
+		return ctx.Status(500).JSON(fiber.Map{
+			"success": false, "message": "Error deleting all tasks, try again",
+		})
+	}
+
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"success": true, "message": "Task deleted",
+	})
+}

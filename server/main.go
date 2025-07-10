@@ -54,6 +54,7 @@ func main() {
 	auth := app.Group("/auth")
 
 	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
+	auth.Put("/user", middlewares.AuthMiddleware, auth_controllers.UpdateUserController)
 	auth.Get("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)
@@ -62,13 +63,14 @@ func main() {
 	// auth.Get("/callback", oauth.OauthCallBackController)
 
 	// task
-	taskRoute := app.Group("/task")
+	taskRoute := app.Group("/tasks")
 	taskRoute.Use(middlewares.AuthMiddleware)
 
 	taskRoute.Get("", task_controllers.GetAllTasksController)
 	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
 	taskRoute.Post("/new", task_controllers.CreateTaskController)
 	taskRoute.Put("/:id", task_controllers.UpdateTaskController)
+	taskRoute.Delete("/all", task_controllers.DeleteAllTasksController)
 	taskRoute.Delete("/:id", task_controllers.DeleteTaskController)
 
 	// projects
@@ -80,6 +82,7 @@ func main() {
 	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
 	projectRoute.Post("/new", project_controllers.CreateProjectController)
 	projectRoute.Put("/:id", project_controllers.UpdateProjectController)
+	projectRoute.Delete("/all", project_controllers.DeleteAllProjectsController)
 	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
 	redis.GetRedisClient()
