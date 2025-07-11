@@ -65,7 +65,7 @@ func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
 	for _, task := range t {
 		dueDate := task.DueDate.Local().Truncate(24 * time.Hour)
 
-		if dueDate.Equal(now) {
+		if dueDate.Equal(now) && task.Status != "completed" {
 			isDueToday++
 		}
 
