@@ -31,7 +31,7 @@ export default async function HomePage() {
           Organize your projects, track your tasks, and collaborate with your
           team. Everything you need to stay productive in one place.
         </p>
-        <div className="items-center flex flex-wrap gap-5">
+        <div className="items-center justify-center flex flex-wrap gap-5">
           <Link href="/auth/signup">
             <Button size="lg" className="text-lg px-8 py-3">
               Start Free Trial
