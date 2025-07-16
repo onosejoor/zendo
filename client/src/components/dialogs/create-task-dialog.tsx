@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-
-import { ChangeEvent, useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,10 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 import { axiosInstance } from "@/api/api";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
 import { mutateTasks } from "@/lib/actions/tasks";
+import { getTextNewLength } from "@/lib/functions";
+import SubTaskCard from "@/app/dashboard/_components/sub-task-card";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -43,11 +46,11 @@ export function CreateTaskDialog({
     projectId: "",
     dueDate: new Date().toISOString().slice(0, 16),
   });
-
+  const [subTasks, setSubTasks] = useState<ISubTask[]>([]);
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const { title, description, status, dueDate, projectId } = formData;
-
   const isDisabled =
     isLoading || !title.trim() || !description.trim() || !dueDate;
 
@@ -55,11 +58,17 @@ export function CreateTaskDialog({
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
-
+    const { value: newValue, isLong } = getTextNewLength({ id, value });
+    if (isLong) {
+      const chars = id === "title" ? 70 : 300;
+      toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
+        style: { textTransform: "capitalize" },
+      });
+    }
     setFormData((prev) => {
       return {
         ...prev,
-        [id]: value,
+        [id]: newValue,
       };
     });
   };
@@ -73,6 +82,45 @@ export function CreateTaskDialog({
     });
   };
 
+  const handleAddSubTask = () => {
+    if (!newSubTaskTitle.trim()) return;
+    const { value: trimmedTitle, isLong } = getTextNewLength({
+      id: "subtask",
+      value: newSubTaskTitle.trim(),
+    });
+
+    if (isLong) {
+      toast.error("Subtask title is too long, was shrinked to 70 characters");
+    }
+
+    setSubTasks((prev) => [...prev, { title: trimmedTitle, completed: false }]);
+    setNewSubTaskTitle("");
+  };
+
+  const handleRemoveSubTask = (index: number) => {
+    setSubTasks((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleToggleSubTask = (index: number) => {
+    setSubTasks((prev) =>
+      prev.map((subtask, i) =>
+        i === index ? { ...subtask, completed: !subtask.completed } : subtask
+      )
+    );
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      status: "pending",
+      projectId: "",
+      dueDate: new Date().toISOString().slice(0, 16),
+    });
+    setSubTasks([]);
+    setNewSubTaskTitle("");
+  };
+
   const { data, isLoading: loading } = useProjects();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,11 +132,12 @@ export function CreateTaskDialog({
       const { data } = await axiosInstance.post<APIRes>("/tasks/new", {
         ...formData,
         dueDate: new Date(dueDate),
+        subTasks: subTasks.length > 0 ? subTasks : undefined,
       });
-
       const options = data.success ? "success" : "error";
       toast[options](data.message);
       if (data.success) {
+        resetForm();
         onOpenChange(false);
         mutateTasks("", projectId);
       }
@@ -103,12 +152,11 @@ export function CreateTaskDialog({
   };
 
   const { projects = [] } = data || {};
-
   const disabledSelect = loading || projects.length < 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
@@ -133,6 +181,7 @@ export function CreateTaskDialog({
                 id="description"
                 placeholder="Enter task description"
                 value={description}
+                className="!max-h-30"
                 onChange={handleChange}
                 rows={3}
                 required
@@ -187,12 +236,67 @@ export function CreateTaskDialog({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Subtasks Section */}
+            <div className="grid gap-2">
+              <Label>Subtasks</Label>
+              <div className="space-y-3">
+                {/* Add New Subtask */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a subtask..."
+                    value={newSubTaskTitle}
+                    onChange={(e) => setNewSubTaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSubTask();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddSubTask}
+                    disabled={!newSubTaskTitle.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Existing Subtasks */}
+                {subTasks.length > 0 && (
+                  <Card>
+                    <CardContent className="p-3 space-y-2">
+                      {subTasks.map((subTask, index) => (
+                        <SubTaskCard
+                          subTask={subTask}
+                          key={index}
+                          handleRemoveSubTask={handleRemoveSubTask}
+                          handleToggleSubTask={handleToggleSubTask}
+                          index={index}
+                        />
+                      ))}
+                      <div className="text-xs text-gray-500 mt-2">
+                        {subTasks.length} subtask
+                        {subTasks.length !== 1 ? "s" : ""} •{" "}
+                        {subTasks.filter((st) => st.completed).length} completed
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                resetForm();
+                onOpenChange(false);
+              }}
             >
               Cancel
             </Button>

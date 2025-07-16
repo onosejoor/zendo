@@ -34,3 +34,14 @@ export const getStatusBadge = (
     </Badge>
   );
 };
+
+export function getTextNewLength({ id, value }: { id: string; value: string }) {
+  if (value.length > 70 && id === "title") {
+    return { value: value.slice(0, 70), isLong: true };
+  }
+
+  if (value.length > 300 && id === "description") {
+    return { value: value.slice(0, 300), isLong: true };
+  }
+  return { value, isLong: false };
+}

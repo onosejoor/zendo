@@ -38,6 +38,11 @@ export default function TaskHeader({ task }: { task: ITask }) {
     }
   };
 
+  const description =
+    task.description.length > 250
+      ? task.description.slice(0, 250) + "..."
+      : task.description;
+
   return (
     <Card className="relative">
       <CardContent className={"p-6"}>
@@ -66,29 +71,29 @@ export default function TaskHeader({ task }: { task: ITask }) {
         >
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
-              <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <FileText className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Title
                 </p>
-                <p className="text-foreground">{task.title}</p>
+                <p className="text-foreground line-clamp-1 ">{task.title}</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <FileText className="h-5 shrink-0 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Description
                 </p>
                 <p className="text-foreground">
-                  {task.description || "No description provided"}
+                  {description || "No description provided"}
                 </p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3">
-              <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <Activity className="h-5 w-5  shrink-0 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Status

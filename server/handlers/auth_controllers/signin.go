@@ -51,7 +51,7 @@ func HandleSignin(ctx *fiber.Ctx) error {
 
 	if !userData.ComparePassword(body.Password) {
 		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Incorrect Password",
+			"success": false, "message": "Incorrect Credentials",
 		})
 	}
 

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
+import { getTextNewLength } from "@/lib/functions";
 
 interface EditTaskDialogProps {
   task: ITask;
@@ -46,10 +47,19 @@ export function EditTaskDialog({
   ) => {
     const { id, value } = e.target;
 
+    const { value: newValue, isLong } = getTextNewLength({ id, value });
+
+    if (isLong) {
+      const chars = id === "title" ? 70 : 300;
+      toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
+        style: { textTransform: "capitalize" },
+      });
+    }
+
     setFormData((prev) => {
       return {
         ...prev,
-        [id]: value,
+        [id]: newValue,
       };
     });
   };
@@ -99,7 +109,7 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-screen">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
           <DialogDescription>Update your task details below.</DialogDescription>
@@ -122,6 +132,7 @@ export function EditTaskDialog({
               <Textarea
                 id="description"
                 placeholder="Enter task description"
+                className="!max-h-30"
                 value={description}
                 onChange={handleChange}
                 rows={3}

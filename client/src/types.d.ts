@@ -4,13 +4,13 @@ declare global {
     title: string;
     description: string;
     userId: string;
-    subTasks?: SubTask[];
+    subTasks?: ISubTask[];
     projectId?: string;
     dueDate: Date;
     status: "in-progress" | "completed" | "pending";
     created_at: Date;
   }
-  interface SubTask {
+  interface ISubTask {
     title: string;
     completed: boolean;
   }

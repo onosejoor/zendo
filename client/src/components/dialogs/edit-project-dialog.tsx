@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { mutateProject, updateProject } from "@/lib/actions/projects";
+import { getTextNewLength } from "@/lib/functions";
 
 interface EditProjectDialogProps {
   project: IProject;
@@ -39,10 +40,19 @@ export function EditProjectDialog({
   ) => {
     const { id, value } = e.target;
 
+    const { value: newValue, isLong } = getTextNewLength({ id, value });
+
+    if (isLong) {
+      const chars = id === "title" ? 70 : 300;
+      toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
+        style: { textTransform: "capitalize" },
+      });
+    }
+
     setFormData((prev) => {
       return {
         ...prev,
-        [id]: value,
+        [id]: newValue,
       };
     });
   };

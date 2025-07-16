@@ -52,15 +52,15 @@ export default function TaskCard({ task, handleEditTask }: Props) {
               <div className="flex-1">
                 <h3
                   className={cn(
-                    `font-medium `,
+                    `font-medium  line-clamp-1`,
                     isCompleted ? "line-through text-gray-500" : "text-gray-900"
                   )}
                 >
                   {task.title}
                 </h3>
                 <p
-                  className={`text-sm mt-1 ${
-                    isCompleted ? "text-gray-400" : "text-gray-600"
+                  className={`text-sm mt-1 line-clamp-3 ${
+                    isCompleted ? "text-gray-400 " : "text-gray-600"
                   }`}
                 >
                   {task.description || "No Description"}

@@ -19,6 +19,7 @@ import { useState } from "react";
 import { getStatusBadge } from "@/lib/functions";
 import ErrorDisplay from "@/components/error-display";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
+import Link from "next/link";
 
 export default function ProjectTasksTable({
   projectId,
@@ -74,16 +75,19 @@ export default function ProjectTasksTable({
                 {filteredTasks.map((task) => (
                   <TableRow key={task._id} className="border-b last:border-0">
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-foreground">
+                      <Link
+                        href={`/dashboard/tasks/${task._id}`}
+                        className="block"
+                      >
+                        <p className="font-medium max-w-md truncate text-foreground">
                           {task.title}
                         </p>
                         {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-sm truncate max-w-sm text-muted-foreground mt-1">
                             {task.description}
                           </p>
                         )}
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(task.status, task.dueDate)}

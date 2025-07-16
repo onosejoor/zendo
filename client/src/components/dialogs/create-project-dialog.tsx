@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createProject, mutateProject } from "@/lib/actions/projects";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getTextNewLength } from "@/lib/functions";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -73,17 +74,26 @@ export function CreateProjectDialog({
   ) => {
     const { id, value } = e.target;
 
+    const { value: newValue, isLong } = getTextNewLength({ id, value });
+
+    if (isLong) {
+      const chars = id === "title" ? 70 : 300;
+      toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
+        style: { textTransform: "capitalize" },
+      });
+    }
+
     setFormData((prev) => {
       return {
         ...prev,
-        [id]: value,
+        [id]: newValue,
       };
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-screen">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
@@ -110,6 +120,7 @@ export function CreateProjectDialog({
                 placeholder="Enter project description"
                 value={description}
                 onChange={handleChange}
+                className="!max-h-30"
                 rows={3}
               />
             </div>
