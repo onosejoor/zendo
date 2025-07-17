@@ -25,5 +25,5 @@ export const SERVER_URl = "/api";
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);
 
-export const checkExpired = (date: Date) =>
+export const checkExpired = (date: ITask["dueDate"]) =>
   new Date(date).toLocaleString() < new Date().toLocaleString();

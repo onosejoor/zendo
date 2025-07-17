@@ -36,7 +36,10 @@ export const getStatusBadge = (
 };
 
 export function getTextNewLength({ id, value }: { id: string; value: string }) {
-  if (value.length > 70 && id === "title") {
+
+
+
+  if (value.length > 70 && (id === "title" || id === "subtask")) {
     return { value: value.slice(0, 70), isLong: true };
   }
 

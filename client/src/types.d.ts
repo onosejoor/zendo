@@ -3,10 +3,9 @@ declare global {
     _id: string;
     title: string;
     description: string;
-    userId: string;
     subTasks?: ISubTask[];
     projectId?: string;
-    dueDate: Date;
+    dueDate: Date | string;
     status: "in-progress" | "completed" | "pending";
     created_at: Date;
   }

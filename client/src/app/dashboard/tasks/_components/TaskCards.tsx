@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { handleToggleTask } from "@/lib/actions/tasks";
-import { Edit, MoreHorizontal, Timer } from "lucide-react";
+import { Edit, MoreHorizontal, Subtitles, Timer } from "lucide-react";
 import { formatDate, getStatusColor } from "./constants";
 import { Badge } from "@/components/ui/badge";
 import { checkExpired, cn } from "@/lib/utils";
@@ -78,6 +78,10 @@ export default function TaskCard({ task, handleEditTask }: Props) {
                   <div className="flex items-center space-x-1 text-sm text-gray-500">
                     <Timer className="size-3" />
                     <span>Due: {formatDate(task.dueDate)}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-sm text-gray-500">
+                    <Subtitles className="size-3" />
+                    <span>Subtasks: {task.subTasks?.length || 0}</span>
                   </div>
                 </div>
               </div>

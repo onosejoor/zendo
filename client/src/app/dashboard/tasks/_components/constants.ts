@@ -4,7 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
 
-export const formatDate = (dateString: Date) => {
+export const formatDate = (dateString: Date | string) => {
   return dayjs(new Date(dateString)).fromNow();
 };
 

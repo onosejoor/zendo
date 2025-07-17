@@ -25,6 +25,9 @@ import {
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
 import { getTextNewLength } from "@/lib/functions";
+import { Plus } from "lucide-react";
+import { addSubTask, SubTaskProps } from "@/lib/actions/subTasks";
+import SubTask from "@/app/dashboard/_components/sub-task-card";
 
 interface EditTaskDialogProps {
   task: ITask;
@@ -39,8 +42,9 @@ export function EditTaskDialog({
 }: EditTaskDialogProps) {
   const [formData, setFormData] = useState(task);
   const [isLoading, setIsLoading] = useState(false);
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
 
-  const { title, description, status, dueDate } = formData;
+  const { title, description, status, dueDate, subTasks } = formData;
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,6 +106,11 @@ export function EditTaskDialog({
     }
   };
 
+  const handleAddSubTask = () => {
+    addSubTask(newSubTaskTitle, setFormData as SubTaskProps["setFormData"]);
+    setNewSubTaskTitle("");
+  };
+
   const handleCancel = () => {
     setFormData(task);
     onOpenChange(false);
@@ -109,7 +118,7 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-screen">
+      <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
           <DialogDescription>Update your task details below.</DialogDescription>
@@ -169,22 +178,37 @@ export function EditTaskDialog({
               </Select>
             </div>
 
-            {/* <div className="grid gap-2">
-              <Label htmlFor="project">Project</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select project (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Project</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project._id} value={project._id}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div> */}
+            <div className="grid gap-2">
+              <Label>Subtasks</Label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a subtask..."
+                    value={newSubTaskTitle}
+                    onChange={(e) => setNewSubTaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSubTask();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddSubTask}
+                    disabled={!newSubTaskTitle.trim()}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <SubTask
+                  setFormData={setFormData as SubTaskProps["setFormData"]}
+                  subTasks={subTasks}
+                />
+              </div>
+            </div>
           </div>
 
           <DialogFooter>

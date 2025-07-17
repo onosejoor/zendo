@@ -1,5 +1,11 @@
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  handleRemoveSubTask,
+  handleToggleSubTask,
+  SubTaskProps,
+} from "@/lib/actions/subTasks";
 import { cn } from "@/lib/utils";
 import { CheckSquare, X } from "lucide-react";
 
@@ -10,14 +16,46 @@ type Props = {
   index: number;
 };
 
-export default function SubTaskCard({
+type CompProps = {
+  setFormData: SubTaskProps["setFormData"];
+  subTasks?: ISubTask[];
+};
+
+export default function SubTask({ setFormData, subTasks }: CompProps) {
+  return (
+    subTasks &&
+    subTasks.length > 0 && (
+      <Card>
+        <CardContent className="p-3 space-y-2">
+          {subTasks.map((subTask, index) => (
+            <SubTaskCard
+              subTask={subTask}
+              key={index}
+              handleRemoveSubTask={(i) =>
+                handleRemoveSubTask({
+                  index: i,
+                  subTasks,
+                  setFormData,
+                })
+              }
+              handleToggleSubTask={(i) => handleToggleSubTask(setFormData, i)}
+              index={index}
+            />
+          ))}
+        </CardContent>
+      </Card>
+    )
+  );
+}
+
+function SubTaskCard({
   subTask,
   handleRemoveSubTask,
   handleToggleSubTask,
   index,
 }: Props) {
   return (
-    <div className="flex items-center gap-2 group">
+    <div className="flex animate-in animation-duration-[200ms] items-center gap-2 group">
       <button
         type="button"
         onClick={() => handleToggleSubTask(index)}
@@ -44,7 +82,7 @@ export default function SubTaskCard({
         variant="ghost"
         size="sm"
         onClick={() => handleRemoveSubTask(index)}
-        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 h-8 w-8 p-0"
+        className="transition-opacity flex-shrink-0 h-8 w-8 p-0"
       >
         <X className="h-3 w-3" />
       </Button>
