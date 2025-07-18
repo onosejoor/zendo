@@ -1,21 +1,18 @@
+import { SubTaskCard } from "@/app/dashboard/_components/sub-task-card";
 import { formatDate } from "@/app/dashboard/tasks/_components/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { toggleSubTasks } from "@/lib/actions/subTasks";
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { getStatusBadge } from "@/lib/functions";
 import { checkExpired, cn } from "@/lib/utils";
 import {
   Activity,
   Calendar,
-  CheckSquare,
   FileText,
   Link2Icon,
   LinkIcon,
   Timer,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -30,27 +27,6 @@ export default function TaskHeader({ task }: { task: ITask }) {
       const newTask = { ...task, status: newStatus };
 
       const { message, success } = await updateTask(newTask as ITask);
-
-      const options = success ? "success" : "error";
-
-      if (success) {
-        mutateTasks(task._id, task.projectId);
-      }
-      toast[options](message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "internal error");
-    }
-  };
-
-  const handleToggleSubTask = async (index: number) => {
-    try {
-      const newStatus = task.subTasks?.[index].completed ? false : true;
-
-      const { message, success } = await toggleSubTasks(
-        index,
-        task._id,
-        newStatus
-      );
 
       const options = success ? "success" : "error";
 
@@ -177,45 +153,14 @@ export default function TaskHeader({ task }: { task: ITask }) {
       {task.subTasks && task.subTasks.length > 0 && (
         <Card>
           <CardContent className="p-6 space-y-3">
-            <h3 className="font-semibold">SubTasks</h3>
+            <div className="flex gap-2 items-center">
+              <div className="size-2.5 rounded-full bg-accent-blue animate-bounce"></div>{" "}
+              <h3 className="font-semibold">SubTasks</h3>
+            </div>
 
             <div className="grid gap-5">
               {task.subTasks.map((subTask, i) => (
-                <div
-                  key={i}
-                  className="flex animate-in animation-duration-[200ms] items-center gap-2 group"
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleToggleSubTask(i)}
-                    className="flex-shrink-0"
-                  >
-                    <CheckSquare
-                      className={`h-4 w-4 ${
-                        subTask.completed
-                          ? "text-green-600 fill-green-100"
-                          : "text-gray-400"
-                      }`}
-                    />
-                  </button>
-                  <Input
-                    readOnly
-                    value={subTask.title}
-                    className={cn(
-                      `flex-1 h-8`,
-                      subTask.completed ? "line-through text-gray-500" : ""
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    // onClick={}
-                    className="transition-opacity flex-shrink-0 h-8 w-8 p-0"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
+                <SubTaskCard key={i} subTask={subTask} task={task} />
               ))}
             </div>
           </CardContent>

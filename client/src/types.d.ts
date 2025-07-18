@@ -10,6 +10,7 @@ declare global {
     created_at: Date;
   }
   interface ISubTask {
+    _id: string;
     title: string;
     completed: boolean;
   }

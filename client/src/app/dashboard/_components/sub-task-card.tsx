@@ -3,11 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   handleRemoveSubTask,
-  handleToggleSubTask,
   SubTaskProps,
+  toggleSubTask,
+} from "@/lib/actions/sub-task-states";
+import {
+  handleDeleteSubTask,
+  handleToggleSubTask,
 } from "@/lib/actions/subTasks";
 import { cn } from "@/lib/utils";
-import { CheckSquare, X } from "lucide-react";
+import { X } from "lucide-react";
+import { useState } from "react";
 
 type Props = {
   subTask: ISubTask;
@@ -28,7 +33,7 @@ export default function SubTask({ setFormData, subTasks }: CompProps) {
       <Card>
         <CardContent className="p-3 space-y-2">
           {subTasks.map((subTask, index) => (
-            <SubTaskCard
+            <SubTaskCardMain
               subTask={subTask}
               key={index}
               handleRemoveSubTask={(i) =>
@@ -38,7 +43,7 @@ export default function SubTask({ setFormData, subTasks }: CompProps) {
                   setFormData,
                 })
               }
-              handleToggleSubTask={(i) => handleToggleSubTask(setFormData, i)}
+              handleToggleSubTask={(i) => toggleSubTask(setFormData, i)}
               index={index}
             />
           ))}
@@ -48,7 +53,7 @@ export default function SubTask({ setFormData, subTasks }: CompProps) {
   );
 }
 
-function SubTaskCard({
+function SubTaskCardMain({
   subTask,
   handleRemoveSubTask,
   handleToggleSubTask,
@@ -56,19 +61,13 @@ function SubTaskCard({
 }: Props) {
   return (
     <div className="flex animate-in animation-duration-[200ms] items-center gap-2 group">
-      <button
-        type="button"
-        onClick={() => handleToggleSubTask(index)}
-        className="flex-shrink-0"
-      >
-        <CheckSquare
-          className={`h-4 w-4 ${
-            subTask.completed
-              ? "text-green-600 fill-green-100"
-              : "text-gray-400"
-          }`}
-        />
-      </button>
+      <Input
+        type="checkbox"
+        checked={subTask.completed}
+        onChange={() => handleToggleSubTask(index)}
+        className="size-4 text-green-600 rounded border-gray-300 focus:ring-accent-blue"
+      />
+
       <Input
         readOnly
         value={subTask.title}
@@ -89,3 +88,51 @@ function SubTaskCard({
     </div>
   );
 }
+
+type SubTaskExportProps = {
+  subTask: ISubTask;
+  task: ITask;
+};
+
+export const SubTaskCard = ({ subTask, task }: SubTaskExportProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const deleteSubtask = async () => {
+    setIsLoading(true);
+    await handleDeleteSubTask(subTask._id, task._id, task.projectId);
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="flex animate-in animation-duration-[200ms] items-center gap-2 group">
+      <Input
+        type="checkbox"
+        checked={subTask.completed}
+        onChange={() => handleToggleSubTask(subTask._id, task)}
+        className="size-4 text-green-600 rounded border-gray-300 focus:ring-accent-blue"
+      />
+      <Input
+        readOnly
+        value={subTask.title}
+        className={cn(
+          `flex-1 h-8`,
+          subTask.completed && "line-through text-gray-500"
+        )}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => deleteSubtask()}
+        className="transition-opacity flex-shrink-0 h-8 w-8 p-0"
+      >
+        <X
+          className={cn(
+            "h-3 w-3",
+            isLoading && "animate-spin animation-duration-[500ms]"
+          )}
+        />
+      </Button>
+    </div>
+  );
+};

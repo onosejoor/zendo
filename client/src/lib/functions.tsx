@@ -36,9 +36,6 @@ export const getStatusBadge = (
 };
 
 export function getTextNewLength({ id, value }: { id: string; value: string }) {
-
-
-
   if (value.length > 70 && (id === "title" || id === "subtask")) {
     return { value: value.slice(0, 70), isLong: true };
   }
@@ -48,3 +45,17 @@ export function getTextNewLength({ id, value }: { id: string; value: string }) {
   }
   return { value, isLong: false };
 }
+
+export const generateId = () => {
+  const chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+
+  let id = "";
+
+  while (id.length < 16) {
+    const randomStr = chars[Math.floor(Math.random() * chars.length)];
+
+    id += randomStr;
+  }
+
+  return id;
+};

@@ -28,7 +28,7 @@ import { useProjects } from "@/hooks/use-projects";
 import { mutateTasks } from "@/lib/actions/tasks";
 import { getTextNewLength } from "@/lib/functions";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
-import { addSubTask, SubTaskProps } from "@/lib/actions/subTasks";
+import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 
 interface CreateTaskDialogProps {
   open: boolean;

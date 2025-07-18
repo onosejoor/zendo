@@ -26,7 +26,7 @@ import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
 import { getTextNewLength } from "@/lib/functions";
 import { Plus } from "lucide-react";
-import { addSubTask, SubTaskProps } from "@/lib/actions/subTasks";
+import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
 
 interface EditTaskDialogProps {
