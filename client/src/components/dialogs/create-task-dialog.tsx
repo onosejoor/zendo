@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { type ChangeEvent, useState } from "react";
+
+import { ChangeEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -113,12 +114,13 @@ export function CreateTaskDialog({
         dueDate: new Date(dueDate),
         subTasks,
       });
+
       const options = data.success ? "success" : "error";
       toast[options](data.message);
       if (data.success) {
-        resetForm();
         onOpenChange(false);
         mutateTasks("", projectId);
+        resetForm()
       }
     } catch (error) {
       toast.error(
@@ -131,11 +133,12 @@ export function CreateTaskDialog({
   };
 
   const { projects = [] } = data || {};
+
   const disabledSelect = loading || projects.length < 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
@@ -252,10 +255,7 @@ export function CreateTaskDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                resetForm();
-                onOpenChange(false);
-              }}
+              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
