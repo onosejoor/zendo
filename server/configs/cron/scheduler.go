@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"main/db"
+	"main/models"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -12,8 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type ReminderProps struct {
+	TaskID   primitive.ObjectID
+	DueDate  time.Time
+	UserID   primitive.ObjectID
+	TaskName string
+	Ctx      context.Context
+}
+
 var scheduler *gocron.Scheduler
 
+// this function initializes the cronjobs in the backhround
 func InitializeGoCron() {
 	if scheduler != nil {
 		return
@@ -24,69 +34,104 @@ func InitializeGoCron() {
 	log.Println("Cron scheduler active")
 }
 
-func ScheduleReminderJob(taskID primitive.ObjectID, dueDate time.Time, userID primitive.ObjectID, userEmail string) (*gocron.Job, error) {
-	reminderTime := calculateReminderTime(dueDate)
+// a method to schedule a reminder
+func (params ReminderProps) ScheduleReminderJob() error {
+	reminderTime := calculateReminderTime(params.DueDate)
 
-	if reminderTime.Before(time.Now()) {
-		log.Printf("Reminder for task %s is in the past or too soon. Handling immediately. \n", taskID)
-		return nil, fmt.Errorf("due date is too soon to schedule a future reminder")
+	if reminderTime.Before(time.Now().Local()) {
+		log.Printf("Reminder for task %s is in the past or too soon. Handling immediately. \n", params.TaskID)
+		return fmt.Errorf("due date is too soon to schedule a future reminder")
 	}
 
-	job, err := scheduler.
-		Every(1).Minute().
-		At(reminderTime.Format("15:04:05")).
-		Tag(taskID.Hex()).
-		Do(sendEmailReminder, taskID, userID, userEmail, dueDate)
-
+	_, err := scheduler.Every(1).Day().
+		Tag(params.TaskID.Hex()).
+		At(reminderTime).
+		Do(params.sendEmailReminder)
 	if err != nil {
-		log.Printf("Error scheduling reminder for task %s: %v", taskID, err)
-		return nil, err
+		log.Printf("Error scheduling reminder for task %s: %v", params.TaskID, err)
+		return err
 	}
 
-	log.Printf("Reminder scheduled for task %s at %s \n", taskID, reminderTime.Format(time.RFC3339))
-	return job, nil
+	log.Printf("Reminder scheduled for task %s at %s \n", params.TaskID, reminderTime.Format(time.RFC3339))
+	return nil
 }
+func calculateReminderTime(due time.Time) time.Time {
+	diff := time.Until(due)
+	switch {
+	case diff <= 5*time.Minute:
+		adjusted := time.Now().Add(30 * time.Second)
+		log.Println("🟡 Due soon (<=5min). Reminder in 30s:", adjusted)
+		return adjusted
 
-func calculateReminderTime(dueDate time.Time) time.Time {
-	diff := time.Until(dueDate)
+	case diff <= 1*time.Hour:
+		adjusted := due.Add(-diff / 2)
+		log.Println("🟠 Due within an hour. Reminder at midpoint:", adjusted)
+		return adjusted
 
-	if diff <= 5*time.Minute {
-		// If less than or equal to 5 minutes, remind at 5 minutes before
-		return dueDate.Add(-5 * time.Minute)
-	} else {
-		// Otherwise, remind at 1 hour before
-		return dueDate.Add(-1 * time.Hour)
+	default:
+		adjusted := due.Add(-1 * time.Hour)
+		log.Println("🟢 Due in > 1hr. Reminder 1hr before:", adjusted)
+		return adjusted
 	}
 }
 
-func sendEmailReminder(taskID primitive.ObjectID, userID primitive.ObjectID, userEmail string, dueDate time.Time) {
-	log.Printf("Sending reminder for task ID: %s to user %s (%s). Due: %s", taskID, userID, userEmail, dueDate.Format(time.RFC822))
+func (params ReminderProps) sendEmailReminder() {
+	client := db.GetClient()
+	tasksCollection := client.Collection("tasks")
+	usersCollection := client.Collection("users")
 
-	// send mail here ....
+	user, err := models.GetUser(params.UserID, usersCollection, params.Ctx)
+	if err != nil {
+		log.Println("[Reminder] Error getting user data:", err)
+		return
+	}
 
-	// if no error then
+	log.Printf("[Reminder] Sending for task ID: %s to user. Due: %s",
+		params.TaskID.Hex(), params.DueDate.Format(time.RFC822))
 
-	client := db.GetClient().Collection("tasks")
+	reminderSent, err := models.GetTaskReminderSent(params.TaskID, tasksCollection, params.Ctx)
+	if err != nil {
+		log.Println("[Reminder] Error fetching task reminder flag:", err)
+		return
+	}
+
+	if reminderSent {
+		log.Println("[Reminder] Already sent for task:", params.TaskID.Hex())
+		return
+	}
+
+	htmlTemplate := GenerateHtmlTemplate(EmailProps{
+		Username: user.Username,
+		TaskId:   params.TaskID.Hex(),
+		DueDate:  params.DueDate,
+		TaskName: params.TaskName,
+	})
+
+	sendErr := SendEmailToGmail(user.Email, "Task Getting Due", htmlTemplate)
+	if sendErr != nil {
+		log.Printf("[Reminder] Initial email send failed: %v", sendErr)
+		time.Sleep(5 * time.Second)
+
+		sendErr = SendEmailToGmail(user.Email, "Task Getting Due", htmlTemplate)
+		if sendErr != nil {
+			log.Printf("[Reminder] Retry email send failed: %v", sendErr)
+			return
+		}
+	}
 
 	filter := bson.M{
-		"_id":    taskID,
-		"userId": userID,
+		"_id":    params.TaskID,
+		"userId": params.UserID,
 	}
 
-	_, err := client.UpdateOne(context.TODO(), filter, bson.M{
+	_, err = tasksCollection.UpdateOne(params.Ctx, filter, bson.M{
 		"$set": bson.M{
 			"reminder_sent": true,
-		}})
+		},
+	})
 	if err != nil {
-		log.Println("Error updating task")
+		log.Printf("[Reminder] Error updating task %s for user %s: %v", params.TaskID.Hex(), params.UserID.Hex(), err)
+	} else {
+		log.Printf("[Reminder] Email sent successfully and reminder marked as sent for task %s", params.TaskID.Hex())
 	}
-
-	// TODO: Implement your actual email sending logic here
-	// Example: notifications.SendEmail(userEmail, "Task Reminder", fmt.Sprintf("Your task '%s' is due soon!", taskID))
-
-	// After sending, you might want to mark the reminder as sent in your DB
-	// to prevent duplicate reminders if your scheduler somehow re-runs.
-	// As discussed, this isn't strictly necessary if your logic only schedules one-offs
-	// and doesn't reschedule past events, but it's good for robustness.
-	// For instance, you could update the task: task.ReminderSent = true
 }

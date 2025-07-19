@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"main/db"
 	"os"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Task struct {
@@ -31,8 +34,8 @@ type SubTask struct {
 }
 
 func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any, err error) {
-
-	if p.ProjectId != nil {
+	log.Println(p.ProjectId != nil && *p.ProjectId != primitive.NilObjectID, p.ProjectId != nil, *p.ProjectId != primitive.NilObjectID, p.ProjectId, *p.ProjectId)
+	if p.ProjectId != nil && *p.ProjectId != primitive.NilObjectID {
 		id, err := p.CreateTaskWithTransaction(ctx, userId)
 		if err != nil {
 			return nil, err
@@ -59,6 +62,34 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	}
 
 	return newTaskId.InsertedID, nil
+}
+
+func GetTaskReminderSent(taskId primitive.ObjectID, collection *mongo.Collection, ctx context.Context) (bool, error) {
+	var result bson.M
+
+	projection := bson.M{"reminder_sent": 1, "_id": 0}
+
+	opts := options.FindOne().SetProjection(projection)
+
+	err := collection.FindOne(
+		ctx,
+		bson.M{"_id": taskId}, opts,
+	).Decode(&result)
+
+	if err != nil {
+		if err.Error() == mongo.ErrNoDocuments.Error() {
+			return true, err
+		}
+
+		return false, err
+	}
+
+	reminderSent, ok := result["reminder_sent"].(bool)
+	if !ok {
+		return false, fmt.Errorf("field 'reminder_sent' not found or not a bool")
+	}
+
+	return reminderSent, nil
 }
 
 func GetCompletionRateAndDueDate(t []Task) (int, int, int) {

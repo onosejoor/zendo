@@ -6,8 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,4 +60,23 @@ func (p UserPayload) CreateUser(collection *mongo.Collection, ctx context.Contex
 	}
 
 	return data.InsertedID.(primitive.ObjectID), nil
+}
+
+type GetUserPayload struct {
+	Email    string `bson:"email" json:"email"`
+	Username string `bson:"username" json:"username"`
+}
+
+func GetUser(userId primitive.ObjectID, collection *mongo.Collection, ctx context.Context) (data GetUserPayload, err error) {
+	var user GetUserPayload
+	projection := bson.M{"email": 1, "username": 1, "_id": 0}
+
+	opts := options.FindOne().SetProjection(projection)
+
+	err = collection.FindOne(ctx, bson.M{"_id": userId}, opts).Decode(&user)
+	if err != nil {
+		return GetUserPayload{}, err
+	}
+
+	return user, nil
 }

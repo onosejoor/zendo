@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"main/configs/cron"
 	redis "main/configs/redis"
 	"main/db"
 	"main/handlers"
@@ -87,6 +88,7 @@ func main() {
 	projectRoute.Delete("/all", project_controllers.DeleteAllProjectsController)
 	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
 
+	cron.InitializeGoCron()
 	redis.GetRedisClient()
 	db.GetClient()
 
