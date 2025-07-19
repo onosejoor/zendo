@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"main/db"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -54,8 +55,8 @@ func DeleteAllProjectsWithTransaction(ctx context.Context, user *UserRes) (Delet
 	}
 	defer session.EndSession(ctx)
 
-	tasksCollection := client.Database("zendo").Collection("tasks")
-	projectsCollection := client.Database("zendo").Collection("projects")
+	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
+	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		cursor, err := projectsCollection.Find(sessCtx, bson.M{"ownerId": user.ID})

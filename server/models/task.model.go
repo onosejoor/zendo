@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"main/db"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,15 +12,16 @@ import (
 )
 
 type Task struct {
-	ID          primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title       string              `json:"title" bson:"title" validate:"required"`
-	Description string              `json:"description" bson:"description" validate:"required"`
-	UserId      primitive.ObjectID  `json:"userId" bson:"userId"`
-	SubTasks    []SubTask           `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId   *primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate     time.Time           `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status      string              `json:"status" bson:"status" validate:"required"`
-	CreatedAt   time.Time           `json:"created_at" bson:"created_at"`
+	ID           primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title        string              `json:"title" bson:"title" validate:"required"`
+	Description  string              `json:"description" bson:"description" validate:"required"`
+	ReminderSent bool                `json:"-" bson:"reminder_sent"`
+	UserId       primitive.ObjectID  `json:"userId" bson:"userId"`
+	SubTasks     []SubTask           `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId    *primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate      time.Time           `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status       string              `json:"status" bson:"status" validate:"required"`
+	CreatedAt    time.Time           `json:"created_at" bson:"created_at"`
 }
 
 type SubTask struct {
@@ -42,14 +44,15 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	collection := client.Collection("tasks")
 
 	newTaskId, err := collection.InsertOne(ctx, Task{
-		Title:       p.Title,
-		Description: p.Description,
-		UserId:      userId,
-		SubTasks:    p.SubTasks,
-		ProjectId:   p.ProjectId,
-		DueDate:     p.DueDate,
-		Status:      p.Status,
-		CreatedAt:   time.Now(),
+		Title:        p.Title,
+		Description:  p.Description,
+		UserId:       userId,
+		SubTasks:     p.SubTasks,
+		ProjectId:    p.ProjectId,
+		DueDate:      p.DueDate,
+		ReminderSent: false,
+		Status:       p.Status,
+		CreatedAt:    time.Now(),
 	})
 	if err != nil {
 		return nil, err
@@ -92,8 +95,8 @@ func (task Task) CreateTaskWithTransaction(ctx context.Context, userId primitive
 	}
 	defer session.EndSession(ctx)
 
-	tasksCollection := client.Database("zendo").Collection("tasks")
-	projectsCollection := client.Database("zendo").Collection("projects")
+	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
+	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		id, err := tasksCollection.InsertOne(sessCtx, Task{
@@ -136,8 +139,8 @@ func (task Task) DeleteTaskWithTransaction(ctx context.Context) error {
 	}
 	defer session.EndSession(ctx)
 
-	tasksCollection := client.Database("zendo").Collection("tasks")
-	projectsCollection := client.Database("zendo").Collection("projects")
+	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
+	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		_, err := tasksCollection.DeleteOne(sessCtx, bson.M{"_id": id})
@@ -169,8 +172,8 @@ func DeleteAllTasksWithTransaction(ctx context.Context, user *UserRes) error {
 	}
 	defer session.EndSession(ctx)
 
-	tasksCollection := client.Database("zendo").Collection("tasks")
-	projectsCollection := client.Database("zendo").Collection("projects")
+	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
+	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		cursor, err := tasksCollection.Find(sessCtx, bson.M{"userId": user.ID})

@@ -22,7 +22,7 @@ func GetClient() *mongo.Database {
 	defer clientMu.Unlock()
 
 	if client != nil {
-		return client.Database("zendo")
+		return client.Database(os.Getenv("DATABASE"))
 	}
 
 	MONGODB_URL := os.Getenv("MONGODB_URL")
@@ -42,7 +42,7 @@ func GetClient() *mongo.Database {
 
 	log.Println("Connected to MongoDB!")
 
-	return client.Database("zendo")
+	return client.Database(os.Getenv("DATABASE"))
 }
 
 func GetClientWithoutDB() *mongo.Client {
