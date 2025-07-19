@@ -27,9 +27,10 @@ import { axiosInstance } from "@/api/api";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
 import { mutateTasks } from "@/lib/actions/tasks";
-import { getTextNewLength } from "@/lib/functions";
+import { getLocalISOString, getTextNewLength } from "@/lib/functions";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
+import dayjs from "dayjs";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -45,7 +46,7 @@ export function CreateTaskDialog({
     description: "",
     status: "pending",
     projectId: "",
-    dueDate: new Date().toISOString().slice(0, 16),
+    dueDate: getLocalISOString(),
     subTasks: [],
   });
 
@@ -111,8 +112,9 @@ export function CreateTaskDialog({
     try {
       const { data } = await axiosInstance.post<APIRes>("/tasks/new", {
         ...formData,
-        dueDate: new Date(dueDate),
+        dueDate: dayjs(dueDate).format(),
         subTasks,
+        ...(projectId && { projectId }),
       });
 
       const options = data.success ? "success" : "error";
@@ -120,7 +122,7 @@ export function CreateTaskDialog({
       if (data.success) {
         onOpenChange(false);
         mutateTasks("", projectId);
-        resetForm()
+        resetForm();
       }
     } catch (error) {
       toast.error(
@@ -174,7 +176,7 @@ export function CreateTaskDialog({
               <Input
                 id="dueDate"
                 type="datetime-local"
-                min={new Date().toISOString().slice(0, 16)}
+                min={getLocalISOString()}
                 value={dueDate as string}
                 onChange={handleChange}
                 required

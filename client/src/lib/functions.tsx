@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { checkExpired } from "./utils";
+import dayjs from "dayjs";
 
 export const getStatusBadge = (
   status: ITask["status"],
@@ -59,3 +60,8 @@ export const generateId = () => {
 
   return id;
 };
+
+export function getLocalISOString() {
+  const now = dayjs();
+  return now.format("YYYY-MM-DDTHH:mm");
+}

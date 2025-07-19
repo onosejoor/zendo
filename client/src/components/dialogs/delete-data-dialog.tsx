@@ -61,7 +61,7 @@ export default function DeleteDataDialog({ id, type, card = false }: Props) {
           variant={card ? "ghost" : "outline"}
         >
           <Trash2 className="h-4 w-4 " />
-          Delete
+          {loading ? "Deleting... " : "Delete"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

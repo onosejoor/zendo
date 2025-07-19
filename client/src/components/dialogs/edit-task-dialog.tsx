@@ -28,6 +28,7 @@ import { getTextNewLength } from "@/lib/functions";
 import { Plus } from "lucide-react";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
+import dayjs from "dayjs";
 
 interface EditTaskDialogProps {
   task: ITask;
@@ -40,7 +41,10 @@ export function EditTaskDialog({
   open,
   onOpenChange,
 }: EditTaskDialogProps) {
-  const [formData, setFormData] = useState(task);
+  const [formData, setFormData] = useState<ITask>({
+    ...task,
+    dueDate: dayjs(task.dueDate).format("YYYY-MM-DDTHH:mm"),
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
 
@@ -83,7 +87,10 @@ export function EditTaskDialog({
 
     setIsLoading(true);
     try {
-      const { success, message } = await updateTask(formData);
+      const { success, message } = await updateTask({
+        ...formData,
+        ...(dueDate !== task.dueDate && { dueDate }),
+      });
 
       const options = success ? "success" : "error";
 
