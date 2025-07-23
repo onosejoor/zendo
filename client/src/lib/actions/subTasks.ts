@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import { axiosInstance } from "@/api/api";
-import { isAxiosError } from "axios";
 import { mutateTasks } from "./tasks";
+import { getErrorMesage } from "../utils";
 
 export async function toggleSubTasks(
   subTaskId: ISubTask["_id"],
@@ -15,15 +15,9 @@ export async function toggleSubTasks(
     );
     return { success: data.success, message: data.message };
   } catch (error) {
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }
@@ -38,15 +32,9 @@ export async function deleteSubTasks(
     );
     return { success: data.success, message: data.message };
   } catch (error) {
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }

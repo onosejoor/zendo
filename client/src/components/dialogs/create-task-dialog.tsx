@@ -23,14 +23,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { axiosInstance } from "@/api/api";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
-import { mutateTasks } from "@/lib/actions/tasks";
+import { createTask, mutateTasks } from "@/lib/actions/tasks";
 import { getLocalISOString, getTextNewLength } from "@/lib/functions";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
-import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -44,7 +43,7 @@ export function CreateTaskDialog({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "pending",
+    status: "pending" as Status,
     projectId: "",
     dueDate: getLocalISOString(),
     subTasks: [],
@@ -52,6 +51,8 @@ export function CreateTaskDialog({
 
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   const { title, description, status, dueDate, projectId, subTasks } = formData;
   const isDisabled =
@@ -106,23 +107,19 @@ export function CreateTaskDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !description.trim() || !dueDate) return;
 
     setIsLoading(true);
     try {
-      const { data } = await axiosInstance.post<APIRes>("/tasks/new", {
-        ...formData,
-        dueDate: dayjs(dueDate).format(),
-        subTasks,
-        ...(projectId && { projectId }),
-      });
+      const { success, message, taskId } = await createTask(formData, subTasks);
 
-      const options = data.success ? "success" : "error";
-      toast[options](data.message);
-      if (data.success) {
+      const options = success ? "success" : "error";
+      toast[options](message);
+
+      if (success) {
         onOpenChange(false);
         mutateTasks("", projectId);
         resetForm();
+        router.push(`/dashboard/tasks/${taskId}`);
       }
     } catch (error) {
       toast.error(

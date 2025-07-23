@@ -94,7 +94,7 @@ const EMAIL_TEMPLATE = `
     <div class="email-container">
         <p class="greeting">Hi %s,</p>
 
-        <p class="message-text">🔐 You're almost there! Click the button below to verify your email and sign in securely:</p>
+        <p class="message-text">You're almost there! Click the button below to verify your email and sign in securely:</p>
 
         <div class="action-section">
             <a href="%s" class="button">Verify Email & Sign In</a>

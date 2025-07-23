@@ -14,16 +14,16 @@ import (
 )
 
 type Task struct {
-	ID           primitive.ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title        string              `json:"title" bson:"title" validate:"required"`
-	Description  string              `json:"description" bson:"description" validate:"required"`
-	ReminderSent bool                `json:"-" bson:"reminder_sent"`
-	UserId       primitive.ObjectID  `json:"userId" bson:"userId"`
-	SubTasks     []SubTask           `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId    *primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate      time.Time           `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status       string              `json:"status" bson:"status" validate:"required"`
-	CreatedAt    time.Time           `json:"created_at" bson:"created_at"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title        string             `json:"title" bson:"title" validate:"required"`
+	Description  string             `json:"description" bson:"description" validate:"required"`
+	ReminderSent bool               `json:"-" bson:"reminder_sent"`
+	UserId       primitive.ObjectID `json:"userId" bson:"userId"`
+	SubTasks     []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId    primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate      time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status       string             `json:"status" bson:"status" validate:"required"`
+	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 }
 
 type SubTask struct {
@@ -33,7 +33,7 @@ type SubTask struct {
 }
 
 func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any, err error) {
-	if p.ProjectId != nil && *p.ProjectId != primitive.NilObjectID {
+	if p.ProjectId != primitive.NilObjectID {
 		id, err := p.CreateTaskWithTransaction(ctx, userId)
 		if err != nil {
 			return nil, err
@@ -49,7 +49,6 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 		Description:  p.Description,
 		UserId:       userId,
 		SubTasks:     p.SubTasks,
-		ProjectId:    p.ProjectId,
 		DueDate:      p.DueDate,
 		ReminderSent: false,
 		Status:       p.Status,
@@ -217,8 +216,8 @@ func DeleteAllTasksWithTransaction(ctx context.Context, user *UserRes) error {
 			if err := cursor.Decode(&task); err != nil {
 				return nil, err
 			}
-			if task.ProjectId != nil {
-				projectTaskCount[*task.ProjectId]++
+			if task.ProjectId != primitive.NilObjectID {
+				projectTaskCount[task.ProjectId]++
 			}
 		}
 

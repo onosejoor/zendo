@@ -1,7 +1,7 @@
 import { axiosInstance } from "@/api/api";
-import { isAxiosError } from "axios";
 import { mutate } from "swr";
 import { toast } from "sonner";
+import { getErrorMesage } from "../utils";
 
 type APIRes = {
   success: boolean;
@@ -21,15 +21,9 @@ export async function createProject(project: CreateProps) {
     );
     return { success: data.success, message: data.message, id: data.projectId };
   } catch (error) {
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }
@@ -44,15 +38,9 @@ export async function updateProject(project: Partial<IProject>) {
   } catch (error) {
     console.log(error);
 
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }
@@ -67,15 +55,9 @@ export async function deleteProject(id: IProject["_id"]) {
   } catch (error) {
     console.log("Error deleting project: ", error);
 
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }

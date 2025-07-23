@@ -30,8 +30,8 @@ export default function SubTask({ setFormData, subTasks }: CompProps) {
   return (
     subTasks &&
     subTasks.length > 0 && (
-      <Card>
-        <CardContent className="p-3 space-y-2">
+      <Card className="py-2.5 !border-0 rounded-none w-[90%] ml-auto !border-l border-gray-300 shadow-none">
+        <CardContent className="space-y-3">
           {subTasks.map((subTask, index) => (
             <SubTaskCardMain
               subTask={subTask}

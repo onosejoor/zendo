@@ -5,7 +5,7 @@ import { postToken } from "@/lib/actions/token";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export default function VerifyEmailBtn() {
+export default function VerifyEmailBtn({ homePage }: { homePage?: boolean }) {
   const [loading, setLoading] = useState(false);
 
   const sendNewToken = async () => {
@@ -14,12 +14,12 @@ export default function VerifyEmailBtn() {
     toast(data.message);
     setLoading(false);
   };
-  
+
   return (
     <Button
       onClick={async () => await sendNewToken()}
-      variant="outline"
-      className="border-gray-300 w-fit text-gray-700 hover:bg-gray-50 px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+      variant={homePage ? "default" : "outline"}
+      className="border-gray-300 w-fit text-gray-700 hover:bg-gray-50 hover:text-black px-6 py-3 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
     >
       {loading ? "Verifying..." : " Verify Email"}
     </Button>

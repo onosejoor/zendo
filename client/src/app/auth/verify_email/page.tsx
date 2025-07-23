@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import WaitComponant from "./_components/wait-page";
 import Loader from "@/components/loader-card";
 import ErrorDisplay from "@/components/error-display";
+import { notFound } from "next/navigation";
 
 type Props = {
   searchParams: Promise<{ token: string }>;
@@ -25,5 +26,5 @@ function getComponentToDisplay(token: string) {
       return <ErrorDisplay title="Invalid Token" />;
     }
   }
-  return <></>;
+   notFound();
 }

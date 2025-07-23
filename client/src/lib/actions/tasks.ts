@@ -1,12 +1,34 @@
 import { axiosInstance } from "@/api/api";
-import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import { mutate } from "swr";
+import { getErrorMesage } from "../utils";
+import dayjs from "dayjs";
 
-type APIRes = {
-  success: boolean;
-  message: string;
+type APIResponse = APIRes & {
+  taskId: string;
 };
+
+export async function createTask(
+  formData: Partial<ITask>,
+  subTasks: ISubTask[]
+) {
+  try {
+    const { data } = await axiosInstance.post<APIResponse>("/tasks/new", {
+      ...formData,
+      dueDate: dayjs(formData.dueDate).format(),
+      subTasks,
+      ...(formData.projectId && { projectId: formData.projectId }),
+    });
+
+    return data;
+  } catch (error) {
+    return {
+      taskId: "",
+      success: false,
+      message: getErrorMesage(error),
+    };
+  }
+}
 
 export async function updateTask(task: Partial<ITask>) {
   try {
@@ -16,15 +38,9 @@ export async function updateTask(task: Partial<ITask>) {
     });
     return { success: data.success, message: data.message };
   } catch (error) {
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }
@@ -34,15 +50,9 @@ export async function deleteTask(id: ITask["_id"]) {
     const { data } = await axiosInstance.delete<APIRes>(`/tasks/${id}`);
     return { success: data.success, message: data.message };
   } catch (error) {
-    if (isAxiosError(error)) {
-      return {
-        success: false,
-        message: error.response?.data.message || error.response?.data,
-      };
-    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Internal error",
+      message: getErrorMesage(error),
     };
   }
 }

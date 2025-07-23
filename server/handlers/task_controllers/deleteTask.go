@@ -37,7 +37,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if task.ProjectId != nil {
+	if task.ProjectId != primitive.NilObjectID {
 		err := task.DeleteTaskWithTransaction(ctx.Context())
 		if err != nil {
 			log.Println("Error deleting task: ", err)

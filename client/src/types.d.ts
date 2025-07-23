@@ -1,4 +1,5 @@
 declare global {
+  type Status = "in-progress" | "completed" | "pending";
   interface ITask {
     _id: string;
     title: string;
@@ -6,7 +7,7 @@ declare global {
     subTasks?: ISubTask[];
     projectId?: string;
     dueDate: Date | string;
-    status: "in-progress" | "completed" | "pending";
+    status: Status;
     created_at: Date;
   }
   interface ISubTask {
@@ -42,7 +43,7 @@ declare global {
 
   interface IUser {
     _id: string;
-    email_verified: boolean,
+    email_verified: boolean;
     username: string;
     email: string;
     avatar?: string;

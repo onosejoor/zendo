@@ -3,6 +3,7 @@ package email_controllers
 import (
 	"context"
 	"log"
+	"main/configs/redis"
 	"main/cookies"
 	"main/db"
 	"main/models"
@@ -47,6 +48,8 @@ func HandleVerifyEmailController(ctx *fiber.Ctx) error {
 			"message": "Internal error",
 		})
 	}
+
+	_ = redis.DeleteUserCache(ctx.Context(), user.ID.Hex())
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "User verified successfully",
 	})

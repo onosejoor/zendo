@@ -1,5 +1,6 @@
 import { axiosInstance } from "@/api/api";
 import { getErrorMesage } from "../utils";
+import { mutate } from "swr";
 
 export async function sendEmailToken(token: string) {
   try {
@@ -21,7 +22,11 @@ export async function postToken() {
       `/auth/verify_email`
     );
 
+    if (data.success) {
+      mutate("/auth/user")
+    }
     return data;
+    
   } catch (error) {
     console.log("SEND NEW TOKEN TO EMAIL ERROR: ", error);
     

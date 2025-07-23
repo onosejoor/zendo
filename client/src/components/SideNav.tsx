@@ -140,7 +140,7 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
             <p className="font-medium capitalize">
               Your Email has not been verified yet. verify email now.
             </p>
-            <VerifyEmailBtn />
+            <VerifyEmailBtn homePage />
           </div>
         )}
         <div className="sticky top-0 z-40 flex h-16 items-center justify-between bg-white border-b px-4 lg:px-6">
