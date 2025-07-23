@@ -55,7 +55,30 @@ func HandleSignup(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err = cookies.CreateSession(models.UserRes{Username: body.Username, ID: id}, ctx)
+	user := models.UserRes{Username: body.Username, ID: id, EmailVerified: false}
+
+	token, err := cookies.GenerateEmailToken(&user)
+	if err != nil {
+		log.Println("Error Generating email token: ", err.Error())
+		return ctx.Status(201).JSON(fiber.Map{
+			"success": true,
+			"message": "User created successfully, but email token not sent",
+		})
+	}
+
+	err = cookies.SendEmail(token, models.UserPayload{
+		Username: body.Username,
+		Email:    body.Email,
+	})
+	if err != nil {
+		log.Println("Error sending email: ", err.Error())
+		return ctx.Status(201).JSON(fiber.Map{
+			"success": true,
+			"message": "User created successfully, but email not verified",
+		})
+	}
+
+	err = cookies.CreateSession(user, ctx)
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": true,
@@ -63,9 +86,9 @@ func HandleSignup(ctx *fiber.Ctx) error {
 		})
 	}
 
-	ctx.Status(201).JSON(fiber.Map{
+	return ctx.Status(201).JSON(fiber.Map{
 		"success": true,
-		"message": "User created successfully",
+		"message": "Verification Link Sent To Email",
 	})
-	return nil
+
 }

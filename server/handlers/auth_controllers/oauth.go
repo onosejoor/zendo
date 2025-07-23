@@ -58,18 +58,19 @@ func createUser(p configs.GooglePayload, collection *mongo.Collection, ctx *fibe
 
 	username := generateUsername(p.Email)
 	data, err := collection.InsertOne(ctx.Context(), models.User{
-		Email:     p.Email,
-		Username:  username,
-		Avatar:    p.Picture,
-		Password:  "",
-		CreatedAt: time.Now(),
+		Email:         p.Email,
+		Username:      username,
+		Avatar:        p.Picture,
+		EmailVerified: p.EmailVerified,
+		Password:      "",
+		CreatedAt:     time.Now(),
 	})
 
 	if err != nil {
 		log.Println("Insert error:", err)
 		return err
 	}
-	err = cookies.CreateSession(models.UserRes{Username: username, ID: data.InsertedID.(primitive.ObjectID)}, ctx)
+	err = cookies.CreateSession(models.UserRes{Username: username, ID: data.InsertedID.(primitive.ObjectID), EmailVerified: p.EmailVerified}, ctx)
 	if err != nil {
 		return err
 	}

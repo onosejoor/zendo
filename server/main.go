@@ -8,6 +8,7 @@ import (
 	"main/db"
 	"main/handlers"
 	"main/handlers/auth_controllers"
+	"main/handlers/email_controllers"
 	"main/handlers/project_controllers"
 	"main/handlers/task_controllers"
 	"main/middlewares"
@@ -56,6 +57,8 @@ func main() {
 
 	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
 	auth.Put("/user", middlewares.AuthMiddleware, auth_controllers.UpdateUserController)
+	auth.Get("/verify_email", middlewares.AuthMiddleware, email_controllers.HandleVerifyEmailController)
+	auth.Post("/verify_email", middlewares.AuthMiddleware, email_controllers.SendEmailTokenController)
 	auth.Get("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)
 	auth.Post("/signin", auth_controllers.HandleSignin)

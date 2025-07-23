@@ -42,7 +42,9 @@ func GetClient() *mongo.Database {
 
 	log.Println("Connected to MongoDB!")
 
-	return client.Database(os.Getenv("DATABASE"))
+	db := client.Database(os.Getenv("DATABASE"))
+
+	return db
 }
 
 func GetClientWithoutDB() *mongo.Client {

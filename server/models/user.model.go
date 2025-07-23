@@ -14,12 +14,13 @@ import (
 )
 
 type User struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
-	Email     string             `bson:"email" json:"email"`
-	Username  string             `bson:"username" json:"username"`
-	Avatar    string             `bson:"avatar" json:"avatar"`
-	Password  string             `bson:"password" json:"-"`
-	CreatedAt time.Time          `bson:"created_at" json:"created_at"`
+	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id"`
+	Email         string             `bson:"email" json:"email"`
+	Username      string             `bson:"username" json:"username"`
+	Avatar        string             `bson:"avatar" json:"avatar"`
+	Password      string             `bson:"password" json:"-"`
+	EmailVerified bool               `bson:"email_verified" json:"email_verified"`
+	CreatedAt     time.Time          `bson:"created_at" json:"created_at"`
 }
 
 type UserPayload struct {
@@ -29,8 +30,9 @@ type UserPayload struct {
 }
 
 type UserRes struct {
-	Username string             `json:"username"`
-	ID       primitive.ObjectID `json:"id"`
+	Username      string             `json:"username"`
+	ID            primitive.ObjectID `json:"id"`
+	EmailVerified bool               `json:"email_verified"`
 }
 
 func (u *User) ComparePassword(password string) bool {
@@ -48,10 +50,11 @@ func (p UserPayload) CreateUser(collection *mongo.Collection, ctx context.Contex
 	}
 
 	data, err := collection.InsertOne(ctx, User{
-		Email:     p.Email,
-		Username:  strings.TrimSpace(p.Username),
-		Password:  string(hashedPassword),
-		CreatedAt: time.Now(),
+		Email:         p.Email,
+		Username:      strings.TrimSpace(p.Username),
+		Password:      string(hashedPassword),
+		CreatedAt:     time.Now(),
+		EmailVerified: false,
 	})
 
 	if err != nil {

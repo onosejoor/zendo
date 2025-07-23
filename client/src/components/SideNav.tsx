@@ -30,6 +30,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { KeyedMutator } from "swr";
+import VerifyEmailBtn from "@/app/auth/verify_email/_components/verify-btn";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -134,6 +135,14 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
+        {!isLoading && !error && !user?.email_verified && (
+          <div className="p-3 flex gap-3 m-3 rounded-md flex-col sm:flex-row justify-between sm:items-center bg-red-600 *:text-white">
+            <p className="font-medium capitalize">
+              Your Email has not been verified yet. verify email now.
+            </p>
+            <VerifyEmailBtn />
+          </div>
+        )}
         <div className="sticky top-0 z-40 flex h-16 items-center justify-between bg-white border-b px-4 lg:px-6">
           <Button
             variant="ghost"
@@ -173,15 +182,18 @@ const Error = ({ mutate }: { mutate: KeyedMutator<UserRes> }) => (
     </DropdownMenuTrigger>
     <DropdownMenuContent className="w-56" align="end" forceMount>
       <DropdownMenuLabel className="font-normal">
-          <p className="text-sm font-medium capitalize leading-none">
-            {"error getting user data"}
-          </p>
-        
+        <p className="text-sm font-medium capitalize leading-none">
+          {"error getting user data"}
+        </p>
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
 
-      <Button variant={"ghost"} onClick={() => mutate} className="flex gap-2 items-center !text-accent-blue">
-      <RefreshCcw />  Try again
+      <Button
+        variant={"ghost"}
+        onClick={() => mutate}
+        className="flex gap-2 items-center !text-accent-blue"
+      >
+        <RefreshCcw /> Try again
       </Button>
     </DropdownMenuContent>
   </DropdownMenu>

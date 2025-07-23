@@ -18,8 +18,10 @@ type TokenPair struct {
 }
 
 type Claims struct {
-	ID       any    `json:"id"`
-	Username string `json:"username"`
+	ID            any    `json:"id"`
+	Username      string `json:"username"`
+	EmailVerified bool   `json:"email_verified"`
+
 	jwt.RegisteredClaims
 }
 
@@ -32,8 +34,9 @@ var (
 
 func GenerateTokens(user models.UserRes) (*TokenPair, error) {
 	accessClaims := &Claims{
-		ID:       user.ID,
-		Username: user.Username,
+		ID:            user.ID,
+		Username:      user.Username,
+		EmailVerified: user.EmailVerified,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -47,8 +50,9 @@ func GenerateTokens(user models.UserRes) (*TokenPair, error) {
 	}
 
 	refreshClaims := &Claims{
-		ID:       user.ID,
-		Username: user.Username,
+		ID:            user.ID,
+		Username:      user.Username,
+		EmailVerified: user.EmailVerified,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -79,8 +83,9 @@ func VerifyAccessToken(tokenString string) (*models.UserRes, error) {
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		userId, _ := primitive.ObjectIDFromHex(claims.ID.(string))
 		return &models.UserRes{
-			ID:       userId,
-			Username: claims.Username,
+			ID:            userId,
+			Username:      claims.Username,
+			EmailVerified: claims.EmailVerified,
 		}, nil
 	}
 
@@ -98,8 +103,9 @@ func verifyRefreshToken(tokenString string) (*models.UserRes, error) {
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		userId, _ := primitive.ObjectIDFromHex(claims.ID.(string))
 		return &models.UserRes{
-			ID:       userId,
-			Username: claims.Username,
+			ID:            userId,
+			Username:      claims.Username,
+			EmailVerified: claims.EmailVerified,
 		}, nil
 	}
 

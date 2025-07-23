@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Verified } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -24,6 +24,7 @@ export default function UserData({ user }: { user: IUser }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          {user.email_verified && <Verified className="size-2.5 text-blue-500 z-5 absolute left-0 -bottom-[1px]" />}
           <Avatar className="h-8 w-8">
             <AvatarImage src={user?.avatar} className="object-cover" alt={user?.username} />
             <AvatarFallback>

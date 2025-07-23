@@ -15,8 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import axios from "axios";
-import { validateFields } from "@/lib/utils";
+import { getErrorMesage, validateFields } from "@/lib/utils";
 import { signIn } from "@/lib/actions/signin";
 import { useRouter } from "next/navigation";
 
@@ -57,16 +56,11 @@ export default function SignInForm() {
 
       if (success) {
         router.push("/dashboard");
+
         setIsLoading(false);
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error(`Error signing in: ${error.response?.data.message || error.response?.data}`);
-      } else {
-        const message =
-          error instanceof Error ? error.message : "Internal error";
-        toast.error(`Error signing in: ${message}`);
-      }
+      toast.error(`Error signing in: ${getErrorMesage(error)}`);
 
       console.error("Error signing in: ", error);
     }

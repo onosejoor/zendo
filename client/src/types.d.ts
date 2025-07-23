@@ -42,6 +42,7 @@ declare global {
 
   interface IUser {
     _id: string;
+    email_verified: boolean,
     username: string;
     email: string;
     avatar?: string;

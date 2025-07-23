@@ -1,4 +1,5 @@
 import { axiosInstance } from "@/api/api";
+import { isAxiosError } from "axios";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -27,3 +28,10 @@ export const fetcher = async (url: string) =>
 
 export const checkExpired = (date: ITask["dueDate"]) =>
   new Date(date).toLocaleString() < new Date().toLocaleString();
+
+export function getErrorMesage(error: unknown) {
+  if (isAxiosError(error)) {
+    return error.response?.data.message || error.response?.data;
+  }
+  return error instanceof Error ? error.message : "Internal Error";
+}

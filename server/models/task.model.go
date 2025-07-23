@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"fmt"
-	"log"
 	"main/db"
 	"os"
 	"time"
@@ -34,7 +33,6 @@ type SubTask struct {
 }
 
 func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any, err error) {
-	log.Println(p.ProjectId != nil && *p.ProjectId != primitive.NilObjectID, p.ProjectId != nil, *p.ProjectId != primitive.NilObjectID, p.ProjectId, *p.ProjectId)
 	if p.ProjectId != nil && *p.ProjectId != primitive.NilObjectID {
 		id, err := p.CreateTaskWithTransaction(ctx, userId)
 		if err != nil {

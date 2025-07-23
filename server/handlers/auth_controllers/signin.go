@@ -55,7 +55,7 @@ func HandleSignin(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID}, ctx)
+	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID, EmailVerified: userData.EmailVerified}, ctx)
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
@@ -64,7 +64,8 @@ func HandleSignin(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{
-		"success": true,
-		"message": "Welcome " + userData.Username,
+		"success":        true,
+		"message":        "Welcome " + userData.Username,
+		"email_verified": userData.EmailVerified,
 	})
 }
