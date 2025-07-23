@@ -1,10 +1,7 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -27,13 +24,6 @@ export default function SuccessComp() {
             Email successfully verified, redirecting now
           </CardDescription>
         </CardHeader>
-        <CardFooter className="my-5">
-          <CardAction>
-            <Button type="button" variant="outline">
-              Cancel
-            </Button>
-          </CardAction>
-        </CardFooter>
       </CardContent>
     </Card>
   );
