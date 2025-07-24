@@ -38,3 +38,7 @@ export function getErrorMesage(error: unknown) {
   }
   return error instanceof Error ? error.message : "Internal Error";
 }
+
+export function containsOnly( letter: string, str?: string,) {
+  return str && str.length > 0 && [...str].every((c) => c === letter);
+}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { getStatusBadge } from "@/lib/functions";
-import { checkExpired, cn } from "@/lib/utils";
+import { checkExpired, cn, containsOnly } from "@/lib/utils";
 import {
   Activity,
   Calendar,
@@ -127,7 +127,7 @@ export default function TaskHeader({ task }: { task: ITask }) {
                   </p>
                 </div>
               </div>
-              {task.projectId && (
+              {!containsOnly("0", task.projectId) && (
                 <div className="flex items-start space-x-3">
                   <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
