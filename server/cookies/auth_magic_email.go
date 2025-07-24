@@ -18,7 +18,8 @@ var (
 )
 
 type EmailTokenPayload struct {
-	ID         any    `json:"id"`
+	ID         string `json:"id"`
+	UserName   string `json:"username"`
 	EmailToken string `json:"email_token,omitempty"`
 	jwt.RegisteredClaims
 }
@@ -34,7 +35,8 @@ func (t *EmailTokenPayload) IsExpired() bool {
 
 func GenerateEmailToken(payload *models.UserRes) (string, error) {
 	emailClaims := &EmailTokenPayload{
-		ID: payload.ID.Hex(),
+		ID:       payload.ID.Hex(),
+		UserName: payload.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -45,19 +47,19 @@ func GenerateEmailToken(payload *models.UserRes) (string, error) {
 	return token.SignedString(emailSecret)
 }
 
-func VerifyEmailToken(tokenString string) (bool, error) {
+func VerifyEmailToken(tokenString string) (*EmailTokenPayload, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &EmailTokenPayload{}, func(token *jwt.Token) (any, error) {
 		return emailSecret, nil
 	})
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	if _, ok := token.Claims.(*EmailTokenPayload); ok && token.Valid {
-		return true, nil
+	if claims, ok := token.Claims.(*EmailTokenPayload); ok && token.Valid {
+		return claims, nil
 	}
 
-	return false, errors.New("invalid token")
+	return nil, errors.New("invalid token")
 }
 
 func GenerateMagicLinkEmail(props EmailProps) string {

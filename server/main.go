@@ -57,7 +57,7 @@ func main() {
 
 	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
 	auth.Put("/user", middlewares.AuthMiddleware, auth_controllers.UpdateUserController)
-	auth.Get("/verify_email", middlewares.AuthMiddleware, email_controllers.HandleVerifyEmailController)
+	auth.Get("/verify_email", email_controllers.HandleVerifyEmailController)
 	auth.Post("/verify_email", middlewares.AuthMiddleware, email_controllers.SendEmailTokenController)
 	auth.Get("/refresh-token", auth_controllers.HandleAccessToken)
 	auth.Post("/signup", auth_controllers.HandleSignup)

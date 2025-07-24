@@ -15,10 +15,9 @@ import (
 )
 
 func HandleVerifyEmailController(ctx *fiber.Ctx) error {
-	user := ctx.Locals("user").(*models.UserRes)
 	token := ctx.Query("token")
 
-	_, err := cookies.VerifyEmailToken(token)
+	claims, err := cookies.VerifyEmailToken(token)
 	if err != nil {
 		log.Println("Error Verifying email token: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
@@ -26,10 +25,10 @@ func HandleVerifyEmailController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err = UpdateUser(user.ID, ctx.Context())
+	objectId, _ := primitive.ObjectIDFromHex(claims.ID)
+	err = UpdateUser(objectId, ctx.Context())
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
-			log.Println("Error updating user: ", err.Error())
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "User already verified or not found",
 			})
@@ -39,9 +38,9 @@ func HandleVerifyEmailController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	user.EmailVerified = true
+	user := models.UserRes{Username: claims.UserName, ID: objectId, EmailVerified: true}
 
-	err = cookies.CreateSession(*user, ctx)
+	err = cookies.CreateSession(user, ctx)
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
