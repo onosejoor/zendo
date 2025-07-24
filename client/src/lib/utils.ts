@@ -1,6 +1,7 @@
 import { axiosInstance } from "@/api/api";
 import { isAxiosError } from "axios";
 import { clsx, type ClassValue } from "clsx";
+import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -26,8 +27,10 @@ export const SERVER_URl = "/api";
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);
 
-export const checkExpired = (date: ITask["dueDate"]) =>
-  new Date(date).toLocaleString() < new Date().toLocaleString();
+export const checkExpired = (date: ITask["dueDate"]) => {
+  const dueDate = dayjs(date);
+  return dueDate.isBefore(dayjs());
+};
 
 export function getErrorMesage(error: unknown) {
   if (isAxiosError(error)) {
