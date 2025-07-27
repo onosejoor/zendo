@@ -9,20 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { handleToggleTask } from "@/lib/actions/tasks";
-import { Edit, MoreHorizontal, Subtitles, Timer } from "lucide-react";
+import { MoreHorizontal, Subtitles, Timer } from "lucide-react";
 import { formatDate, getStatusColor } from "./constants";
 import { Badge } from "@/components/ui/badge";
 import { checkExpired, cn } from "@/lib/utils";
 import Link from "next/link";
 import { getStatusBadge } from "@/lib/functions";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
+import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
 
 type Props = {
   task: ITask;
-  handleEditTask: (task: ITask) => void;
 };
 
-export default function TaskCard({ task, handleEditTask }: Props) {
+export default function TaskCard({ task }: Props) {
   const isExpired = checkExpired(task.dueDate);
   const isCompleted = task.status === "completed" || isExpired;
 
@@ -96,9 +96,8 @@ export default function TaskCard({ task, handleEditTask }: Props) {
                 onClick={(e) => e.stopPropagation()}
                 align="end"
               >
-                <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                <DropdownMenuItem asChild>
+                  <EditTaskDialog isCard task={task} />
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <DeleteDataDialog card type="task" id={task._id} />

@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,22 +20,19 @@ import { createProject, mutateProject } from "@/lib/actions/projects";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getTextNewLength } from "@/lib/functions";
+import { Plus } from "lucide-react";
 
-interface CreateProjectDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export function CreateProjectDialog({
-  open,
-  onOpenChange,
-}: CreateProjectDialogProps) {
+export function CreateProjectDialog({ isVariant }: { isVariant?: boolean }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpenChange] = useState(false);
+
   const router = useRouter();
+
+  const onOpenChange = (value: boolean) => setOpenChange(value);
 
   const { name, description } = formData;
 
@@ -93,6 +91,15 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          variant={!isVariant ? "outline" : "default"}
+          onClick={() => setOpenChange(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Project
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>

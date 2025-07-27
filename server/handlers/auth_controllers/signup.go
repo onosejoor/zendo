@@ -61,8 +61,9 @@ func HandleSignup(ctx *fiber.Ctx) error {
 	if err != nil {
 		log.Println("Error Generating email token: ", err.Error())
 		return ctx.Status(201).JSON(fiber.Map{
-			"success": true,
-			"message": "User created successfully, but email token not sent",
+			"success":    true,
+			"message":    "User created successfully, but email token not sent",
+			"email_sent": false,
 		})
 	}
 
@@ -73,22 +74,26 @@ func HandleSignup(ctx *fiber.Ctx) error {
 	if err != nil {
 		log.Println("Error sending email: ", err.Error())
 		return ctx.Status(201).JSON(fiber.Map{
-			"success": true,
-			"message": "User created successfully, but email not verified",
+			"success":    true,
+			"message":    "User created successfully, but email not verified. Re-login to continue",
+			"email_sent": false,
 		})
 	}
 
-	err = cookies.CreateSession(user, ctx)
-	if err != nil {
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": true,
-			"message": "Internal error",
-		})
-	}
+	// This code was commented out to not allow new users access route except email is verified
+	// err = cookies.CreateSession(user, ctx)
+	// if err != nil {
+	// 	return ctx.Status(500).JSON(fiber.Map{
+	// 		"success":    true,
+	// 		"message":    "Internal error",
+	// 		"email_sent": false,
+	// 	})
+	// }
 
 	return ctx.Status(201).JSON(fiber.Map{
-		"success": true,
-		"message": "Verification Link Sent To Email",
+		"success":    true,
+		"message":    "Verification Link Sent To Email",
+		"email_sent": true,
 	})
 
 }

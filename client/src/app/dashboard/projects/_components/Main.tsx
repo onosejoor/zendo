@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
-import { EditProjectDialog } from "@/components/dialogs/edit-project-dialog";
 import { useProjects } from "@/hooks/use-projects";
 
 import ProjectCard from "./ProjectCards";
@@ -15,15 +14,9 @@ import ErrorDisplay from "@/components/error-display";
 import Loader from "@/components/loader-card";
 
 export default function ProjectsContainer() {
-  const [showCreateProject, setShowCreateProject] = useState(false);
-  const [editingProject, setEditingProject] = useState<IProject | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading, error } = useProjects();
-
-  const handleEditProject = (project: IProject) => {
-    setEditingProject(project);
-  };
 
   if (error) {
     return (
@@ -53,16 +46,9 @@ export default function ProjectsContainer() {
                 ? "Try adjusting your search terms"
                 : "Get started by creating your first project"}
             </p>
-            <Button onClick={() => setShowCreateProject(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Project
-            </Button>
+            <CreateProjectDialog isVariant />
           </CardContent>
         </Card>
-        <CreateProjectDialog
-          open={showCreateProject}
-          onOpenChange={setShowCreateProject}
-        />
       </div>
     );
   }
@@ -85,10 +71,7 @@ export default function ProjectsContainer() {
               Organize your work into projects
             </p>
           </div>
-          <Button onClick={() => setShowCreateProject(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
+          <CreateProjectDialog isVariant />
         </div>
 
         {/* Search and Filters */}
@@ -111,26 +94,10 @@ export default function ProjectsContainer() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <ProjectCard
-              key={project._id}
-              project={project}
-              handleEditProject={handleEditProject}
-            />
+            <ProjectCard key={project._id} project={project} />
           ))}
         </div>
       </div>
-
-      <CreateProjectDialog
-        open={showCreateProject}
-        onOpenChange={setShowCreateProject}
-      />
-      {editingProject && (
-        <EditProjectDialog
-          project={editingProject}
-          open={!!editingProject}
-          onOpenChange={(open) => !open && setEditingProject(null)}
-        />
-      )}
     </>
   );
 }

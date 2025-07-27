@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,30 +26,28 @@ import {
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
 import { getTextNewLength } from "@/lib/functions";
-import { Plus } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
 import dayjs from "dayjs";
 
 interface EditTaskDialogProps {
   task: ITask;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isCard?: boolean;
 }
 
-export function EditTaskDialog({
-  task,
-  open,
-  onOpenChange,
-}: EditTaskDialogProps) {
+export function EditTaskDialog({ task, isCard }: EditTaskDialogProps) {
   const [formData, setFormData] = useState<ITask>({
     ...task,
     dueDate: dayjs(task.dueDate).format("YYYY-MM-DDTHH:mm"),
   });
   const [isLoading, setIsLoading] = useState(false);
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
+  const [editTask, setEditTask] = useState(false);
 
   const { title, description, status, dueDate, subTasks } = formData;
+
+  const isDisabled = isLoading || !title.trim() || !dueDate;
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -83,7 +82,7 @@ export function EditTaskDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !description.trim() || !dueDate) return;
+    if (!title.trim() || !dueDate) return;
 
     setIsLoading(true);
     try {
@@ -97,7 +96,7 @@ export function EditTaskDialog({
       toast[options](message);
 
       if (success) {
-        onOpenChange(false);
+        setEditTask(false);
         mutateTasks(task._id, task.projectId);
       } else {
         console.error("Failed to update task");
@@ -120,11 +119,21 @@ export function EditTaskDialog({
 
   const handleCancel = () => {
     setFormData(task);
-    onOpenChange(false);
+    setEditTask(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={editTask} onOpenChange={setEditTask}>
+      <DialogTrigger asChild>
+        <Button
+          className={isCard ? "w-full flex justify-start !px-2" : "w-fit"}
+          onClick={() => setEditTask(true)}
+          variant={isCard ? "ghost" : "outline"}
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Task
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
@@ -152,7 +161,6 @@ export function EditTaskDialog({
                 value={description}
                 onChange={handleChange}
                 rows={3}
-                required
               />
             </div>
 
@@ -227,12 +235,7 @@ export function EditTaskDialog({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={
-                isLoading || !title.trim() || !description.trim() || !dueDate
-              }
-            >
+            <Button type="submit" disabled={isDisabled}>
               {isLoading ? "Updating..." : "Update Task"}
             </Button>
           </DialogFooter>

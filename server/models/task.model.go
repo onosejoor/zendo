@@ -16,7 +16,7 @@ import (
 type Task struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Title        string             `json:"title" bson:"title" validate:"required"`
-	Description  string             `json:"description" bson:"description" validate:"required"`
+	Description  string             `json:"description" bson:"descriptio"`
 	ReminderSent bool               `json:"-" bson:"reminder_sent"`
 	UserId       primitive.ObjectID `json:"userId" bson:"userId"`
 	SubTasks     []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`

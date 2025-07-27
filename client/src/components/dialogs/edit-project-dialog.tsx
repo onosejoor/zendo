@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,19 +19,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { mutateProject, updateProject } from "@/lib/actions/projects";
 import { getTextNewLength } from "@/lib/functions";
+import { Edit } from "lucide-react";
 
 interface EditProjectDialogProps {
   project: IProject;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isCard?: boolean;
 }
 
-export function EditProjectDialog({
-  project,
-  open,
-  onOpenChange,
-}: EditProjectDialogProps) {
+export function EditProjectDialog({ project, isCard }: EditProjectDialogProps) {
   const [formData, setFormData] = useState(project);
+  const [editProject, setEditProject] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { name, description } = formData;
@@ -70,7 +68,7 @@ export function EditProjectDialog({
       toast[options](message);
 
       if (success) {
-        onOpenChange(false);
+        setEditProject(false);
         mutateProject(formData._id);
       }
     } catch (error) {
@@ -82,7 +80,17 @@ export function EditProjectDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={editProject} onOpenChange={setEditProject}>
+      <DialogTrigger asChild>
+        <Button
+          className={isCard ? "w-full flex justify-start !px-2" : "w-fit"}
+          onClick={() => setEditProject(true)}
+          variant={isCard ? "ghost" : "outline"}
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Project
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
@@ -117,7 +125,7 @@ export function EditProjectDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => setEditProject(false)}
             >
               Cancel
             </Button>

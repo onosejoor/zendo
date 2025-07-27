@@ -10,12 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { FileText, Plus } from "lucide-react";
+import { FileText } from "lucide-react";
 
 import { formatDate } from "@/app/dashboard/tasks/_components/constants";
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
-import { useState } from "react";
 import { getStatusBadge } from "@/lib/functions";
 import ErrorDisplay from "@/components/error-display";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
@@ -29,7 +27,6 @@ export default function ProjectTasksTable({
   projectId: IProject["_id"];
 }) {
   const { data: taskData, isLoading, error } = useProjectTasks(projectId);
-  const [showCreateTask, setShowCreateTask] = useState(false);
 
   if (error) {
     return (
@@ -117,18 +114,11 @@ export default function ProjectTasksTable({
                   ? "Try adjusting your search terms"
                   : "Get started by adding your first task to this project"}
               </p>
-              <Button onClick={() => setShowCreateTask(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Task
-              </Button>
+              <CreateTaskDialog defaultProjectId={projectId} />
             </div>
           )}
         </CardContent>
       </Card>
-      <CreateTaskDialog
-        open={showCreateTask}
-        onOpenChange={setShowCreateTask}
-      />
     </>
   );
 }

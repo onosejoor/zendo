@@ -18,7 +18,7 @@ type EmailProps struct {
 
 const (
 	SMTPServer = "smtp.gmail.com"
-	SMTPPort   = 587
+	SMTPPort   = 465
 )
 
 func GenerateHtmlTemplate(props EmailProps) string {

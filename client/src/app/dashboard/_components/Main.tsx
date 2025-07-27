@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
 import { useUser } from "@/hooks/use-user";
@@ -11,9 +8,6 @@ import StatCards from "./Stats";
 import Loader from "@/components/loader-card";
 
 export default function Dashboard() {
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [showCreateProject, setShowCreateProject] = useState(false);
-
   const { data, isLoading: userLoading, error } = useUser();
 
   if (userLoading) {
@@ -45,17 +39,8 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex *:w-fit gap-2 sm:items-center flex-col sm:flex-row">
-            <Button onClick={() => setShowCreateTask(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateProject(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
+            <CreateTaskDialog />
+            <CreateProjectDialog />
           </div>
         </div>
 
@@ -65,15 +50,6 @@ export default function Dashboard() {
         {/* Recent Tasks and Projects */}
         <RecentActivities />
       </div>
-
-      <CreateTaskDialog
-        open={showCreateTask}
-        onOpenChange={setShowCreateTask}
-      />
-      <CreateProjectDialog
-        open={showCreateProject}
-        onOpenChange={setShowCreateProject}
-      />
     </>
   );
 }

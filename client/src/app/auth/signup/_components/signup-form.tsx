@@ -47,13 +47,13 @@ export default function SignUpForm() {
     }
 
     try {
-      const { success, message } = await signup(formData);
+      const { success, message, email_sent } = await signup(formData);
 
       const toastType = success ? "success" : "error";
 
       toast[toastType](message);
 
-      if (success) {
+      if (success && email_sent) {
         setShowVerifyEmail(true);
       }
     } catch (error) {

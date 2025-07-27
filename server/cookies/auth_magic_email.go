@@ -75,10 +75,6 @@ func SendEmail(token string, user models.UserPayload) error {
 		Username: user.Username,
 	})
 
-	err := cron.SendEmailToGmail(user.Email, "Verify your Zendo account", template)
-	if err != nil {
-		return err
-	}
-	return nil
+	return cron.SendEmailToGmail(user.Email, "Verify your Zendo account", template)
 
 }

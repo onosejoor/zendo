@@ -7,17 +7,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit, MoreHorizontal } from "lucide-react";
+import { Calendar, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
+import { EditProjectDialog } from "@/components/dialogs/edit-project-dialog";
 
 type Props = {
   project: IProject;
-  handleEditProject: (project: IProject) => void;
 };
 
-export default function ProjectCard({ project, handleEditProject }: Props) {
+export default function ProjectCard({ project }: Props) {
   return (
     <Link href={`/dashboard/projects/${project._id}`}>
       <Card className="hover:shadow-md transition-shadow h-full">
@@ -34,9 +34,8 @@ export default function ProjectCard({ project, handleEditProject }: Props) {
                 onClick={(e) => e.stopPropagation()}
                 align="end"
               >
-                <DropdownMenuItem onClick={() => handleEditProject(project)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                <DropdownMenuItem asChild>
+                  <EditProjectDialog project={project} isCard />
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <DeleteDataDialog card type="project" id={project._id} />

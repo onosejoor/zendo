@@ -1,21 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
-
 import TaskHeader from "./Data";
 import { useTask } from "@/hooks/use-tasks";
 import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
-import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+
 import BreadCrumbs from "@/components/BreadCrumbs";
 import ErrorDisplay from "@/components/error-display";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 export default function TaskContainer({ taskId }: { taskId: string }) {
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [editingTask, setEditingTask] = useState(false);
-
   const { data: taskData, isLoading, error } = useTask(taskId);
 
   if (error) {
@@ -53,14 +46,7 @@ export default function TaskContainer({ taskId }: { taskId: string }) {
             </p>
           </div>
           <div className="space-x-3 flex">
-            <Button
-              className="w-fit"
-              onClick={() => setEditingTask(true)}
-              variant="outline"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Task
-            </Button>
+            <EditTaskDialog task={task} />
             <DeleteDataDialog id={taskId} type="task" />
           </div>
         </div>
@@ -68,19 +54,6 @@ export default function TaskContainer({ taskId }: { taskId: string }) {
         {/* Project Details */}
         <TaskHeader task={task} />
       </div>
-
-      {editingTask && (
-        <EditTaskDialog
-          task={task}
-          open={editingTask}
-          onOpenChange={setEditingTask}
-        />
-      )}
-
-      <CreateTaskDialog
-        open={showCreateTask}
-        onOpenChange={setShowCreateTask}
-      />
     </>
   );
 }

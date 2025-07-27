@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,19 +33,17 @@ import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import { useRouter } from "next/navigation";
 
 interface CreateTaskDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  defaultProjectId?: string;
 }
 
-export function CreateTaskDialog({
-  open,
-  onOpenChange,
-}: CreateTaskDialogProps) {
+export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
+  const [open, setOpenChange] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     status: "pending" as Status,
-    projectId: "",
+    projectId: defaultProjectId || "",
     dueDate: getLocalISOString(),
     subTasks: [],
   });
@@ -55,8 +54,9 @@ export function CreateTaskDialog({
   const router = useRouter();
 
   const { title, description, status, dueDate, projectId, subTasks } = formData;
-  const isDisabled =
-    isLoading || !title.trim() || !description.trim() || !dueDate;
+  const isDisabled = isLoading || !title.trim() || !dueDate;
+
+  const onOpenChange = (value: boolean) => setOpenChange(value);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -137,6 +137,12 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button onClick={() => setOpenChange(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Task
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
@@ -165,7 +171,6 @@ export function CreateTaskDialog({
                 className="!max-h-30"
                 onChange={handleChange}
                 rows={3}
-                required
               />
             </div>
             <div className="grid gap-2">
