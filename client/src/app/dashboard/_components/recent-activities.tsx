@@ -13,6 +13,7 @@ import { useTasks } from "@/hooks/use-tasks";
 import { useProjects } from "@/hooks/use-projects";
 import Loader from "@/components/loader-card";
 import ErrorDisplay from "@/components/error-display";
+import { cn } from "@/lib/utils";
 
 export default function RecentActivities() {
   const {
@@ -20,7 +21,7 @@ export default function RecentActivities() {
     isLoading: tasksLoading,
     error: taskError,
   } = useTasks();
-  
+
   const {
     data: projectData,
     isLoading: projectsLoading,
@@ -96,8 +97,13 @@ const TaskCard = ({ task }: { task: ITask }) => {
           <div className={`size-2.5 shrink-0 rounded-full ${statusColor}`} />
           <div>
             <p className="font-medium">{task.title}</p>
-            <p className="text-sm text-gray-500 line-clamp-2">
-              {task.description}
+            <p
+              className={cn(
+                "text-sm text-gray-500 line-clamp-2",
+                !task.description.trim() && "italic"
+              )}
+            >
+              {task.description || "No description"}
             </p>
           </div>
         </div>
@@ -114,8 +120,13 @@ const ProjectCard = ({ project }: { project: IProject }) => (
         <h4 className="font-medium">{project.name}</h4>
         <Badge variant="outline">Active</Badge>
       </div>
-      <p className="text-sm text-gray-500 mb-2 line-clamp-2">
-        {project.description}
+      <p
+        className={cn(
+          "text-sm text-gray-500 line-clamp-2",
+          !project.description?.trim() && "italic"
+        )}
+      >
+        {project.description || "No description"}
       </p>
       <div className="flex items-center justify-between text-xs text-gray-400">
         <span>Total Tasks: {project.totalTasks}</span>

@@ -61,7 +61,7 @@ export const generateId = () => {
   return id;
 };
 
-export function getLocalISOString() {
-  const now = dayjs();
+export function getLocalISOString(date?: string | Date) {
+  const now = dayjs(date);
   return now.format("YYYY-MM-DDTHH:mm");
 }

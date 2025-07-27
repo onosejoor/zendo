@@ -25,11 +25,10 @@ import {
 } from "@/components/ui/select";
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
 import { toast } from "sonner";
-import { getTextNewLength } from "@/lib/functions";
+import { getLocalISOString, getTextNewLength } from "@/lib/functions";
 import { Edit, Plus } from "lucide-react";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
-import dayjs from "dayjs";
 
 interface EditTaskDialogProps {
   task: ITask;
@@ -39,7 +38,7 @@ interface EditTaskDialogProps {
 export function EditTaskDialog({ task, isCard }: EditTaskDialogProps) {
   const [formData, setFormData] = useState<ITask>({
     ...task,
-    dueDate: dayjs(task.dueDate).format("YYYY-MM-DDTHH:mm"),
+    dueDate: getLocalISOString(task.dueDate),
   });
   const [isLoading, setIsLoading] = useState(false);
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
@@ -169,8 +168,8 @@ export function EditTaskDialog({ task, isCard }: EditTaskDialogProps) {
               <Input
                 id="dueDate"
                 type="datetime-local"
-                min={new Date().toISOString().slice(0, 16)}
-                value={new Date(dueDate).toISOString().slice(0, 16)}
+                min={getLocalISOString(dueDate)}
+                value={getLocalISOString(dueDate)}
                 onChange={handleChange}
                 required
               />
