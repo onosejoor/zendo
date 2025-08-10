@@ -11,18 +11,15 @@ export function cn(...inputs: ClassValue[]) {
 type Fields = SignUpFormData | SigninFormData;
 
 export function validateFields(fields: Fields) {
-  const keys = Object.keys(fields);
+  const values = Object.values(fields);
 
-  const isEmptyFields = keys.some(
-    (key) =>
-      typeof fields[key as keyof Fields] === "string" &&
-      !fields[key as keyof Fields].trim()
-  );
+  const isEmptyFields = values.some((value) => !value.trim());
 
-  return { isEmptyFields };
+  return isEmptyFields;
 }
 
 export const SERVER_URl = "/api";
+export const BACKUP_SERVER_URL = process.env.NEXT_PUBLIC_BACKUP_SERVER_URL!;
 
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);

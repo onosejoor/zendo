@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, SearchX, X } from "lucide-react";
 
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useTasks } from "@/hooks/use-tasks";
 import TaskCard from "./TaskCards";
 import Loader from "@/components/loader-card";
 import ErrorDisplay from "@/components/error-display";
+import FilterDropdown from "../../_components/filter-dropdown";
+import { checkExpired } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default function TasksPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<Status | "all" | "expired">("all");
 
   const { data, isLoading, error } = useTasks();
 
@@ -52,11 +55,38 @@ export default function TasksPage() {
     );
   }
 
-  const filteredTasks = tasks.filter(
-    (task) =>
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getFilteredTasks = () => {
+    if (filter === "expired") {
+      return tasks.filter(
+        (task) =>
+          (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            task?.description
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())) &&
+          checkExpired(task.dueDate) &&
+          task.status !== "completed"
+      );
+    }
+
+    if (filter === "all") {
+      return tasks.filter(
+        (task) =>
+          task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (task.description &&
+            task.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    return tasks.filter(
+      (task) =>
+        (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          task?.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        task.status === filter
+    );
+  };
+
+  const onFilterChange = (s: Status) => setFilter(s);
+
+  const filteredTasks = getFilteredTasks();
 
   return (
     <>
@@ -83,18 +113,38 @@ export default function TasksPage() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
+          <FilterDropdown
+            currentFilter={filter}
+            onFilterChange={onFilterChange}
+          />
         </div>
 
         {/* Tasks List */}
-        <div className="grid gap-5 md:grid-cols-2 grid-cols-1">
-          {filteredTasks.map((task) => (
-            <TaskCard key={task._id} task={task} />
-          ))}
-        </div>
+
+        {filteredTasks.length > 0 ? (
+          <div className="grid gap-5 md:grid-cols-2 grid-cols-1">
+            {filteredTasks.map((task) => (
+              <TaskCard key={task._id} task={task} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-5 grid place-items-center min-h-[50vh] w-full bg-white">
+            <div className="space-y-5 grid items-center">
+              <SearchX className="text-gray-500 size-12.5 w-fit mx-auto" />
+              <p className="text-gray-600">No Task with the Search or filter</p>
+
+              <Button
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilter("all");
+                }}
+                className="w-fit mx-auto"
+              >
+                <X /> Clear Filters
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
