@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"main/db"
 	"os"
 	"time"
@@ -14,16 +13,15 @@ import (
 )
 
 type Task struct {
-	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title        string             `json:"title" bson:"title" validate:"required"`
-	Description  string             `json:"description" bson:"description"`
-	ReminderSent bool               `json:"-" bson:"reminder_sent"`
-	UserId       primitive.ObjectID `json:"userId" bson:"userId"`
-	SubTasks     []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId    primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate      time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status       string             `json:"status" bson:"status" validate:"required"`
-	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title       string             `json:"title" bson:"title" validate:"required"`
+	Description string             `json:"description" bson:"description"`
+	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
+	SubTasks    []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status      string             `json:"status" bson:"status" validate:"required"`
+	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 }
 
 type SubTask struct {
@@ -45,14 +43,13 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	collection := client.Collection("tasks")
 
 	newTaskId, err := collection.InsertOne(ctx, Task{
-		Title:        p.Title,
-		Description:  p.Description,
-		UserId:       userId,
-		SubTasks:     p.SubTasks,
-		DueDate:      p.DueDate,
-		ReminderSent: false,
-		Status:       p.Status,
-		CreatedAt:    time.Now(),
+		Title:       p.Title,
+		Description: p.Description,
+		UserId:      userId,
+		SubTasks:    p.SubTasks,
+		DueDate:     p.DueDate,
+		Status:      p.Status,
+		CreatedAt:   time.Now(),
 	})
 	if err != nil {
 		return nil, err
@@ -61,32 +58,42 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	return newTaskId.InsertedID, nil
 }
 
-func GetTaskReminderSent(taskId primitive.ObjectID, collection *mongo.Collection, ctx context.Context) (bool, error) {
+func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx context.Context) (bool, error) {
+	remindersCollection := client.Collection("reminders")
+	taskCollection := client.Collection("tasks")
+
+	var taskResult bson.M
+	taskProjection := bson.M{"_id": 0, "status": 1}
+
+	err := taskCollection.FindOne(
+		ctx,
+		bson.M{"_id": taskId}, options.FindOne().SetProjection(taskProjection),
+	).Decode(&taskResult)
+	if err != nil {
+		return true, err
+	}
+
+	if taskResult["status"] == "completed" {
+		return true, nil
+	}
+
 	var result bson.M
 
-	projection := bson.M{"reminder_sent": 1, "_id": 0}
+	reminderProjection := bson.M{"_id": 0}
 
-	opts := options.FindOne().SetProjection(projection)
+	opts := options.FindOne().SetProjection(reminderProjection)
 
-	err := collection.FindOne(
+	err = remindersCollection.FindOne(
 		ctx,
-		bson.M{"_id": taskId}, opts,
+		bson.M{"taskId": taskId}, opts,
 	).Decode(&result)
-
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return true, err
 		}
-
 		return false, err
 	}
-
-	reminderSent, ok := result["reminder_sent"].(bool)
-	if !ok {
-		return false, fmt.Errorf("field 'reminder_sent' not found or not a bool")
-	}
-
-	return reminderSent, nil
+	return false, nil
 }
 
 func GetCompletionRateAndDueDate(t []Task) (int, int, int) {

@@ -82,7 +82,7 @@ axiosInstance.interceptors.response.use(
         }
         processQueue(refreshError, null);
         if (typeof window !== "undefined") {
-          // window.location.href = "/auth/signin";
+          window.location.href = "/auth/signin";
         }
         return Promise.reject(refreshError);
       } finally {

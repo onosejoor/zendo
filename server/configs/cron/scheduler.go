@@ -24,14 +24,27 @@ type ReminderProps struct {
 var scheduler *gocron.Scheduler
 
 // this function initializes the cronjobs in the backhround
-func InitializeGoCron() {
+func InitializeGoCron() *gocron.Scheduler {
 	if scheduler != nil {
-		return
+		return scheduler
 	}
 
 	scheduler = gocron.NewScheduler(time.Local)
 	scheduler.StartAsync()
+
+	scheduler.Every(10).Minutes().Do(SetTasksCron(context.Background()))
 	log.Println("Cron scheduler active")
+
+	return scheduler
+}
+
+func DeleteCronJob(taskId primitive.ObjectID) error {
+	err := scheduler.RemoveByTag(taskId.Hex())
+	if err != nil {
+		log.Printf("Error removing cron job for task %s: %v", taskId.Hex(), err)
+		return err
+	}
+	return nil
 }
 
 // a method to schedule a reminder
@@ -55,6 +68,7 @@ func (params ReminderProps) ScheduleReminderJob() error {
 	log.Printf("Reminder scheduled for task %s at %s \n", params.TaskID, reminderTime.Format(time.RFC3339))
 	return nil
 }
+
 func calculateReminderTime(due time.Time) time.Time {
 	diff := time.Until(due)
 	switch {
@@ -77,7 +91,6 @@ func calculateReminderTime(due time.Time) time.Time {
 
 func (params ReminderProps) sendEmailReminder() {
 	client := db.GetClient()
-	tasksCollection := client.Collection("tasks")
 	usersCollection := client.Collection("users")
 
 	user, err := models.GetUser(params.UserID, usersCollection, params.Ctx)
@@ -89,21 +102,21 @@ func (params ReminderProps) sendEmailReminder() {
 	log.Printf("[Reminder] Sending for task ID: %s to user. Due: %s",
 		params.TaskID.Hex(), params.DueDate.Format(time.RFC822))
 
-	reminderSent, err := models.GetTaskReminderSent(params.TaskID, tasksCollection, params.Ctx)
+	reminderDoesNotExists, err := models.GetTaskReminderSent(params.TaskID, client, params.Ctx)
 	if err != nil {
 		log.Println("[Reminder] Error fetching task reminder flag:", err)
 		return
 	}
 
-	if reminderSent {
-		log.Println("[Reminder] Already sent for task:", params.TaskID.Hex())
+	if reminderDoesNotExists {
+		log.Println("[Reminder] Already sent or does not exist for task:", params.TaskID.Hex())
 		return
 	}
 
 	htmlTemplate := GenerateHtmlTemplate(EmailProps{
 		Username: user.Username,
 		TaskId:   params.TaskID.Hex(),
-		DueDate:  params.DueDate,
+		DueDate:  params.DueDate.Local(),
 		TaskName: params.TaskName,
 	})
 
@@ -119,19 +132,59 @@ func (params ReminderProps) sendEmailReminder() {
 		}
 	}
 
-	filter := bson.M{
-		"_id":    params.TaskID,
-		"userId": params.UserID,
+	err = models.DeleteReminder(params.Ctx, params.TaskID, params.UserID)
+	if err != nil {
+		log.Printf("[Reminder] Error Deleting Reminder for %s: %v", params.TaskName, err)
+	} else {
+		log.Printf("[Reminder] Email sent successfully and reminder deleted for %s", params.TaskName)
 	}
+}
 
-	_, err = tasksCollection.UpdateOne(params.Ctx, filter, bson.M{
-		"$set": bson.M{
-			"reminder_sent": true,
+// GetTasksCron fetches tasks that are due within the next 10 minutes and schedules reminders for them
+// This function is intended to be run as a cron job
+// It retrieves tasks that are due within the next 10 minutes and schedules reminders for them
+func SetTasksCron(ctx context.Context) error {
+
+	collection := db.GetClient().Collection("reminders")
+
+	log.Println(time.Now().Format(time.RFC3339), " - Fetching reminders for cron job")
+
+	var reminders = make([]models.Reminder, 0)
+
+	cursor, err := collection.Find(ctx, bson.M{
+		"dueDate": bson.M{
+			"$gte": time.Now(),
+			"$lte": time.Now().Add(10 * time.Minute),
 		},
 	})
 	if err != nil {
-		log.Printf("[Reminder] Error updating task %s for user %s: %v", params.TaskID.Hex(), params.UserID.Hex(), err)
-	} else {
-		log.Printf("[Reminder] Email sent successfully and reminder marked as sent for task %s", params.TaskID.Hex())
+		log.Println("ERROR GETTING REMINDERS CRON: ", err)
+		return err
 	}
+
+	defer cursor.Close(ctx)
+
+	if err := cursor.All(ctx, &reminders); err != nil {
+		log.Println("ERROR DECODING REMINDERS CRON: ", err)
+		return err
+	}
+
+	for _, reminder := range reminders {
+
+		payload := ReminderProps{
+			TaskID:   reminder.TaskID,
+			TaskName: reminder.TaskName,
+			UserID:   reminder.UserID,
+			DueDate:  reminder.DueDate.Local(),
+			Ctx:      ctx,
+		}
+
+		err := payload.ScheduleReminderJob()
+		if err != nil {
+			log.Printf("[Scheduler] Failed to schedule reminder for taskName %v, Error : %v", reminder.TaskName, err)
+			continue
+		}
+	}
+
+	return nil
 }
