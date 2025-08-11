@@ -6,6 +6,7 @@ import (
 	"main/configs/redis"
 	"main/models"
 	"main/utils"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,6 +29,13 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
+	if !body.DueDate.After(time.Now().Local()) {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false,
+			"message": "Due date must be in the future",
+		})
+	}
+
 	userId := ctx.Locals("user").(*models.UserRes).ID
 
 	id, err := models.CreateTask(body, ctx.Context(), userId)
@@ -39,19 +47,38 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	cronData := cron.ReminderProps{
-		TaskID:   id.(primitive.ObjectID),
-		TaskName: body.Title,
-		Ctx:      ctx.Context(),
-		UserID:   userId,
-		DueDate:  body.DueDate.Local(),
+	reminderPayload := models.Reminder{
+		TaskID:     id.(primitive.ObjectID),
+		TaskName:   body.Title,
+		UserID:     userId,
+		DueDate:    body.DueDate.Local(),
+		Expires_At: body.DueDate.Local(),
+		CreatedAt:  time.Now().Local(),
 	}
 
-	err = cronData.ScheduleReminderJob()
 	statusText := "Task created successfully"
+
+	err = reminderPayload.CreateReminder(ctx.Context())
 	if err != nil {
 		statusText = "Task created, but reminder may not be scheduled"
-		log.Println("[Scheduler] Failed to schedule reminder: ", err)
+		log.Println("CREATE REMINDER FAILED: ", err)
+	}
+
+	if !body.DueDate.After(time.Now().Local().Add(10*time.Minute)) && body.Status != "completed" {
+		payload := cron.ReminderProps{
+			TaskID:   id.(primitive.ObjectID),
+			TaskName: body.Title,
+			UserID:   userId,
+			DueDate:  body.DueDate.Local(),
+			Ctx:      ctx.Context(),
+		}
+
+		err := payload.ScheduleReminderJob()
+		if err != nil {
+			statusText = "Task created, but reminder may not be scheduled"
+			log.Println("[Scheduler] Failed to schedule reminder: ", err)
+		}
+
 	}
 
 	redis.ClearAllCache(ctx.Context(), userId.Hex(), "", body.ProjectId.Hex())

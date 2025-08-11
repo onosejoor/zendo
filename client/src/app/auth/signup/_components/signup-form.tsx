@@ -41,8 +41,10 @@ export default function SignUpForm() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!validateFields(formData)) {
+    if (validateFields(formData)) {
       toast.error("All fields must be filled");
+      setIsLoading(false);
+
       return;
     }
 

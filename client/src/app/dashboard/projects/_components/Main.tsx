@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
 import { useProjects } from "@/hooks/use-projects";
@@ -85,10 +84,6 @@ export default function ProjectsContainer() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
         </div>
 
         {/* Projects Grid */}

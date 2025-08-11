@@ -1,7 +1,5 @@
-import axios, { isAxiosError } from "axios";
-
+import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { getCookie } from "@/lib/actions/cookie";
-import { SERVER_URl } from "@/lib/utils";
 
 export const axiosInstance = axios.create({
   baseURL: "/api",
@@ -30,55 +28,78 @@ const processQueue = (
       prom.resolve(token);
     }
   });
-
   failedQueue = [];
+};
+
+const refreshToken = async (useBackup = false) => {
+  const baseURL = useBackup ? "/backup-api" : "/api"; // Use Next.js rewrite routes
+  try {
+    await axios.get(`${baseURL}/auth/refresh-token`, {
+      withCredentials: true,
+    });
+    const accessToken = await getCookie("zendo_access_token");
+    if (!accessToken) throw new Error("No access token received");
+    return accessToken;
+  } catch (error) {
+    throw error;
+  }
 };
 
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+      _retriedWithBackup?: boolean;
+    };
 
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      !originalRequest?._retry
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then(() => {
             return axiosInstance(originalRequest);
           })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
+          .catch((err) => Promise.reject(err));
       }
+
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        await axios.get(`${SERVER_URl}/auth/refresh-token`, {
-          withCredentials: true,
-        });
+        const accessToken = await refreshToken(
+          !!originalRequest._retriedWithBackup
+        );
 
-        const accessToken = await getCookie("zendo_access_token");
-        processQueue(null, accessToken!);
-
+        processQueue(null, accessToken);
         return axiosInstance(originalRequest);
-      } catch (error) {
-        if (isAxiosError(error)) {
-          console.log(error.response?.data);
+      } catch (refreshError) {
+        if (isAxiosError(refreshError)) {
+          console.error("Refresh token error:", refreshError.response?.data);
+        } else {
+          console.error("Unexpected refresh error:", refreshError);
         }
-
-        console.error("ERROR", error);
-        processQueue(error, null);
-        window.location.href = "/auth/signin";
-        return Promise.reject(error);
+        processQueue(refreshError, null);
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/signin";
+        }
+        return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
+    }
+
+    if (
+      (error.response?.status === 503 || error.code === "ERR_NETWORK") &&
+      !originalRequest._retriedWithBackup
+    ) {
+      console.warn(
+        "Primary server unavailable. Retrying with backup server..."
+      );
+      originalRequest._retriedWithBackup = true;
+      originalRequest.baseURL = "/backup-api";
+      return axiosInstance(originalRequest);
     }
 
     return Promise.reject(error);

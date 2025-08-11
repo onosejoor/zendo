@@ -93,7 +93,8 @@ func main() {
 
 	cron.InitializeGoCron()
 	redis.GetRedisClient()
-	db.GetClient()
+	client := db.GetClient()
+	db.CreateReminderTTLIndex(client.Collection("reminders"))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -1,5 +1,5 @@
-import { getErrorMesage, SERVER_URl } from "@/lib/utils";
-import axios from "axios";
+import { axiosInstance } from "@/api/api";
+import { getErrorMesage } from "@/lib/utils";
 
 type ApiResponse = APIRes & {
   email_verified: boolean;
@@ -7,13 +7,7 @@ type ApiResponse = APIRes & {
 
 export async function signIn(formData: SigninFormData) {
   try {
-    const { data } = await axios.post<ApiResponse>(
-      `${SERVER_URl}/auth/signin`,
-      formData,
-      {
-        withCredentials: true,
-      }
-    );
+    const { data } = await axiosInstance.post<ApiResponse>(`/auth/signin`, formData);
 
     return { ...data };
   } catch (error) {

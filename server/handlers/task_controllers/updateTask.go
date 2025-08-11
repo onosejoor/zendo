@@ -15,14 +15,13 @@ import (
 )
 
 type Payload struct {
-	Title        string             `json:"title" bson:"title,omitempty"`
-	Description  string             `json:"description" bson:"description,omitempty"`
-	UserId       primitive.ObjectID `json:"userId" bson:"userId"`
-	SubTasks     []models.SubTask   `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId    primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate      time.Time          `json:"dueDate" bson:"dueDate"`
-	ReminderSent bool               `json:"-" bson:"reminder_sent"`
-	Status       string             `json:"status" bson:"status,omitempty"`
+	Title       string             `json:"title" bson:"title,omitempty"`
+	Description string             `json:"description" bson:"description,omitempty"`
+	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
+	SubTasks    []models.SubTask   `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate     time.Time          `json:"dueDate" bson:"dueDate"`
+	Status      string             `json:"status" bson:"status,omitempty"`
 }
 
 func UpdateTaskController(ctx *fiber.Ctx) error {
@@ -37,7 +36,8 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	collection := db.GetClient().Collection("tasks")
+	client := db.GetClient()
+	collection := client.Collection("tasks")
 	objectId, err := primitive.ObjectIDFromHex(taskId)
 	if err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
