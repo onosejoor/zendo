@@ -80,7 +80,8 @@ export default function TasksPage() {
       (task) =>
         (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           task?.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        task.status === filter && !checkExpired(task.dueDate)
+        task.status === filter &&
+        (task.status === "completed" || !checkExpired(task.dueDate))
     );
   };
 
