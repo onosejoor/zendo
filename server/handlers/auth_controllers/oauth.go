@@ -41,7 +41,19 @@ func HandleOauth(ctx *fiber.Ctx, body configs.GooglePayload) (bool, int) {
 		return true, 500
 	}
 
-	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID}, ctx)
+	if _, err := collection.UpdateOne(ctx.Context(), bson.M{"_id": userData.ID}, bson.M{
+		"$set": bson.M{
+			"avatar":        body.Picture,
+			"emailVerified": body.EmailVerified,
+		},
+	}); err != nil {
+		ctx.Status(500).JSON(fiber.Map{
+			"success": false, "message": "Error Updating user data",
+		})
+		return true, 500
+	}
+
+	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID, EmailVerified: true}, ctx)
 	if err != nil {
 		ctx.Status(500).JSON(fiber.Map{
 			"success": true,
