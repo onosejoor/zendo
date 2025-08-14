@@ -18,6 +18,7 @@ import { getErrorMesage, validateFields } from "@/lib/utils";
 import { toast } from "sonner";
 import { signup } from "@/lib/actions/signup";
 import VerifyEmailDialog from "./verify-email-dialog";
+import GoogleBtn from "../../GoogleBtn";
 
 export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -155,7 +156,7 @@ export default function SignUpForm() {
               </Button>
             </form>
 
-            {/* <GoogleBtn isLoading={isLoading} /> */}
+            <GoogleBtn isLoading={isLoading} />
 
             <div className="text-center">
               <span className="text-auth-text-secondary">

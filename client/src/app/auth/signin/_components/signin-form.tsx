@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { getErrorMesage, validateFields } from "@/lib/utils";
 import { signIn } from "@/lib/actions/signin";
 import { useRouter } from "next/navigation";
+import GoogleBtn from "../../GoogleBtn";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -146,7 +147,7 @@ export default function SignInForm() {
             </Button>
           </form>
 
-          {/* <GoogleBtn isLoading={isLoading} /> */}
+          <GoogleBtn isLoading={isLoading} />
 
           <div className="text-center">
             <span className="text-auth-text-secondary">

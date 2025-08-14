@@ -1,6 +1,8 @@
 package oauth_config
 
 import (
+	"fmt"
+	"log"
 	"main/handlers/auth_controllers"
 	"os"
 
@@ -31,23 +33,41 @@ func (conf *OauthConfig) GetOauthController(c *fiber.Ctx) error {
 
 	return c.Redirect(URL)
 }
+
 func (conf *OauthConfig) OauthCallBackController(c *fiber.Ctx) error {
 	code := c.Query("code")
 	clientURL := os.Getenv("FRONTEND_URL")
 
+	url := fmt.Sprintf("%v/auth/oauth-callback?code=%s", clientURL, code)
+
+	return c.Redirect(url)
+
+}
+
+func (conf *OauthConfig) OauthExchangeController(c *fiber.Ctx) error {
+	code := c.Query("code")
+
 	token, err := conf.Exchange(c.Context(), code)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		log.Println("Error Exchanging Ouath Token: ", err)
+		return c.Status(500).JSON(fiber.Map{
+			"success": false, "message": err.Error(),
+		})
 	}
 
 	profile, err := ConvertToken(token.AccessToken)
 	if err != nil {
-		return c.SendStatus(fiber.StatusInternalServerError)
+		log.Println("Error Converting Ouath Token: ", err)
+		return c.Status(500).JSON(fiber.Map{
+			"success": false, "message": "Error Exchanging token",
+		})
 	}
 
 	isReturned, _ := auth_controllers.HandleOauth(c, *profile)
 	if !isReturned {
-		return c.Redirect(clientURL)
+		return c.Status(200).JSON(fiber.Map{
+			"success": true, "message": "Oauth Successful, welcome " + profile.Email,
+		})
 	}
 
 	return c.Status(500).JSON(fiber.Map{

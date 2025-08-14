@@ -33,3 +33,21 @@ export async function postToken() {
     return { success: false, message: getErrorMesage(error) };
   }
 }
+
+export async function sendOauthCode(code:string) {
+  try {
+    const { data } = await axiosInstance.post<APIRes>(
+      `/auth/oauth/exchange?code=${code}`
+    );
+
+    if (data.success) {
+      mutate("/auth/user")
+    }
+    return data;
+    
+  } catch (error) {
+    console.log("SEND OAUTH CODE ERROR: ", error);
+    
+    return { success: false, message: getErrorMesage(error) };
+  }
+}

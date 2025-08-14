@@ -19,7 +19,7 @@ export function validateFields(fields: Fields) {
 }
 
 export const SERVER_URl = "/api";
-export const BACKUP_SERVER_URL = process.env.NEXT_PUBLIC_BACKUP_SERVER_URL!;
+export const BACKUP_SERVER_URL = "/backup-api";
 
 export const fetcher = async (url: string) =>
   axiosInstance.get(url).then((res) => res.data);

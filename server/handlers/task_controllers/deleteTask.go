@@ -6,6 +6,7 @@ import (
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -64,7 +65,9 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 			log.Println("Error deleting reminder (RETRY): ", err)
 		}
 	}
-	cron.DeleteCronJob(objectId)
+	if !time.Now().After(task.DueDate) && !task.DueDate.After(time.Now().Local().Add(10*time.Minute)) {
+		cron.DeleteCronJob(objectId)
+	}
 
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
 
