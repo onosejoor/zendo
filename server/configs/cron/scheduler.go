@@ -202,6 +202,7 @@ func SetTasksCron(ctx context.Context) error {
 			log.Printf("[Scheduler] Failed to schedule reminder for taskName %v, Error : %v", reminder.TaskName, err)
 			continue
 		}
+		log.Printf("Scheduler set for: %s at %s", reminder.TaskName, reminder.Expires_At)
 	}
 
 	return nil
