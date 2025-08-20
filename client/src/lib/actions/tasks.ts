@@ -58,18 +58,12 @@ export async function deleteTask(id: ITask["_id"]) {
 }
 
 export const handleDeleteTask = async (taskId: ITask["_id"]) => {
-  try {
-    const { success, message } = await deleteTask(taskId);
-    const options = success ? "success" : "error";
+  const { success, message } = await deleteTask(taskId);
+  const options = success ? "success" : "error";
 
-    toast[options](message);
-    if (success) {
-      mutateTasks(taskId);
-      window.location.href = "/dashboard/tasks";
-    }
-  } catch (error) {
-    console.error("Failed to delete task:", error);
-    toast.error(error instanceof Error ? error.message : "internal error");
+  toast[options](message);
+  if (success) {
+    mutateTasks(taskId);
   }
 };
 

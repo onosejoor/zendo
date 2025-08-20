@@ -49,11 +49,24 @@ func InitializeGoCron() *gocron.Scheduler {
 }
 
 func DeleteCronJob(taskId primitive.ObjectID) error {
-	err := scheduler.RemoveByTag(taskId.Hex())
+	jobs, err := scheduler.FindJobsByTag(taskId.Hex())
+	if err != nil {
+		log.Printf("Error finding cron job for task %s: %v", taskId.Hex(), err)
+		return err
+	}
+
+	if len(jobs) < 1 {
+		log.Printf("No cron job found for task %s, nothing to delete", taskId.Hex())
+		return nil
+	}
+
+	err = scheduler.RemoveByTag(taskId.Hex())
 	if err != nil {
 		log.Printf("Error removing cron job for task %s: %v", taskId.Hex(), err)
 		return err
 	}
+
+	log.Printf("Cron job deleted for task %s", taskId.Hex())
 	return nil
 }
 
