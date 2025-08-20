@@ -32,14 +32,6 @@ func InitializeGoCron() *gocron.Scheduler {
 	scheduler = gocron.NewScheduler(time.Local)
 	scheduler.StartAsync()
 
-	go func() {
-		if err := SetTasksCron(context.Background()); err != nil {
-			log.Println("[Cron] Initial SetTasksCron failed:", err)
-		} else {
-			log.Println("[Cron] Initial SetTasksCron executed successfully")
-		}
-	}()
-
 	scheduler.Every(10).Minutes().Do(func() {
 		defer func() {
 			if r := recover(); r != nil {
