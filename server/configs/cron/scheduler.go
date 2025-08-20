@@ -32,7 +32,17 @@ func InitializeGoCron() *gocron.Scheduler {
 	scheduler = gocron.NewScheduler(time.Local)
 	scheduler.StartAsync()
 
-	scheduler.Every(10).Minutes().Do(SetTasksCron(context.Background()))
+	scheduler.Every(10).Minutes().Do(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("[Cron] Panic recovered in SetTasksCron: %v", r)
+			}
+		}()
+
+		if err := SetTasksCron(context.Background()); err != nil {
+			log.Println("[Cron] Error in SetTasksCron:", err)
+		}
+	})
 	log.Println("Cron scheduler active")
 
 	return scheduler
