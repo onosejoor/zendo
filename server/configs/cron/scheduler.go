@@ -79,9 +79,8 @@ func (params ReminderProps) ScheduleReminderJob() error {
 		return fmt.Errorf("due date is too soon to schedule a future reminder")
 	}
 
-	_, err := scheduler.Every(1).Day().
+	_, err := scheduler.Every(1).Day().At(reminderTime).LimitRunsTo(1).
 		Tag(params.TaskID.Hex()).
-		At(reminderTime).
 		Do(params.sendEmailReminder)
 	if err != nil {
 		log.Printf("Error scheduling reminder for task %s: %v", params.TaskID, err)
@@ -121,9 +120,6 @@ func (params ReminderProps) sendEmailReminder() {
 		log.Println("[Reminder] Error getting user data:", err)
 		return
 	}
-
-	log.Printf("[Reminder] Sending for task ID: %s to user. Due: %s",
-		params.TaskID.Hex(), params.DueDate.Format(time.RFC822))
 
 	reminderDoesNotExists, err := models.GetTaskReminderSent(params.TaskID, client, params.Ctx)
 	if err != nil {
@@ -207,8 +203,8 @@ func SetTasksCron(ctx context.Context) error {
 			log.Printf("[Scheduler] Failed to schedule reminder for taskName %v, Error : %v", reminder.TaskName, err)
 			continue
 		}
-		log.Printf("Scheduler set for: %s at %s", reminder.TaskName, reminder.Expires_At)
 	}
 
+	log.Println("✅ total reminders added to cron: ", len(reminders))
 	return nil
 }
