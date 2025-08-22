@@ -3,6 +3,7 @@ package project_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -46,7 +47,7 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 	}
 
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", id)
-
+	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "Project and related tasks deleted",
@@ -65,7 +66,7 @@ func DeleteAllProjectsController(ctx *fiber.Ctx) error {
 	}
 
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
-
+	prometheus.RecordRedisOperation("clear_all_cache")
 	message := fmt.Sprintf("Deleted %v tasks and %v project(s)", deletedData.TotalTasksDeleted, deletedData.TotalProjectsDeleted)
 
 	return ctx.Status(200).JSON(fiber.Map{

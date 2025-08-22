@@ -3,6 +3,7 @@ package auth_controllers
 import (
 	"log"
 	"main/configs"
+	prometheus "main/configs/prometheus"
 	"main/cookies"
 	"main/db"
 	"main/models"
@@ -21,7 +22,10 @@ func HandleOauth(ctx *fiber.Ctx, body configs.GooglePayload) (bool, int) {
 	collection := db.GetClient().Collection("users")
 
 	var userData models.User
+	start := time.Now()
 	if err := collection.FindOne(ctx.Context(), bson.M{"email": body.Email}).Decode(&userData); err != nil {
+		dbDuration := time.Since(start)
+		prometheus.RecordDatabaseQueryOperation(dbDuration, "users", "findOne")
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			err := createUser(body, collection, ctx)
 			if err != nil {
@@ -42,6 +46,7 @@ func HandleOauth(ctx *fiber.Ctx, body configs.GooglePayload) (bool, int) {
 	}
 
 	if !userData.EmailVerified {
+		updateStart := time.Now()
 		if _, err := collection.UpdateOne(ctx.Context(), bson.M{"_id": userData.ID}, bson.M{
 			"$set": bson.M{
 				"avatar":        body.Picture,
@@ -53,6 +58,8 @@ func HandleOauth(ctx *fiber.Ctx, body configs.GooglePayload) (bool, int) {
 			})
 			return true, 500
 		}
+		dbDuration := time.Since(updateStart)
+		prometheus.RecordDatabaseQueryOperation(dbDuration, "users", "UpdateOne")
 	}
 
 	err := cookies.CreateSession(models.UserRes{Username: userData.Username, ID: userData.ID, EmailVerified: true}, ctx)
@@ -84,6 +91,8 @@ func createUser(p configs.GooglePayload, collection *mongo.Collection, ctx *fibe
 		log.Println("Insert error:", err)
 		return err
 	}
+
+	prometheus.RecordUserRegistration()
 	err = cookies.CreateSession(models.UserRes{Username: username, ID: data.InsertedID.(primitive.ObjectID), EmailVerified: p.EmailVerified}, ctx)
 	if err != nil {
 		return err

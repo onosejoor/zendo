@@ -3,6 +3,7 @@ package task_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -65,7 +66,7 @@ func UpdateSubTaskController(ctx *fiber.Ctx) error {
 	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
 		log.Println(err.Error())
 	}
-
+	prometheus.RecordRedisOperation("clear_task_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "SubTask updated",
@@ -111,7 +112,7 @@ func DeleteSubTaskController(ctx *fiber.Ctx) error {
 	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
 		log.Println(err.Error())
 	}
-
+	prometheus.RecordRedisOperation("delete_task_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "SubTask deleted",

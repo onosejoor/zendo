@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"log"
+	"main/configs/prometheus"
 	"main/configs/redis"
 	"main/db"
 	"main/models"
@@ -33,9 +34,10 @@ func GetStatsControllers(ctx *fiber.Ctx) error {
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &stats, cacheKey, "stats") {
+		prometheus.RecordRedisOperation("get_cache")
 		return nil
 	}
-
+	prometheus.RecordRedisOperation("cache_miss")
 	cursor, err := client.Collection("tasks").Find(ctx.Context(), bson.M{
 		"userId": user.ID,
 	})
@@ -75,7 +77,7 @@ func GetStatsControllers(ctx *fiber.Ctx) error {
 	}
 
 	_ = redisClient.SetCacheData(cacheKey, ctx.Context(), stats)
-
+	prometheus.RecordRedisOperation("set_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"stats":   stats,

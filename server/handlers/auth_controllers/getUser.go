@@ -3,9 +3,11 @@ package auth_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	"main/configs/redis"
 	"main/db"
 	"main/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,10 +26,14 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &user, cacheKey, "user") {
+		prometheus.RecordRedisOperation("get_cache")
 		return nil
 	}
-
+	prometheus.RecordRedisOperation("cache_miss")
+	start := time.Now()
 	err := client.Collection("users").FindOne(ctx.Context(), bson.M{"_id": userCtx.ID}).Decode(&user)
+	dbDuration := time.Since(start)
+	prometheus.RecordDatabaseQueryOperation(dbDuration, "users", "findOne")
 	if err != nil {
 		if err.Error() == mongo.ErrNoDocuments.Error() {
 			return ctx.Status(404).JSON(fiber.Map{
@@ -42,6 +48,7 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 	}
 
 	_ = redisClient.SetCacheData(cacheKey, ctx.Context(), user)
+	prometheus.RecordRedisOperation("set_cache")
 	ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"user":    user,

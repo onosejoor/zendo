@@ -3,6 +3,7 @@ package project_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -69,7 +70,7 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex(), projectId); err != nil {
 		log.Println(err.Error())
 	}
-
+	prometheus.RecordRedisOperation("delete_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "Project updated",

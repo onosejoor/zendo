@@ -3,6 +3,7 @@ package task_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -25,9 +26,10 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &task, cacheKey, "task") {
+		prometheus.RecordRedisOperation("get_cache")
 		return nil
 	}
-
+	prometheus.RecordRedisOperation("cache_miss")
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
@@ -46,7 +48,7 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 	if err := redisClient.SetCacheData(cacheKey, ctx.Context(), task); err != nil {
 		log.Println("Error setting cache: ", err.Error())
 	}
-
+	prometheus.RecordRedisOperation("set_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "task": task,
 	})

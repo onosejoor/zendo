@@ -1,4 +1,4 @@
-package middlewares
+package prometheus
 
 import (
 	"strconv"
@@ -18,12 +18,12 @@ var (
 
 	HttpRequestTotal = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_total",
-		Help: "Number of HTTP requests in progress",
-	}, []string{"path", "method"})
+		Help: "Number of HTTP requests in total",
+	}, []string{"path", "method", "status"})
 
 	HttpRequestInProgress = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "http_requests_in_progress",
-		Help: "Number of HTTP requests in progress",
+		Help: "Total number of HTTP requests in progress",
 	}, []string{"path", "method"})
 )
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"main/configs/cron"
 	oauth_config "main/configs/oauth"
+	prometheus_config "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/handlers"
@@ -42,6 +43,8 @@ func main() {
 		ExposeHeaders:    "Set-Cookie",
 	}))
 
+	app.Use(prometheus_config.NewMiddleware())
+	app.Get("/metrics", handlers.MetricsHandler)
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(fiber.Map{
 			"success": true, "message": "Healthy",

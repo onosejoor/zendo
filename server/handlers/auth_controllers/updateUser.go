@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	prometheus "main/configs/prometheus"
 	"main/configs/redis"
 	"main/db"
 	"main/models"
@@ -57,7 +58,7 @@ func UpdateUserController(ctx *fiber.Ctx) error {
 	}
 
 	_ = redis.DeleteUserCache(ctx.Context(), user.ID.Hex())
-
+	prometheus.RecordRedisOperation("delete_user_cache")
 	return ctx.JSON(fiber.Map{
 		"success": true,
 		"message": "user updated succesfully",
