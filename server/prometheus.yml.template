@@ -1,0 +1,15 @@
+# prometheus.yml.template
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'zendo-backend'
+    static_configs:
+      - targets: ['backend:8080']
+
+# Use environment variables for sensitive data
+remote_write:
+  - url: ${GRAFANA_URL}
+    basic_auth:
+      username: ${GRAFANA_USERNAME}
+      password: ${GRAFANA_API_TOKEN}
