@@ -1,13 +1,17 @@
-global: 
+global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: "zendo"
+  - job_name: "zendo-backend"
     static_configs:
-      - targets: ["localhost:8080"]
+      - targets: ["myzendobackend.onrender.com"]
     metrics_path: "/metrics"
     scrape_interval: 10s
 
-
-    
+remote_write:
+  - url: "https://prometheus-prod-58-prod-eu-central-0.grafana.net/api/prom/push"
+    basic_auth:
+      username: "2634799"
+      password: "glc_eyJvIjoiMTUxNjE2MSIsIm4iOiJzdGFjay0xMzU1MjgyLWFsbG95LXJlbmRlci1wcm9tZXRoZXVzIiwiayI6ImhZUDI4RThQcDJtb25QWmFPOWQxMTc5MCIsIm0iOnsiciI6InByb2QtZXUtY2VudHJhbC0wIn19"
+  
