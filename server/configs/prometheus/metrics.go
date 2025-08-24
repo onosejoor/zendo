@@ -6,59 +6,70 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
-	httpRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "http_request_duration_seconds",
 		Help:    "Duration of HTTP requests",
 		Buckets: []float64{0.01, 0.05, 0.1, 0.5, 1, 2, 3, 5, 10},
 	}, []string{"path", "method", "status"})
 
-	HttpRequestTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+	HttpRequestTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_total",
 		Help: "Number of HTTP requests in total",
 	}, []string{"path", "method", "status"})
 
-	HttpRequestInProgress = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	HttpRequestInProgress = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "http_requests_in_progress",
 		Help: "Total number of HTTP requests in progress",
 	}, []string{"path", "method"})
 )
 
 var (
-	ProjectsCreated = promauto.NewCounter(prometheus.CounterOpts{
+	ProjectsCreated = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "total_zendo_projects_created",
 		Help: "Total number of projects created",
 	})
 
-	TasksCreated = promauto.NewCounter(prometheus.CounterOpts{
+	TasksCreated = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "total_zendo_tasks_created",
 		Help: "Total number of tasks created",
 	})
 
-	UsersRegistered = promauto.NewCounter(prometheus.CounterOpts{
+	UsersRegistered = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "total_zendo_users_signed_up",
 		Help: "Total number of users who signed up",
 	})
 
-	DatabaseQueryDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
+	DatabaseQueryDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "zendo_database_query_duration_seconds",
 		Help:    "Duratio of database queries",
 		Buckets: []float64{0.001, 0.005, 0.01, 0.05, 0.1, 1, 2},
 	}, []string{"collection", "operation"})
 
-	RedisOperations = promauto.NewCounterVec(prometheus.CounterOpts{
+	RedisOperations = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "total_zendo_redis_operations",
 		Help: "Total number of Redis operations",
 	}, []string{"operation"})
 
-	CronJobsOperation = promauto.NewCounterVec(prometheus.CounterOpts{
+	CronJobsOperation = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "total_zendo_cron_jobs_operations",
 		Help: "Total number of Cron Jobs operations",
 	}, []string{"operation"})
 )
+
+func Init() {
+	prometheus.MustRegister(httpRequestDuration)
+	prometheus.MustRegister(HttpRequestTotal)
+	prometheus.MustRegister(HttpRequestInProgress)
+	prometheus.MustRegister(ProjectsCreated)
+	prometheus.MustRegister(TasksCreated)
+	prometheus.MustRegister(UsersRegistered)
+	prometheus.MustRegister(DatabaseQueryDuration)
+	prometheus.MustRegister(RedisOperations)
+	prometheus.MustRegister(CronJobsOperation)
+}
 
 func NewMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {

@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
-
+	prometheus_config.Init()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
