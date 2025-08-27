@@ -1,3 +1,4 @@
 .env*
 prometheus.yml
 tmp
+.log.txt
