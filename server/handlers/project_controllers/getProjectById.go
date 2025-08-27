@@ -2,6 +2,7 @@ package project_controllers
 
 import (
 	"fmt"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -24,8 +25,10 @@ func GetProjectByIdController(ctx *fiber.Ctx) error {
 	cacheKey := fmt.Sprintf("user:%s:project:%s", user.ID.Hex(), id)
 
 	if redisClient.GetCacheHandler(ctx, &project, cacheKey, "project") {
+		prometheus.RecordRedisOperation("get_cache")
 		return nil
 	}
+	prometheus.RecordRedisOperation("cache_miss")
 
 	client := db.GetClient()
 	collection := client.Collection("projects")
@@ -45,7 +48,7 @@ func GetProjectByIdController(ctx *fiber.Ctx) error {
 	if err := redisClient.SetCacheData(cacheKey, ctx.Context(), project); err != nil {
 		return nil
 	}
-
+	prometheus.RecordRedisOperation("set_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "project": project,
 	})

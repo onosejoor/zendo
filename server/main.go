@@ -5,6 +5,7 @@ import (
 	"log"
 	"main/configs/cron"
 	oauth_config "main/configs/oauth"
+	prometheus_config "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/handlers"
@@ -27,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
-
+	prometheus_config.Init()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -42,8 +43,10 @@ func main() {
 		ExposeHeaders:    "Set-Cookie",
 	}))
 
-	app.Use(middlewares.LoggerMiddleware)
 
+	app.Use(prometheus_config.NewMiddleware())
+	app.Get("/metrics", handlers.MetricsHandler)
+	app.Use(middlewares.LoggerMiddleware)
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(fiber.Map{
 			"success": true, "message": "Healthy",

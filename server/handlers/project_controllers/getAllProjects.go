@@ -3,6 +3,7 @@ package project_controllers
 import (
 	"fmt"
 	"log"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -22,9 +23,10 @@ func GetAllProjectsController(ctx *fiber.Ctx) error {
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &projects, cacheKey, "projects") {
+		prometheus.RecordRedisOperation("get_cache")
 		return nil
 	}
-
+	prometheus.RecordRedisOperation("cache_miss")
 	client := db.GetClient()
 	collection := client.Collection("projects")
 
@@ -47,6 +49,7 @@ func GetAllProjectsController(ctx *fiber.Ctx) error {
 	}
 
 	err = redisClient.SetCacheData(cacheKey, ctx.Context(), projects)
+	prometheus.RecordRedisOperation("set_cache")
 	if err != nil {
 		log.Println("Error caching data: ", err.Error())
 	}

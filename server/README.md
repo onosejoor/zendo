@@ -42,7 +42,7 @@ Zendo relies on environment variables for configuration. Create a `.env` file in
 ```ini
 PORT=8080
 DATABASE=zendo_db
-MONGO_URI="mongodb://localhost:27017"
+MONGODB_URL="mongodb://localhost:27017"
 ACCESS_SECRET="your_access_token_secret"
 JWT_SECRET="your_refresh_token_secret"
 EMAIL_SECRET="your_email_verification_secret"

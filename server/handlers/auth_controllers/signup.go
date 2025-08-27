@@ -2,6 +2,7 @@ package auth_controllers
 
 import (
 	"log"
+	prometheus "main/configs/prometheus"
 	"main/cookies"
 	"main/db"
 	"main/models"
@@ -54,7 +55,7 @@ func HandleSignup(ctx *fiber.Ctx) error {
 			"success": false, "message": "Internal error",
 		})
 	}
-
+	prometheus.RecordUserRegistration()
 	user := models.UserRes{Username: body.Username, ID: id, EmailVerified: false}
 
 	token, err := cookies.GenerateEmailToken(&user)

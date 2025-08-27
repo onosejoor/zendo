@@ -3,6 +3,7 @@ package task_controllers
 import (
 	"log"
 	"main/configs/cron"
+	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -51,10 +52,12 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 	} else {
 		if _, err := collection.DeleteOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}); err != nil {
 			log.Println("Error deleting task: ", err.Error())
+			prometheus.RecordRedisOperation("clear_all_cache")
 			return ctx.Status(500).JSON(fiber.Map{
 				"success": false, "message": "Internal error",
 			})
 		}
+
 	}
 
 	err = models.DeleteReminder(ctx.Context(), objectId, user.ID)
@@ -67,10 +70,11 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 	}
 	if !time.Now().After(task.DueDate) && !task.DueDate.After(time.Now().Local().Add(10*time.Minute)) {
 		cron.DeleteCronJob(objectId)
+		prometheus.RecordCronJobOperation("delete_job")
 	}
 
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
-
+	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",
 	})
@@ -97,7 +101,7 @@ func DeleteAllTasksController(ctx *fiber.Ctx) error {
 	}
 
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
-
+	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",
 	})
