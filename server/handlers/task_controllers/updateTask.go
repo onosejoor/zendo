@@ -70,7 +70,7 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
 		log.Println(err.Error())
 	}
 

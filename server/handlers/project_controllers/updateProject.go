@@ -66,7 +66,7 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex(), projectId); err != nil {
+	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex()); err != nil {
 		log.Println(err.Error())
 	}
 

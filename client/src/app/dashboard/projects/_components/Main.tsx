@@ -8,14 +8,18 @@ import { Plus, Search } from "lucide-react";
 import { CreateProjectDialog } from "@/components/dialogs/create-project-dialog";
 import { useProjects } from "@/hooks/use-projects";
 
-import ProjectCard from "./ProjectCards";
 import ErrorDisplay from "@/components/error-display";
 import Loader from "@/components/loader-card";
+import PaginationBtn from "../../_components/pagination-btn";
+import ProjectsDisplay from "./projects-display";
+import useDebounce from "@/hooks/use-debounce";
 
 export default function ProjectsContainer() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useProjects();
+  const debouncedSearchTerm = useDebounce(searchTerm, 200);
+  const { data, isLoading, error } = useProjects(5, page);
 
   if (error) {
     return (
@@ -23,13 +27,9 @@ export default function ProjectsContainer() {
     );
   }
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  const { projects } = data || {};
 
-  const { projects } = data!;
-
-  if (projects.length < 1) {
+  if (projects && projects.length < 1) {
     return (
       <div className="col-span-full">
         <Card>
@@ -51,13 +51,6 @@ export default function ProjectsContainer() {
       </div>
     );
   }
-
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (project.description &&
-        project.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   return (
     <>
@@ -86,12 +79,21 @@ export default function ProjectsContainer() {
           </div>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <ProjectCard key={project._id} project={project} />
-          ))}
-        </div>
+        {isLoading ? (
+          <Loader text="Loading Projects..." />
+        ) : (
+          <>
+            <ProjectsDisplay
+              initialProjects={projects!}
+              searchTerm={debouncedSearchTerm}
+            />
+            <PaginationBtn
+              page={page}
+              setPage={setPage}
+              dataLength={projects!.length}
+            />
+          </>
+        )}
       </div>
     </>
   );

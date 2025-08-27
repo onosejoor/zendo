@@ -73,9 +73,20 @@ export const handleDeleteProject = async (projectId: IProject["_id"]) => {
   }
 };
 
+export async function searchForProjects(search: string) {
+  try {
+    const { data } = await axiosInstance.get<APIRes & { projects: IProject[] }>(
+      `/projects/search?search=${search}`
+    );
+    return data;
+  } catch (error) {
+    return { success: false, message: getErrorMesage(error), projects: [] };
+  }
+}
+
 export function mutateProject(projectId?: string) {
   mutate(`/projects/${projectId}`);
-  mutate(`/projects`);
+  mutate((key) => typeof key === "string" && key.startsWith("/projects?"));
   mutate(`/projects/${projectId}/tasks`);
   mutate("/stats");
 }

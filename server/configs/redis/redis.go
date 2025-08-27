@@ -89,22 +89,20 @@ func DeleteUserCache(ctx context.Context, id string) error {
 	return nil
 }
 
-func DeleteTaskCache(ctx context.Context, id string, taskId string) error {
-	redisClient := GetRedisClient()
-	key := []string{fmt.Sprintf("user:%s:task:%s", id, taskId), fmt.Sprintf("user:%s:tasks", id), fmt.Sprintf("user:%s:stats", id), fmt.Sprintf("user:%s:tasks", id)}
+func DeleteTaskCache(ctx context.Context, userId string) error {
+	pattern := fmt.Sprintf("user:%s:tasks*", userId)
 
-	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
+	if err := DeleteKeysByPattern(ctx, pattern, userId); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())
 		return err
 	}
 	return nil
 }
 
-func DeleteProjectCache(ctx context.Context, id string, projectId string) error {
-	redisClient := GetRedisClient()
-	key := []string{fmt.Sprintf("user:%s:project:%s", id, projectId), fmt.Sprintf("user:%s:projects", id), fmt.Sprintf("user:%s:stats", id), fmt.Sprintf("user:%s:project:%s:tasks", id, projectId)}
+func DeleteProjectCache(ctx context.Context, userId string) error {
+	pattern := fmt.Sprintf("user:%s:projects*", userId)
 
-	if err := redisClient.Client.Del(ctx, key...).Err(); err != nil {
+	if err := DeleteKeysByPattern(ctx, pattern, userId); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())
 		return err
 	}
@@ -137,10 +135,36 @@ func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key s
 }
 
 func ClearAllCache(ctx context.Context, userId, taskId, projectId string) {
-	if err := DeleteTaskCache(ctx, userId, taskId); err != nil {
+	if err := DeleteTaskCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}
-	if err := DeleteProjectCache(ctx, userId, projectId); err != nil {
+	if err := DeleteProjectCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}
+}
+
+func DeleteKeysByPattern(ctx context.Context, pattern, userId string) error {
+
+	redisClient := GetRedisClient()
+	iter := redisClient.Client.Scan(ctx, 0, pattern, 0).Iterator()
+
+	var keys = make([]string, 0)
+
+	keys = append(keys, fmt.Sprintf("user:%s:stats", userId))
+
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		log.Println("Error scanning keys: ", err.Error())
+		return err
+	}
+
+	if len(keys) != 0 {
+		if err := redisClient.Client.Del(ctx, keys...).Err(); err != nil {
+			log.Println("Error deleting keys by pattern: ", err.Error())
+			return err
+		}
+	}
+	return nil
 }

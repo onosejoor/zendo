@@ -20,13 +20,13 @@ export default function RecentActivities() {
     data: taskData,
     isLoading: tasksLoading,
     error: taskError,
-  } = useTasks();
+  } = useTasks(2);
 
   const {
     data: projectData,
     isLoading: projectsLoading,
     error: projectError,
-  } = useProjects();
+  } = useProjects(2);
 
   if (taskError || projectError) {
     return (
@@ -44,8 +44,7 @@ export default function RecentActivities() {
   const { tasks } = taskData!;
   const { projects } = projectData!;
 
-  const recentTasks = tasks.slice(0, 5);
-  const recentProjects = projects.slice(0, 2);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -54,9 +53,9 @@ export default function RecentActivities() {
           <CardDescription>Your latest task activity</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentTasks.length > 0 ? (
+          {tasks.length > 0 ? (
             <div className="space-y-3">
-              {recentTasks.map((task) => (
+              {tasks.map((task) => (
                 <TaskCard key={task._id} task={task} />
               ))}
             </div>
@@ -72,9 +71,9 @@ export default function RecentActivities() {
           <CardDescription>Your current project overview</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentProjects.length > 0 ? (
+          {projects.length > 0 ? (
             <div className="space-y-3">
-              {recentProjects.map((project) => (
+              {projects.map((project) => (
                 <ProjectCard key={project._id} project={project} />
               ))}
             </div>

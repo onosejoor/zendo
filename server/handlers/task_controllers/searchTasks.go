@@ -1,36 +1,32 @@
 package task_controllers
 
 import (
-	"fmt"
 	"log"
-	redis "main/configs/redis"
 	"main/db"
 	"main/models"
-	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetAllTasksController(ctx *fiber.Ctx) error {
+func GetSearchedTasksController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
+	search := ctx.Query("search")
 	var dbTaks = make([]models.Task, 0)
-
-	cacheKey := fmt.Sprintf("user:%s:tasks:page:%s:limit:%s", user.ID.Hex(), page, limit)
-	redisClient := redis.GetRedisClient()
-
-	if redisClient.GetCacheHandler(ctx, &dbTaks, cacheKey, "tasks") {
-		return nil
-	}
 
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
-	opts := utils.GeneratePaginationOptions(page, limit)
+	filter := bson.M{"userId": user.ID}
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID}, opts)
+	if search != "" {
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": search, "$options": "i"}},
+			{"description": bson.M{"$regex": search, "$options": "i"}},
+		}
+	}
+
+	cursor, err := collection.Find(ctx.Context(), filter)
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
@@ -45,11 +41,6 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 			"success": false,
 			"message": "Internal server error",
 		})
-	}
-
-	err = redisClient.SetCacheData(cacheKey, ctx.Context(), dbTaks)
-	if err != nil {
-		log.Println("Error caching data: ", err.Error())
 	}
 
 	return ctx.Status(200).JSON(bson.M{
