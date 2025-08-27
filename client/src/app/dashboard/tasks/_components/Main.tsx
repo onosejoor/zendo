@@ -3,22 +3,26 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, SearchX, X } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import { CreateTaskDialog } from "@/components/dialogs/create-task-dialog";
 import { useTasks } from "@/hooks/use-tasks";
-import TaskCard from "./TaskCards";
+
 import Loader from "@/components/loader-card";
 import ErrorDisplay from "@/components/error-display";
 import FilterDropdown from "../../_components/filter-dropdown";
-import { checkExpired } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import PaginationBtn from "../../_components/pagination-btn";
+import TasksDisplay from "./tasks-display";
+import useDebounce from "@/hooks/use-debounce";
 
 export default function TasksPage() {
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+
   const [filter, setFilter] = useState<Status | "all" | "expired">("all");
 
-  const { data, isLoading, error } = useTasks();
+  const { data, isLoading, error } = useTasks(5, page);
+  const debouncedSearchTerm = useDebounce(searchTerm, 200);
 
   if (error) {
     return (
@@ -26,13 +30,9 @@ export default function TasksPage() {
     );
   }
 
-  if (isLoading) {
-    return <Loader text="Loading Tasks..." />;
-  }
+  const { tasks } = data || {};
 
-  const { tasks } = data!;
-
-  if (tasks.length < 1) {
+  if (tasks && tasks.length < 1) {
     return (
       <>
         <Card>
@@ -55,39 +55,7 @@ export default function TasksPage() {
     );
   }
 
-  const getFilteredTasks = () => {
-    if (filter === "expired") {
-      return tasks.filter(
-        (task) =>
-          (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            task?.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())) &&
-          checkExpired(task.dueDate) &&
-          task.status !== "completed"
-      );
-    }
-
-    if (filter === "all") {
-      return tasks.filter(
-        (task) =>
-          task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (task.description &&
-            task.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    return tasks.filter(
-      (task) =>
-        (task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          task?.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        task.status === filter &&
-        (task.status === "completed" || !checkExpired(task.dueDate))
-    );
-  };
-
   const onFilterChange = (s: Status) => setFilter(s);
-
-  const filteredTasks = getFilteredTasks();
 
   return (
     <>
@@ -103,49 +71,42 @@ export default function TasksPage() {
           <CreateTaskDialog />
         </div>
 
-        {/* Search and Filters */}
-        <div className="flex space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search tasks..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+        <>
+          {/* Search and Filters */}
+          <div className="flex space-x-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search tasks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <FilterDropdown
+              currentFilter={filter}
+              onFilterChange={onFilterChange}
             />
           </div>
-          <FilterDropdown
-            currentFilter={filter}
-            onFilterChange={onFilterChange}
-          />
-        </div>
 
-        {/* Tasks List */}
-
-        {filteredTasks.length > 0 ? (
-          <div className="grid gap-5 md:grid-cols-2 grid-cols-1">
-            {filteredTasks.map((task) => (
-              <TaskCard key={task._id} task={task} />
-            ))}
-          </div>
-        ) : (
-          <div className="p-5 grid place-items-center min-h-[50vh] w-full bg-white">
-            <div className="space-y-5 grid items-center">
-              <SearchX className="text-gray-500 size-12.5 w-fit mx-auto" />
-              <p className="text-gray-600">No Task with the Search or filter</p>
-
-              <Button
-                onClick={() => {
-                  setSearchTerm("");
-                  setFilter("all");
-                }}
-                className="w-fit mx-auto"
-              >
-                <X /> Clear Filters
-              </Button>
-            </div>
-          </div>
-        )}
+          {/* Tasks List */}
+          {isLoading ? (
+            <Loader text="Loading Tasks..." />
+          ) : (
+            <>
+              <TasksDisplay
+                searchTerm={debouncedSearchTerm}
+                initialTasks={tasks!}
+                filter={filter}
+              />
+              <PaginationBtn
+                page={page}
+                setPage={setPage}
+                dataLength={tasks!.length}
+              />
+            </>
+          )}
+        </>
       </div>
     </>
   );

@@ -1,10 +1,7 @@
 package project_controllers
 
 import (
-	"fmt"
 	"log"
-	prometheus "main/configs/prometheus"
-	redis "main/configs/redis"
 	"main/db"
 	"main/models"
 	"main/utils"
@@ -13,25 +10,28 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetAllProjectsController(ctx *fiber.Ctx) error {
+func GetSearchedProjectsController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 	var projects = make([]models.Project, 0)
+
+	search := ctx.Query("search")
 	page := ctx.Query("page")
 	limit := ctx.Query("limit")
 
-	cacheKey := fmt.Sprintf("user:%s:projects:page:%s:limit:%s", user.ID.Hex(), page, limit)
-	redisClient := redis.GetRedisClient()
-
-	if redisClient.GetCacheHandler(ctx, &projects, cacheKey, "projects") {
-		prometheus.RecordRedisOperation("get_cache")
-		return nil
-	}
-	prometheus.RecordRedisOperation("cache_miss")
 	client := db.GetClient()
 	collection := client.Collection("projects")
 
+	filter := bson.M{"ownerId": user.ID}
+
+	if search != "" {
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": search, "$options": "i"}},
+			{"description": bson.M{"$regex": search, "$options": "i"}},
+		}
+	}
 	opts := utils.GeneratePaginationOptions(page, limit)
-	cursor, err := collection.Find(ctx.Context(), bson.M{"ownerId": user.ID}, opts)
+
+	cursor, err := collection.Find(ctx.Context(), filter, opts)
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
@@ -46,12 +46,6 @@ func GetAllProjectsController(ctx *fiber.Ctx) error {
 			"success": false,
 			"message": "Internal server error",
 		})
-	}
-
-	err = redisClient.SetCacheData(cacheKey, ctx.Context(), projects)
-	prometheus.RecordRedisOperation("set_cache")
-	if err != nil {
-		log.Println("Error caching data: ", err.Error())
 	}
 
 	return ctx.Status(200).JSON(bson.M{

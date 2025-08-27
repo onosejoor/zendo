@@ -1,9 +1,9 @@
 import { fetcher } from "@/lib/utils";
 import useSWR from "swr";
 
-export function useProjects() {
+export function useProjects(limit: number = 10, page: number = 1) {
   return useSWR<{ success: boolean; projects: IProject[] }>(
-    "/projects",
+    `/projects?limit=${limit}&page=${page}`,
     fetcher,
     {
       revalidateOnFocus: false,

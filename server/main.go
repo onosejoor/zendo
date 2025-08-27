@@ -43,8 +43,10 @@ func main() {
 		ExposeHeaders:    "Set-Cookie",
 	}))
 
+
 	app.Use(prometheus_config.NewMiddleware())
 	app.Get("/metrics", handlers.MetricsHandler)
+	app.Use(middlewares.LoggerMiddleware)
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.JSON(fiber.Map{
 			"success": true, "message": "Healthy",
@@ -76,6 +78,7 @@ func main() {
 	taskRoute.Use(middlewares.AuthMiddleware)
 
 	taskRoute.Get("", task_controllers.GetAllTasksController)
+	taskRoute.Get("/search", task_controllers.GetSearchedTasksController)
 	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
 	taskRoute.Post("/new", task_controllers.CreateTaskController)
 	taskRoute.Put("/:id", task_controllers.UpdateTaskController)
@@ -89,6 +92,7 @@ func main() {
 	projectRoute.Use(middlewares.AuthMiddleware)
 
 	projectRoute.Get("", project_controllers.GetAllProjectsController)
+	projectRoute.Get("/search", project_controllers.GetSearchedProjectsController)
 	projectRoute.Get("/:id/tasks", project_controllers.GetTaskInProjectsController)
 	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
 	projectRoute.Post("/new", project_controllers.CreateProjectController)

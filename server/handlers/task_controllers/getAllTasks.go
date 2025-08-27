@@ -7,17 +7,19 @@ import (
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetAllTasksController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
+	page := ctx.Query("page")
+	limit := ctx.Query("limit")
 	var dbTaks = make([]models.Task, 0)
 
-	cacheKey := fmt.Sprintf("user:%s:tasks", user.ID.Hex())
+	cacheKey := fmt.Sprintf("user:%s:tasks:page:%s:limit:%s", user.ID.Hex(), page, limit)
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &dbTaks, cacheKey, "tasks") {
@@ -28,9 +30,9 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID}, &options.FindOptions{
-		Sort: bson.M{"created_at": -1},
-	})
+	opts := utils.GeneratePaginationOptions(page, limit)
+
+	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID}, opts)
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{

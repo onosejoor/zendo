@@ -86,9 +86,20 @@ export const handleToggleTask = async (task: ITask) => {
   }
 };
 
+export async function searchForTasks(search: string) {
+  try {
+    const { data } = await axiosInstance.get<APIRes & { tasks: ITask[] }>(
+      `/tasks/search?search=${search}`
+    );
+    return data;
+  } catch (error) {
+    return { success: false, message: getErrorMesage(error), tasks: [] };
+  }
+}
+
 export function mutateTasks(taskId?: string, projectId?: string) {
   mutate(`/tasks/${taskId}`);
-  mutate(`/tasks`);
+  mutate((key) => typeof key === "string" && key.startsWith("/tasks?"));
   mutate("/stats");
   mutate(`/projects/${projectId}/tasks`);
 }

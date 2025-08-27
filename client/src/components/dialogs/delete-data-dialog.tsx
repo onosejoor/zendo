@@ -54,6 +54,7 @@ export default function DeleteDataDialog({ id, type, card = false }: Props) {
       <AlertDialogTrigger asChild>
         <Button
           onClick={() => setOpenDialog(!openDialog)}
+          disabled={loading}
           className={cn(
             "text-red-600 justify-start !px-2",
             card ? "w-full" : "w-fit"

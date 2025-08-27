@@ -63,7 +63,7 @@ func UpdateSubTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
 		log.Println(err.Error())
 	}
 	prometheus.RecordRedisOperation("clear_task_cache")
@@ -109,7 +109,7 @@ func DeleteSubTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex(), taskId); err != nil {
+	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
 		log.Println(err.Error())
 	}
 	prometheus.RecordRedisOperation("delete_task_cache")
