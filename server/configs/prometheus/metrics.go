@@ -2,11 +2,14 @@ package prometheus
 
 import (
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+var initOnce sync.Once
 
 var (
 	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -60,15 +63,17 @@ var (
 )
 
 func Init() {
-	prometheus.MustRegister(httpRequestDuration)
-	prometheus.MustRegister(HttpRequestTotal)
-	prometheus.MustRegister(HttpRequestInProgress)
-	prometheus.MustRegister(ProjectsCreated)
-	prometheus.MustRegister(TasksCreated)
-	prometheus.MustRegister(UsersRegistered)
-	prometheus.MustRegister(DatabaseQueryDuration)
-	prometheus.MustRegister(RedisOperations)
-	prometheus.MustRegister(CronJobsOperation)
+	initOnce.Do(func() {
+		prometheus.MustRegister(httpRequestDuration)
+		prometheus.MustRegister(HttpRequestTotal)
+		prometheus.MustRegister(HttpRequestInProgress)
+		prometheus.MustRegister(ProjectsCreated)
+		prometheus.MustRegister(TasksCreated)
+		prometheus.MustRegister(UsersRegistered)
+		prometheus.MustRegister(DatabaseQueryDuration)
+		prometheus.MustRegister(RedisOperations)
+		prometheus.MustRegister(CronJobsOperation)
+	})
 }
 
 func NewMiddleware() fiber.Handler {
