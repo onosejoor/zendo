@@ -15,8 +15,8 @@ import (
 
 func GetAllTasksController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 10)
 	var dbTaks = make([]models.Task, 0)
 
 	cacheKey := fmt.Sprintf("user:%s:tasks:page:%s:limit:%s", user.ID.Hex(), page, limit)

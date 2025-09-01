@@ -16,17 +16,9 @@ import (
 func CreateTaskController(ctx *fiber.Ctx) error {
 	var body models.Task
 
-	if err := ctx.BodyParser(&body); err != nil {
-		log.Println("Error parsing body: ", err)
+	if err := utils.ParseBodyAndValidateStruct(&body, ctx); err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
-			"success": false, "message": "Error parsing data",
-		})
-	}
-
-	if err := utils.Validate.Struct(body); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false,
-			"message": "All fields must be valid",
+			"success": false, "message": err.Error(),
 		})
 	}
 
