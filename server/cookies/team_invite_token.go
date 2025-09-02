@@ -1,6 +1,7 @@
 package cookies
 
 import (
+	"errors"
 	"fmt"
 	"main/configs"
 	"main/models"
@@ -16,35 +17,37 @@ var (
 )
 
 type InviteTokenPayload struct {
-	TeamID string `json:"team_id"`
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	models.TeamMemberSchema
 	jwt.RegisteredClaims
 }
 
 type InviteTokenProps struct {
-	Token string `json:"token"`
-	Role  string `json:"role"`
+	Token    string `json:"token"`
+	Role     string `json:"role"`
+	Username string `json:"username"`
+	TeamName string `json:"team_name"`
 }
 
 func GenerateTeamInviteEmailToken(payload *models.TeamMemberSchema) (string, error) {
 	inviteEmailClaims := &InviteTokenPayload{
-		TeamID: payload.TeamID.Hex(),
-		UserID: payload.UserID.Hex(),
-		Role:   payload.Role,
+		TeamMemberSchema: models.TeamMemberSchema{
+			TeamID: payload.TeamID,
+			UserID: payload.UserID,
+			Role:   payload.Role,
+		},
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExpiry)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(inviteTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, inviteEmailClaims)
-	return token.SignedString(emailSecret)
+	return token.SignedString(inviteSecret)
 }
 
 func VerifyTeamEmailInviteToken(tokenString string) (*InviteTokenPayload, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &InviteTokenPayload{}, func(token *jwt.Token) (any, error) {
-		return emailSecret, nil
+		return inviteSecret, nil
 	})
 	if err != nil {
 		return nil, err
@@ -57,8 +60,8 @@ func VerifyTeamEmailInviteToken(tokenString string) (*InviteTokenPayload, error)
 	return nil, errors.New("invalid token")
 }
 
-func GenerateMagicTeamInviteLink(props EmailProps) string {
+func GenerateMagicTeamInviteLink(props InviteTokenProps) string {
 	magicLink := fmt.Sprintf("%s/teams/create_team_member?token=%s", os.Getenv("FRONTEND_URL"), props.Token)
 
-	return fmt.Sprintf(configs.TEAM_INVITATION_EMAIL_TEMPLATE, props.Username, magicLink)
+	return fmt.Sprintf(configs.TEAM_INVITATION_EMAIL_TEMPLATE, props.Username, props.TeamName, props.Role, props.Username, magicLink)
 }

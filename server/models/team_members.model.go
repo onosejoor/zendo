@@ -42,7 +42,12 @@ func init() {
 }
 
 func (t TeamMemberSchema) CreateTeamMember(ctx context.Context) (*primitive.ObjectID, error) {
-	client := db.GetClient().Collection("team_members")
+	var teamMember TeamMemberSchema
+
+	err := teamMembersColl.FindOne(ctx, bson.M{"user_id": t.UserID, "team_id": t.TeamID}).Decode(&teamMember)
+	if err != nil && err.Error() != mongo.ErrNoDocuments.Error() {
+		return nil, mongo.ErrNoDocuments
+	}
 
 	t.JoinedAt = time.Now()
 

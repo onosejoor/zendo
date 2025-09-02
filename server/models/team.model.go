@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"log"
 	"main/db"
 	"time"
 
@@ -42,14 +43,29 @@ func GetTeams(ctx context.Context, opts *options.FindOptions) ([]TeamSchema, err
 
 }
 
-func (t TeamSchema) CreateTeam(ctx context.Context) (*primitive.ObjectID, error) {
+func (t TeamSchema) CreateTeam(ctx context.Context, userID primitive.ObjectID) (*primitive.ObjectID, error) {
 	t.CreatedAt = time.Now()
 	t.UpdatedAt = time.Now()
 
 	id, err := client.InsertOne(ctx, t)
 	if err != nil {
+		log.Println("Error Creating Team: ", err.Error())
 		return nil, err
 	}
 	oid := id.InsertedID.(primitive.ObjectID)
+
+	newTeamMember := TeamMemberSchema{
+		UserID:   userID,
+		TeamID:   oid,
+		Role:     "owner",
+		JoinedAt: time.Now(),
+	}
+
+	_, err = newTeamMember.CreateTeamMember(ctx)
+	if err != nil {
+		log.Println("Error Adding Team owner to team member schema: ", err.Error())
+		return &oid, err
+	}
+
 	return &oid, nil
 }

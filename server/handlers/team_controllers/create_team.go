@@ -18,7 +18,7 @@ func CreateTeamController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	teamID, err := team.CreateTeam(ctx.Context())
+	teamID, err := team.CreateTeam(ctx.Context(), user.ID)
 	if err != nil {
 		log.Println("Error creating team: ", err)
 		return ctx.Status(500).JSON(fiber.Map{
