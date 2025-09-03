@@ -2,6 +2,7 @@ package team_controllers
 
 import (
 	"log"
+	"main/configs/redis"
 	"main/models"
 	"main/utils"
 
@@ -37,6 +38,8 @@ func CreateTeamController(ctx *fiber.Ctx) error {
 			"success": false, "message": "Failed to create team_member, error: " + err.Error(),
 		})
 	}
+
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"success": true, "team_id": teamID.Hex(),

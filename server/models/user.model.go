@@ -70,6 +70,11 @@ type GetUserPayload struct {
 	Username string `bson:"username" json:"username"`
 }
 
+type GetUserByEmailPayload struct {
+	Email string             `bson:"email" json:"email"`
+	ID    primitive.ObjectID `bson:"_id" json:"_id"`
+}
+
 func GetUser(userId primitive.ObjectID, collection *mongo.Collection, ctx context.Context) (data GetUserPayload, err error) {
 	var user GetUserPayload
 	projection := bson.M{"email": 1, "username": 1, "_id": 0}
@@ -79,6 +84,20 @@ func GetUser(userId primitive.ObjectID, collection *mongo.Collection, ctx contex
 	err = collection.FindOne(ctx, bson.M{"_id": userId}, opts).Decode(&user)
 	if err != nil {
 		return GetUserPayload{}, err
+	}
+
+	return user, nil
+}
+
+func GetUserByEmail(email string, collection *mongo.Collection, ctx context.Context) (data GetUserByEmailPayload, err error) {
+	var user GetUserByEmailPayload
+	projection := bson.M{"email": 1, "_id": 1}
+
+	opts := options.FindOne().SetProjection(projection)
+
+	err = collection.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
+	if err != nil {
+		return GetUserByEmailPayload{}, err
 	}
 
 	return user, nil

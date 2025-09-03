@@ -19,6 +19,7 @@ type Task struct {
 	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
 	SubTasks    []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
 	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	TeamID      primitive.ObjectID `json:"team_id,omitempty" bson:"team_id,omitempty"`
 	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
 	Status      string             `json:"status" bson:"status" validate:"required"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`

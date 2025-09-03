@@ -9,12 +9,14 @@ import (
 
 func TeamsRoutes(app fiber.Router) {
 	teamsRoute := app.Group("/teams")
+	app.Post("/teams/members/invite/callback", team_controllers.CreateTeamMemberController)
+
 	teamsRoute.Use(middlewares.AuthMiddleware)
 
 	teamsRoute.Get("/", team_controllers.GetTeamsController)
+	teamsRoute.Get("/:id", team_controllers.GetTeamByIDController)
 	teamsRoute.Post("/", team_controllers.CreateTeamController)
-	teamsRoute.Get("/team_members", team_controllers.GetTeamMembersController)
-	teamsRoute.Post("/team_members/invite", team_controllers.SendTeamInvite)
-	teamsRoute.Post("/team_members/invite/callback", team_controllers.CreateTeamMemberController)
-
+	teamsRoute.Get("/:id/members", team_controllers.GetTeamMembersController)
+	teamsRoute.Post("/:id/members/invite", team_controllers.SendTeamInvite)
+	teamsRoute.Delete("/:id", team_controllers.DeleteTeamController)
 }

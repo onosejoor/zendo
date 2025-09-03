@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"log"
+	"main/utils"
 	"os"
 	"sync"
 
@@ -21,6 +22,8 @@ var (
 func GetClient() *mongo.Database {
 	clientMu.Lock()
 	defer clientMu.Unlock()
+
+	utils.PullEnv()
 
 	if client != nil {
 		return client.Database(os.Getenv("DATABASE"))
@@ -52,11 +55,14 @@ func GetClientWithoutDB() *mongo.Client {
 	clientMu.Lock()
 	defer clientMu.Unlock()
 
+	utils.PullEnv()
+
 	if client != nil {
 		return client
 	}
 
 	MONGODB_URL := os.Getenv("MONGODB_URL")
+	log.Println(MONGODB_URL)
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(MONGODB_URL).SetServerAPIOptions(serverAPI)

@@ -79,7 +79,7 @@ func (params ReminderProps) ScheduleReminderJob() error {
 		return fmt.Errorf("due date is too soon to schedule a future reminder")
 	}
 
-	_, err := scheduler.Every(1).Day().At(reminderTime).LimitRunsTo(1).
+	_, err := scheduler.Every(1).Day().StartAt(reminderTime).LimitRunsTo(1).
 		Tag(params.TaskID.Hex()).
 		Do(params.sendEmailReminder)
 	if err != nil {
@@ -94,9 +94,9 @@ func (params ReminderProps) ScheduleReminderJob() error {
 func calculateReminderTime(due time.Time) time.Time {
 	diff := time.Until(due)
 	switch {
-	case diff <= 5*time.Minute:
+	case diff <= 10*time.Minute:
 		adjusted := time.Now().Add(30 * time.Second)
-		log.Println("🟡 Due soon (<=5min). Reminder in 30s:", adjusted)
+		log.Println("🟡 Due soon (<=10min). Reminder in 30s:", adjusted)
 		return adjusted
 
 	case diff <= 1*time.Hour:

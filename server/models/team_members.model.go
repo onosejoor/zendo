@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"main/db"
 	"time"
 
@@ -19,18 +20,15 @@ type TeamMemberSchema struct {
 }
 
 type TeamWithRole struct {
-	Team   TeamSchema         `bson:"team" json:"team"`
-	Role   string             `bson:"role" json:"role"`
-	TeamID primitive.ObjectID `bson:"team_id" json:"team_id"`
-	UserID primitive.ObjectID `bson:"user_id" json:"user_id"`
+	Team     TeamSchema `bson:"team" json:"team"`
+	Role     string     `bson:"role" json:"role"`
+	JoinedAt time.Time  `bson:"joined_at" json:"joined_at"`
 }
 
 type UserWithRole struct {
-	UserID   primitive.ObjectID `bson:"user_id" json:"user_id"`
-	TeamID   primitive.ObjectID `bson:"team_id" json:"team_id"`
-	Role     string             `bson:"role" json:"role"`
-	JoinedAt time.Time          `bson:"joined_at" json:"joined_at"`
-	User     User               `bson:"user" json:"user"`
+	User     User      `bson:"user" json:"user"`
+	Role     string    `bson:"role" json:"role"`
+	JoinedAt time.Time `bson:"joined_at" json:"joined_at"`
 }
 
 var teamMembersColl *mongo.Collection
@@ -45,18 +43,33 @@ func (t TeamMemberSchema) CreateTeamMember(ctx context.Context) (*primitive.Obje
 	var teamMember TeamMemberSchema
 
 	err := teamMembersColl.FindOne(ctx, bson.M{"user_id": t.UserID, "team_id": t.TeamID}).Decode(&teamMember)
-	if err != nil && err.Error() != mongo.ErrNoDocuments.Error() {
-		return nil, mongo.ErrNoDocuments
+	if err == nil {
+		return nil, errors.New("user is already a member of the team")
+	}
+	if err != mongo.ErrNoDocuments {
+		return nil, err
 	}
 
 	t.JoinedAt = time.Now()
 
-	id, err := client.InsertOne(ctx, t)
+	id, err := teamMembersColl.InsertOne(ctx, t)
 	if err != nil {
 		return nil, err
 	}
 	oid := id.InsertedID.(primitive.ObjectID)
 	return &oid, nil
+}
+
+func GetTeamMember(ctx context.Context, teamId, userId primitive.ObjectID) (*TeamMemberSchema, error) {
+	var member TeamMemberSchema
+	err := teamMembersColl.FindOne(ctx, bson.M{
+		"team_id": teamId,
+		"user_id": userId,
+	}).Decode(&member)
+	if err != nil {
+		return nil, err
+	}
+	return &member, nil
 }
 
 func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit int) ([]TeamWithRole, error) {
@@ -69,6 +82,11 @@ func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit
 			{Key: "as", Value: "team"},
 		}}},
 		{{Key: "$unwind", Value: "$team"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "team", Value: 1},
+			{Key: "role", Value: 1},
+			{Key: "joined_at", Value: 1},
+		}}},
 		{{Key: "$skip", Value: (page - 1) * limit}},
 		{{Key: "$limit", Value: limit}},
 	}
@@ -79,7 +97,7 @@ func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit
 	}
 	defer cursor.Close(ctx)
 
-	var results []TeamWithRole
+	var results = make([]TeamWithRole, 0)
 	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
@@ -97,6 +115,11 @@ func GetUsersForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit
 			{Key: "as", Value: "user"},
 		}}},
 		{{Key: "$unwind", Value: "$user"}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "user", Value: 1},
+			{Key: "role", Value: 1},
+			{Key: "joined_at", Value: 1},
+		}}},
 		{{Key: "$skip", Value: (page - 1) * limit}},
 		{{Key: "$limit", Value: limit}},
 	}
@@ -107,7 +130,7 @@ func GetUsersForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit
 	}
 	defer cursor.Close(ctx)
 
-	var results []UserWithRole
+	var results = make([]UserWithRole, 0)
 	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}

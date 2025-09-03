@@ -11,7 +11,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type RedisStore struct {
@@ -109,6 +109,16 @@ func DeleteProjectCache(ctx context.Context, userId string) error {
 	return nil
 }
 
+func DeleteTeamsCache(ctx context.Context, userId string) error {
+	pattern := fmt.Sprintf("user:%s:teams*", userId)
+
+	if err := DeleteKeysByPattern(ctx, pattern, userId); err != nil {
+		log.Println("Error deleting data from cache: ", err.Error())
+		return err
+	}
+	return nil
+}
+
 func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key string, name string) bool {
 
 	err, isEmpty := redisClient.GetCacheData(key, ctx.Context(), &result)
@@ -139,6 +149,9 @@ func ClearAllCache(ctx context.Context, userId, taskId, projectId string) {
 		log.Println(err.Error())
 	}
 	if err := DeleteProjectCache(ctx, userId); err != nil {
+		log.Println(err.Error())
+	}
+	if err := DeleteTeamsCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}
 }

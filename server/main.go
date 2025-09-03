@@ -10,20 +10,20 @@ import (
 	"main/handlers"
 	"main/middlewares"
 	"main/routes"
+	"main/utils"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found, using environment variables")
-	}
+
+	utils.PullEnv()
+
 	prometheus_config.Init()
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -39,8 +39,11 @@ func main() {
 		ExposeHeaders:    "Set-Cookie",
 	}))
 
+	app.Use(logger.New(logger.Config{
+		Format: "${time} | ${status} | ${method} | ${path} | ${latency}\n",
+	}))
+
 	app.Use(prometheus_config.NewMiddleware())
-	app.Use(middlewares.LoggerMiddleware)
 
 	app.Get("/metrics", handlers.MetricsHandler)
 	app.Get("/health", func(ctx *fiber.Ctx) error {
@@ -87,5 +90,5 @@ func main() {
 	}()
 
 	log.Println("Server listening on port: ", port)
-	app.Listen(":" + port)
+	log.Fatalln(app.Listen(":" + port))
 }
