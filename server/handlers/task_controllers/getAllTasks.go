@@ -19,7 +19,7 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 	limit := ctx.QueryInt("limit", 10)
 	var dbTaks = make([]models.Task, 0)
 
-	cacheKey := fmt.Sprintf("user:%s:tasks:page:%s:limit:%s", user.ID.Hex(), page, limit)
+	cacheKey := fmt.Sprintf("user:%s:tasks:page:%d:limit:%d", user.ID.Hex(), page, limit)
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &dbTaks, cacheKey, "tasks") {

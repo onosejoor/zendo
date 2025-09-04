@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"errors"
+	"log"
 	"main/db"
 	"time"
 
@@ -136,4 +137,23 @@ func GetUsersForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit
 	}
 
 	return results, nil
+}
+func IsTeamMember(ctx context.Context, userId, teamId primitive.ObjectID) (bool, error) {
+	membersColl := db.GetClient().Collection("team_members")
+
+	number, err := membersColl.CountDocuments(ctx, bson.M{
+		"user_id": userId,
+		"team_id": teamId,
+		"role":    bson.M{"$in": []string{"owner", "admin"}},
+	})
+	if err != nil {
+		log.Println("Error counting IsTeamMember Documents: ", err)
+		return false, err
+	}
+
+	if number == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }

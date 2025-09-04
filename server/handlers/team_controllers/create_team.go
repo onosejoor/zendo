@@ -27,18 +27,6 @@ func CreateTeamController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	teamMember := models.TeamMemberSchema{
-		TeamID: *teamID,
-		UserID: user.ID,
-		Role:   "owner",
-	}
-	if _, err := teamMember.CreateTeamMember(ctx.Context()); err != nil {
-		log.Println("Error creating team_member: ", err)
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": false, "message": "Failed to create team_member, error: " + err.Error(),
-		})
-	}
-
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
 
 	return ctx.Status(201).JSON(fiber.Map{

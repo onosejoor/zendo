@@ -31,6 +31,25 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 
 	userId := ctx.Locals("user").(*models.UserRes).ID
 
+	if body.UserId == primitive.NilObjectID {
+		body.UserId = userId
+	}
+
+	if body.TeamID != primitive.NilObjectID {
+		isMember, err := models.IsTeamMember(ctx.Context(), userId, body.TeamID)
+		if err != nil {
+			log.Println("Error checking team membership: ", err)
+			return ctx.Status(500).JSON(fiber.Map{
+				"success": false, "message": "Internal server error",
+			})
+		}
+		if !isMember {
+			return ctx.Status(403).JSON(fiber.Map{
+				"success": false, "message": "You are not a member of this team",
+			})
+		}
+	}
+
 	id, err := models.CreateTask(body, ctx.Context(), userId)
 	if err != nil {
 		log.Println("Error creating task: ", err)
@@ -43,7 +62,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 	reminderPayload := models.Reminder{
 		TaskID:     id.(primitive.ObjectID),
 		TaskName:   body.Title,
-		UserID:     userId,
+		UserID:     body.UserId,
 		DueDate:    body.DueDate.Local(),
 		Expires_At: body.DueDate.Local(),
 		CreatedAt:  time.Now().Local(),
@@ -74,7 +93,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 
 	}
 
-	redis.ClearAllCache(ctx.Context(), userId.Hex(), "", body.ProjectId.Hex())
+	redis.ClearAllCache(ctx.Context(), userId.Hex(), body.TeamID.Hex(), body.ProjectId.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,

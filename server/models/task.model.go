@@ -3,7 +3,7 @@ package models
 import (
 	"context"
 	"main/db"
-	"os"
+	"main/utils"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,6 +25,21 @@ type Task struct {
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 }
 
+var (
+	tasksCollection    *mongo.Collection
+	projectsCollection *mongo.Collection
+)
+
+func init() {
+	var cl = db.GetClient()
+	if tasksCollection == nil {
+		tasksCollection = cl.Collection("tasks")
+	}
+	if projectsCollection == nil {
+		projectsCollection = cl.Collection("projects")
+	}
+}
+
 type SubTask struct {
 	ID        string `json:"_id" bson:"_id"`
 	Title     string `json:"title" bson:"title"`
@@ -40,15 +55,13 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 		return id, nil
 	}
 
-	client := db.GetClient()
-	collection := client.Collection("tasks")
-
-	newTaskId, err := collection.InsertOne(ctx, Task{
+	newTaskId, err := tasksCollection.InsertOne(ctx, Task{
 		Title:       p.Title,
 		Description: p.Description,
 		UserId:      userId,
 		SubTasks:    p.SubTasks,
 		DueDate:     p.DueDate,
+		TeamID:      p.TeamID,
 		Status:      p.Status,
 		CreatedAt:   time.Now(),
 	})
@@ -61,12 +74,11 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 
 func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx context.Context) (bool, error) {
 	remindersCollection := client.Collection("reminders")
-	taskCollection := client.Collection("tasks")
 
 	var taskResult bson.M
 	taskProjection := bson.M{"_id": 0, "status": 1}
 
-	err := taskCollection.FindOne(
+	err := tasksCollection.FindOne(
 		ctx,
 		bson.M{"_id": taskId}, options.FindOne().SetProjection(taskProjection),
 	).Decode(&taskResult)
@@ -95,6 +107,20 @@ func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx 
 		return false, err
 	}
 	return false, nil
+}
+
+func GetTasksForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit int) ([]Task, error) {
+	opts := utils.GeneratePaginationOptions(page, limit)
+	cursor, err := tasksCollection.Find(ctx, bson.M{"team_id": teamId}, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	var tasksSlice []Task
+	if err := cursor.All(ctx, &tasksSlice); err != nil {
+		return nil, err
+	}
+	return tasksSlice, nil
 }
 
 func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
@@ -130,9 +156,6 @@ func (task Task) CreateTaskWithTransaction(ctx context.Context, userId primitive
 		return primitive.NilObjectID, err
 	}
 	defer session.EndSession(ctx)
-
-	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
-	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		id, err := tasksCollection.InsertOne(sessCtx, Task{
@@ -175,9 +198,6 @@ func (task Task) DeleteTaskWithTransaction(ctx context.Context) error {
 	}
 	defer session.EndSession(ctx)
 
-	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
-	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
-
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		_, err := tasksCollection.DeleteOne(sessCtx, bson.M{"_id": id})
 		if err != nil {
@@ -207,9 +227,6 @@ func DeleteAllTasksWithTransaction(ctx context.Context, user *UserRes) error {
 		return err
 	}
 	defer session.EndSession(ctx)
-
-	tasksCollection := client.Database(os.Getenv("DATABASE")).Collection("tasks")
-	projectsCollection := client.Database(os.Getenv("DATABASE")).Collection("projects")
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
 		cursor, err := tasksCollection.Find(sessCtx, bson.M{"userId": user.ID})
