@@ -18,12 +18,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+	if os.Getenv("ENVIRONMENT") == "development" {
+		prometheus.DefaultRegisterer = prometheus.NewRegistry()
+		prometheus.DefaultGatherer = prometheus.NewRegistry()
+	}
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, using environment variables")
@@ -42,7 +49,6 @@ func main() {
 		AllowCredentials: true,
 		ExposeHeaders:    "Set-Cookie",
 	}))
-
 
 	app.Use(prometheus_config.NewMiddleware())
 	app.Get("/metrics", handlers.MetricsHandler)

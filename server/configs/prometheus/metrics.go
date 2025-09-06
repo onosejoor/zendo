@@ -2,6 +2,7 @@ package prometheus
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -80,7 +81,7 @@ func NewMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		start := time.Now()
 		path := c.Route().Path
-		method := c.Method()
+		method := sanitizeMethod(c.Method())
 
 		HttpRequestInProgress.WithLabelValues(path, method).Inc()
 		err := c.Next()
@@ -92,6 +93,29 @@ func NewMiddleware() fiber.Handler {
 		HttpRequestTotal.WithLabelValues(path, method, status).Inc()
 		return err
 	}
+}
+
+func sanitizeMethod(method string) string {
+	validateMethods := map[string]bool{
+		"GET":     true,
+		"POST":    true,
+		"PUT":     true,
+		"DELETE":  true,
+		"PATCH":   true,
+		"OPTIONS": true,
+		"HEAD":    true,
+		"CONNECT": true,
+		"TRACE":   true,
+	}
+
+	method = strings.ToUpper(method)
+	if !validateMethods[method] {
+		return method
+	}
+	if strings.HasPrefix(method, "GET") {
+		return "GET"
+	}
+	return "UNKNOWN"
 }
 
 func RecordProjectCreation() {
