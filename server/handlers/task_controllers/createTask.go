@@ -1,6 +1,7 @@
 package task_controllers
 
 import (
+	"context"
 	"log"
 	"main/configs/cron"
 	prometheus "main/configs/prometheus"
@@ -31,12 +32,8 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 
 	userId := ctx.Locals("user").(*models.UserRes).ID
 
-	if body.UserId == primitive.NilObjectID {
-		body.UserId = userId
-	}
-
 	if body.TeamID != primitive.NilObjectID {
-		isMember, err := models.IsTeamMember(ctx.Context(), userId, body.TeamID)
+		isMember, err := models.IsTeamMembers(ctx.Context(), []primitive.ObjectID{userId}, body.TeamID, true)
 		if err != nil {
 			log.Println("Error checking team membership: ", err)
 			return ctx.Status(500).JSON(fiber.Map{
@@ -47,6 +44,22 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 			return ctx.Status(403).JSON(fiber.Map{
 				"success": false, "message": "You are not a member of this team",
 			})
+		}
+
+		if len(body.Assignees) > 0 {
+			assignees, err := models.CheckAssignee(body.Assignees, body.TeamID, ctx.Context())
+			if err != nil {
+				log.Println("Error checking assignees: ", err)
+				return ctx.Status(500).JSON(fiber.Map{
+					"success": false, "message": "Internal server error",
+				})
+			}
+
+			if !assignees {
+				return ctx.Status(400).JSON(fiber.Map{
+					"success": false, "message": "One or more assignees are not members of the team",
+				})
+			}
 		}
 	}
 
@@ -59,45 +72,51 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	reminderPayload := models.Reminder{
-		TaskID:     id.(primitive.ObjectID),
-		TaskName:   body.Title,
-		UserID:     body.UserId,
-		DueDate:    body.DueDate.Local(),
-		Expires_At: body.DueDate.Local(),
-		CreatedAt:  time.Now().Local(),
-	}
+	setReminders(id.(primitive.ObjectID), body, ctx.Context(), userId)
 
-	statusText := "Task created successfully"
-
-	err = reminderPayload.CreateReminder(ctx.Context())
-	if err != nil {
-		statusText = "Task created, but reminder may not be scheduled"
-		log.Println("CREATE REMINDER FAILED: ", err)
-	}
-
-	if !body.DueDate.After(time.Now().Local().Add(10*time.Minute)) && body.Status != "completed" {
-		payload := cron.ReminderProps{
-			TaskID:   id.(primitive.ObjectID),
-			TaskName: body.Title,
-			UserID:   userId,
-			DueDate:  body.DueDate.Local(),
-			Ctx:      ctx.Context(),
+	if len(body.Assignees) > 0 {
+		for _, assigneeId := range body.Assignees {
+			go setReminders(id.(primitive.ObjectID), body, ctx.Context(), assigneeId)
 		}
-
-		err := payload.ScheduleReminderJob()
-		if err != nil {
-			statusText = "Task created, but reminder may not be scheduled"
-			log.Println("[Scheduler] Failed to schedule reminder: ", err)
-		}
-
 	}
 
 	redis.ClearAllCache(ctx.Context(), userId.Hex(), body.TeamID.Hex(), body.ProjectId.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
-		"message": statusText,
+		"message": "Task created successfully",
 		"taskId":  id,
 	})
+}
+
+func setReminders(id primitive.ObjectID, body models.Task, ctx context.Context, userId primitive.ObjectID) {
+
+	reminderPayload := models.Reminder{
+		TaskID:     id,
+		TaskName:   body.Title,
+		UserID:     userId,
+		DueDate:    body.DueDate.Local(),
+		Expires_At: body.DueDate.Local(),
+		CreatedAt:  time.Now().Local(),
+	}
+
+	err := reminderPayload.CreateReminder(ctx)
+	if err != nil {
+		log.Println("CREATE REMINDER FAILED: ", err)
+	}
+
+	if !body.DueDate.After(time.Now().Local().Add(10*time.Minute)) && body.Status != "completed" {
+		payload := cron.ReminderProps{
+			TaskID:   id,
+			TaskName: body.Title,
+			UserID:   userId, // ✅ correct user here too
+			DueDate:  body.DueDate.Local(),
+			Ctx:      ctx,
+		}
+
+		err := payload.ScheduleReminderJob()
+		if err != nil {
+			log.Println("[Scheduler] Failed to schedule reminder: ", err)
+		}
+	}
 }

@@ -208,3 +208,20 @@ func SetTasksCron(ctx context.Context) error {
 	log.Println("✅ total reminders added to cron: ", len(reminders))
 	return nil
 }
+
+func SetMultipleReminders(userIds []primitive.ObjectID, title string, dueDate time.Time, id primitive.ObjectID, ctx context.Context) {
+	for _, userId := range userIds {
+		reminderPayload := models.Reminder{
+			TaskID:     id,
+			TaskName:   title,
+			UserID:     userId,
+			DueDate:    dueDate.Local(),
+			Expires_At: dueDate.Local(),
+			CreatedAt:  time.Now().Local(),
+		}
+		err := reminderPayload.CreateReminder(ctx)
+		if err != nil {
+			log.Printf("CREATE REMINDER FAILED FOR USER %s, %v \n", userId, err)
+		}
+	}
+}

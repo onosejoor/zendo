@@ -138,22 +138,24 @@ func GetUsersForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit
 
 	return results, nil
 }
-func IsTeamMember(ctx context.Context, userId, teamId primitive.ObjectID) (bool, error) {
+
+func IsTeamMembers(ctx context.Context, userIds []primitive.ObjectID, teamId primitive.ObjectID, addRole bool) (bool, error) {
 	membersColl := db.GetClient().Collection("team_members")
 
-	number, err := membersColl.CountDocuments(ctx, bson.M{
-		"user_id": userId,
+	filter := bson.M{
+		"user_id": bson.M{"$in": userIds},
 		"team_id": teamId,
-		"role":    bson.M{"$in": []string{"owner", "admin"}},
-	})
+	}
+
+	if addRole {
+		filter["role"] = bson.M{"$in": []string{"owner", "admin"}}
+	}
+
+	number, err := membersColl.CountDocuments(ctx, filter)
 	if err != nil {
 		log.Println("Error counting IsTeamMember Documents: ", err)
 		return false, err
 	}
 
-	if number == 0 {
-		return false, nil
-	}
-
-	return true, nil
+	return number == int64(len(userIds)), nil
 }

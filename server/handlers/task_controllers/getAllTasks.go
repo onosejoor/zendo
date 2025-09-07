@@ -32,7 +32,7 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 
 	opts := utils.GeneratePaginationOptions(page, limit)
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID}, opts)
+	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID, "team_id": nil}, opts)
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{

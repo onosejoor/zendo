@@ -90,5 +90,5 @@ func main() {
 	}()
 
 	log.Println("Server listening on port: ", port)
-	log.Fatalln(app.Listen(":" + port))
+	app.Listen(":" + port)
 }

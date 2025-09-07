@@ -13,16 +13,17 @@ import (
 )
 
 type Task struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title       string             `json:"title" bson:"title" validate:"required"`
-	Description string             `json:"description" bson:"description"`
-	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
-	SubTasks    []SubTask          `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	TeamID      primitive.ObjectID `json:"team_id,omitempty" bson:"team_id,omitempty"`
-	DueDate     time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
-	Status      string             `json:"status" bson:"status" validate:"required"`
-	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
+	ID          primitive.ObjectID   `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title       string               `json:"title" bson:"title" validate:"required"`
+	Description string               `json:"description" bson:"description"`
+	UserId      primitive.ObjectID   `json:"userId" bson:"userId"`
+	SubTasks    []SubTask            `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId   primitive.ObjectID   `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	TeamID      primitive.ObjectID   `json:"team_id,omitempty" bson:"team_id,omitempty"`
+	DueDate     time.Time            `json:"dueDate" bson:"dueDate" validate:"required"`
+	Status      string               `json:"status" bson:"status" validate:"required"`
+	Assignees   []primitive.ObjectID `json:"assignees" bson:"assignees"`
+	CreatedAt   time.Time            `json:"created_at" bson:"created_at"`
 }
 
 var (
@@ -62,6 +63,7 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 		SubTasks:    p.SubTasks,
 		DueDate:     p.DueDate,
 		TeamID:      p.TeamID,
+		Assignees:   p.Assignees,
 		Status:      p.Status,
 		CreatedAt:   time.Now(),
 	})
@@ -70,6 +72,19 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 	}
 
 	return newTaskId.InsertedID, nil
+}
+
+func CheckAssignee(assignees []primitive.ObjectID, teamId primitive.ObjectID, ctx context.Context) (bool, error) {
+	isMembers, err := IsTeamMembers(ctx, assignees, teamId, false)
+	if err != nil {
+		return false, err
+	}
+	if isMembers {
+		return true, nil
+	}
+
+	return false, nil
+
 }
 
 func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx context.Context) (bool, error) {
