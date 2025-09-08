@@ -17,7 +17,7 @@ func GetTeamMembersController(ctx *fiber.Ctx) error {
 
 	var teamMembersSlice = make([]models.UserWithRole, 0)
 
-	cacheKey := fmt.Sprintf("user:%s:team:%s:members:page:%d:limit:%d", user.ID.Hex(), teamId.Hex(), page, limit)
+	cacheKey := fmt.Sprintf("user:%s:teams:%s:members:page:%d:limit:%d", user.ID.Hex(), teamId.Hex(), page, limit)
 
 	redisClient := redis.GetRedisClient()
 

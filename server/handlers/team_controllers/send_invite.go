@@ -38,7 +38,6 @@ func teamMemberExist(ctx context.Context, invitePayload *TeamInvite, teamId prim
 		"user_id": user.ID,
 		"team_id": teamId,
 	}).Decode(&teamMember)
-
 	if err == nil {
 		return user.ID, true, nil
 	}
@@ -78,11 +77,21 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		})
 	}
 
+	inviteExists := models.CheckIfInviteExists(ctx.Context(), invitePayload.Email, teamId)
+	if inviteExists {
+		return ctx.Status(400).JSON(fiber.Map{
+			"success": false, "message": "an invite has already been sent to this email for this team",
+		})
+	}
+
 	teamMember := &models.TeamMemberSchema{
 		TeamID: teamId,
 		UserID: userId,
 		Role:   invitePayload.Role,
+		Email:  invitePayload.Email,
 	}
+
+	log.Println(teamMember)
 
 	token, err := cookies.GenerateTeamInviteEmailToken(teamMember)
 	if err != nil {
@@ -106,6 +115,17 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false, "message": "Failed to send invite email",
 		})
+	}
+
+	inviteSchemaProps := models.TeamInviteSchema{
+		Email:  invitePayload.Email,
+		TeamID: teamId,
+		Token:  token,
+	}
+
+	err = inviteSchemaProps.CreateMemberInvite(ctx.Context())
+	if err != nil {
+		log.Println("ERROR ADDING USER INVITE TO DB: ", err)
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{

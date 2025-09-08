@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"main/db"
 	"main/utils"
 	"time"
@@ -116,7 +117,7 @@ func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx 
 		bson.M{"taskId": taskId}, opts,
 	).Decode(&result)
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return true, err
 		}
 		return false, err

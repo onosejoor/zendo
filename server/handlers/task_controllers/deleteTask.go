@@ -1,6 +1,7 @@
 package task_controllers
 
 import (
+	"errors"
 	"log"
 	"main/configs/cron"
 	prometheus "main/configs/prometheus"
@@ -29,7 +30,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 
 	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "Task not found",
 			})
@@ -73,7 +74,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		prometheus.RecordCronJobOperation("delete_job")
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",
@@ -100,7 +101,7 @@ func DeleteAllTasksController(ctx *fiber.Ctx) error {
 		}
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",

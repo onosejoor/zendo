@@ -144,7 +144,7 @@ func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key s
 
 }
 
-func ClearAllCache(ctx context.Context, userId, taskId, projectId string) {
+func ClearAllCache(ctx context.Context, userId string) {
 	if err := DeleteTaskCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}

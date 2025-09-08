@@ -80,7 +80,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		}
 	}
 
-	redis.ClearAllCache(ctx.Context(), userId.Hex(), body.TeamID.Hex(), body.ProjectId.Hex())
+	redis.ClearAllCache(ctx.Context(), userId.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,

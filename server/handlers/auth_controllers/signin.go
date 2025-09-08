@@ -1,6 +1,7 @@
 package auth_controllers
 
 import (
+	"errors"
 	"log"
 	"main/cookies"
 	"main/db"
@@ -38,7 +39,7 @@ func HandleSignin(ctx *fiber.Ctx) error {
 
 	var userData models.User
 	if err := collection.FindOne(ctx.Context(), bson.M{"email": body.Email}).Decode(&userData); err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "User not found",
 			})

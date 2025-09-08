@@ -30,7 +30,7 @@ func CreateProjectController(ctx *fiber.Ctx) error {
 	}
 
 	prometheus.RecordProjectCreation()
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 	prometheus.RecordRedisOperation("clear_all_cache")
 	return ctx.Status(201).JSON(fiber.Map{
 		"success":   true,

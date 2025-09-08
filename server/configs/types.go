@@ -164,19 +164,6 @@ const DUE_DATE_TEMPLATE = `
             background-color: #149041ff;
         }
 
-        .task-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1d2025ff;
-            margin: 16px 0 8px 0;
-        }
-
-        .due-date {
-            font-style: italic;
-            font-weight: 500;
-            color: #ef4343ff;
-        }
-
         .greeting {
             margin-bottom: 24px;
         }
@@ -185,12 +172,31 @@ const DUE_DATE_TEMPLATE = `
             margin-bottom: 24px;
         }
 
-        .task-details {
-            margin-bottom: 24px;
+        .task-info {
+            background-color: #fef3c7;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 24px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .task-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d2025ff;
+            margin: 0 0 8px 0;
+        }
+
+        .due-date {
+            font-style: italic;
+            font-weight: 500;
+            color: #ef4343ff;
+            margin: 0;
         }
 
         .action-section {
             margin: 32px 0;
+            text-align: center;
         }
 
         .signature {
@@ -202,6 +208,12 @@ const DUE_DATE_TEMPLATE = `
             font-weight: 600;
         }
 
+        .secondary-text {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
         @media (max-width: 600px) {
             .email-container {
                 padding: 20px;
@@ -210,6 +222,10 @@ const DUE_DATE_TEMPLATE = `
             
             body {
                 padding: 10px;
+            }
+            
+            .task-info {
+                padding: 16px;
             }
         }
     </style>
@@ -221,16 +237,18 @@ const DUE_DATE_TEMPLATE = `
 
         <p class="reminder-text">⏰ This is a quick reminder that one of your tasks is coming due soon:</p>
 
-        <div class="task-details">
+        <div class="task-info">
             <p class="task-title">Task: %s</p>
-            <p>Due Date: <span class="due-date">%s</span></p>
+            <p class="due-date">Due Date: %s</p>
         </div>
 
-        <p>Please make sure to wrap it up before the deadline.</p>
+        <p class="reminder-text">Please make sure to wrap it up before the deadline.</p>
 
         <div class="action-section">
             <a href="%s" class="button">View Task Details</a>
         </div>
+
+        <p class="secondary-text">Need help or have questions? Just reply to this email and we'll be happy to assist.</p>
 
         <div class="signature">
             <p>Let us know if you need any help.<br><br>

@@ -119,3 +119,16 @@ func DeleteTeam(ctx context.Context, teamID, userID primitive.ObjectID) error {
 
 	return nil
 }
+
+func CheckMemberRoleMatch(userId, teamId primitive.ObjectID, ctx context.Context, roles []string) bool {
+
+	number, err := teamMembersColl.CountDocuments(ctx, bson.M{
+		"user_id": userId, "team_id": teamId, "role": bson.M{"$in": roles},
+	})
+	if err != nil {
+		return false
+	}
+
+	return number > 0
+
+}

@@ -4,6 +4,7 @@ import (
 	"log"
 	"main/configs/redis"
 	"main/cookies"
+	"main/models"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -39,7 +40,12 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	redis.ClearAllCache(ctx.Context(), teamMember.UserID.Hex(), "", "")
+	err = models.DeleteMemberInvite(ctx.Context(), teamMember.Email, teamMember.TeamID)
+	if err != nil {
+		log.Println("Error removing member invite: ", err)
+	}
+
+	redis.ClearAllCache(ctx.Context(), teamMember.UserID.Hex())
 	return ctx.Status(201).JSON(fiber.Map{
 		"success": true, "team_id": teamMember.TeamID.Hex(), "message": "Team member created successfully",
 	})

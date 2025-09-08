@@ -1,6 +1,7 @@
 package team_controllers
 
 import (
+	"main/configs/redis"
 	"main/models"
 	"main/utils"
 
@@ -18,6 +19,7 @@ func DeleteTeamController(ctx *fiber.Ctx) error {
 		})
 	}
 
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 	return ctx.JSON(fiber.Map{
 		"success": true,
 		"message": "Team deleted successfully",

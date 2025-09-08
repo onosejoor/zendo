@@ -14,6 +14,7 @@ import (
 
 type TeamMemberSchema struct {
 	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Email    string             `json:"email" bson:"email" validate:"required"`
 	TeamID   primitive.ObjectID `json:"team_id" bson:"team_id" validate:"required"`
 	UserID   primitive.ObjectID `json:"user_id" bson:"user_id" validate:"required"`
 	Role     string             `json:"role" bson:"role" validate:"required,oneof=owner admin member"`
@@ -57,6 +58,7 @@ func (t TeamMemberSchema) CreateTeamMember(ctx context.Context) (*primitive.Obje
 	if err != nil {
 		return nil, err
 	}
+
 	oid := id.InsertedID.(primitive.ObjectID)
 	return &oid, nil
 }
@@ -71,6 +73,17 @@ func GetTeamMember(ctx context.Context, teamId, userId primitive.ObjectID) (*Tea
 		return nil, err
 	}
 	return &member, nil
+}
+
+func DeleteTeamMember(memberId, teamId primitive.ObjectID, ctx context.Context) error {
+	_, err := teamMembersColl.DeleteOne(ctx, bson.M{
+		"team_id": teamId,
+		"user_id": memberId,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit int) ([]TeamWithRole, error) {

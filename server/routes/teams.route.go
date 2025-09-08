@@ -9,9 +9,9 @@ import (
 )
 
 func TeamsRoutes(app fiber.Router) {
-	teamsRoute := app.Group("/teams")
 
-	app.Post("/teams/members/invite/callback", team_controllers.CreateTeamMemberController)
+	app.Get("/teams/members/invite/callback", team_controllers.CreateTeamMemberController)
+	teamsRoute := app.Group("/teams")
 
 	teamsRoute.Use(middlewares.AuthMiddleware)
 
@@ -23,4 +23,6 @@ func TeamsRoutes(app fiber.Router) {
 	teamsRoute.Delete("/:id", team_controllers.DeleteTeamController)
 
 	teamsRoute.Get("/:teamId/tasks", team_task_controllers.GetTeamTasksController)
+	teamsRoute.Delete("/:teamId/members/:memberId", team_controllers.RemoveTeamMemberController)
+	teamsRoute.Get("/:teamId/tasks/:id", team_task_controllers.GetTeamTaskByIdController)
 }
