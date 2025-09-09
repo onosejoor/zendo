@@ -113,9 +113,8 @@ func calculateReminderTime(due time.Time) time.Time {
 
 func (params ReminderProps) sendEmailReminder() {
 	client := db.GetClient()
-	usersCollection := client.Collection("users")
 
-	user, err := models.GetUser(params.UserID, usersCollection, params.Ctx)
+	user, err := models.GetUser(params.UserID, params.Ctx)
 	if err != nil {
 		log.Println("[Reminder] Error getting user data:", err)
 		return

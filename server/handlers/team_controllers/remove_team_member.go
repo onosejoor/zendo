@@ -14,9 +14,10 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	memberUserId := utils.HexToObjectID(ctx.Params("memberId"))
 	teamId := utils.HexToObjectID(ctx.Params("teamId"))
 
-	if user.ID == memberUserId {
-		return ctx.Status(403).JSON(fiber.Map{
-			"success": false, "message": "You cannot remove yourself",
+	if teamExist := models.CheckTeamExist(teamId, ctx.Context()); !teamExist {
+		return ctx.Status(404).JSON(fiber.Map{
+			"success": false,
+			"message": "Team does not exist",
 		})
 	}
 
@@ -30,7 +31,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	isMember := models.CheckMemberRoleMatch(memberUserId, teamId, ctx.Context(), []string{"member", "admin"})
 	if !isMember {
 		return ctx.Status(403).JSON(fiber.Map{
-			"success": false, "message": "Only Admins or Member can be removed or member does not exist",
+			"success": false, "message": "Only Admins or Member can be removed  or member does not exist",
 		})
 	}
 
@@ -42,7 +43,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	redis.DeleteTeamsCache(ctx.Context(), user.ID.Hex())
+	go redis.DeleteTeamsCache(ctx.Context(), user.ID.Hex())
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Member Removed Successfully",
 	})

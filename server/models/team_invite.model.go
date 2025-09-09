@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -15,6 +16,7 @@ type TeamInviteSchema struct {
 	TeamID    primitive.ObjectID `json:"team_id" bson:"team_id" validate:"required"`
 	ExpiresAt time.Time          `json:"expires_at" bson:"expires_at"`
 	Token     string             `json:"token" bson:"token"`
+	Status    string             `json:"status" bson:"status"`
 	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
 }
 
@@ -25,16 +27,27 @@ func init() {
 		inviteCollection = db.GetClient().Collection("team_invites")
 	}
 }
-
-func (teamMember TeamInviteSchema) CreateMemberInvite(ctx context.Context) error {
-	teamMember.CreatedAt = time.Now()
-	teamMember.ExpiresAt = time.Now().Add(7 * 24 * time.Hour)
-
-	_, err := inviteCollection.InsertOne(ctx, teamMember)
-	if err != nil {
-		return err
+func (invite *TeamInviteSchema) CreateOrUpdateInvite(ctx context.Context) error {
+	filter := bson.M{
+		"email":   invite.Email,
+		"team_id": invite.TeamID,
 	}
-	return nil
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":    invite.Status,
+			"token":     invite.Token,
+			"updatedAt": time.Now(),
+			"expiresAt": time.Now().Add(7 * 24 * time.Hour),
+		},
+		"$setOnInsert": bson.M{
+			"createdAt": time.Now(),
+		},
+	}
+
+	opts := options.Update().SetUpsert(true)
+	_, err := inviteCollection.UpdateOne(ctx, filter, update, opts)
+	return err
 }
 
 func DeleteMemberInvite(ctx context.Context, email string, teamId primitive.ObjectID) error {
@@ -51,6 +64,7 @@ func CheckIfInviteExists(ctx context.Context, email string, teamId primitive.Obj
 	emailExists, err := inviteCollection.CountDocuments(ctx, bson.M{
 		"email":   email,
 		"team_id": teamId,
+		"status":  "sent",
 	})
 	if err != nil {
 		return false

@@ -17,6 +17,7 @@ type TeamSchema struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name        string             `json:"name" bson:"name" validate:"required"`
 	Description string             `json:"description" bson:"description"`
+	CreatorId   primitive.ObjectID `json:"creator_id" bson:"creator_id"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
@@ -27,6 +28,20 @@ func init() {
 	if teamColl == nil {
 		teamColl = db.GetClient().Collection("teams")
 	}
+}
+
+func CheckTeamExist(teamId primitive.ObjectID, ctx context.Context) bool {
+
+	number, err := teamColl.CountDocuments(ctx, bson.M{
+		"_id": teamId,
+	})
+	if err != nil {
+		log.Println("ERROR CHECKING TEAM EXIST: ", err)
+		return false
+	}
+
+	return number > 0
+
 }
 
 func GetTeams(ctx context.Context, opts *options.FindOptions) ([]TeamSchema, error) {
@@ -69,6 +84,7 @@ func GetTeamById(ctx context.Context, teamId, userId primitive.ObjectID) (*TeamS
 func (t TeamSchema) CreateTeam(ctx context.Context, userID primitive.ObjectID) (*primitive.ObjectID, error) {
 	t.CreatedAt = time.Now()
 	t.UpdatedAt = time.Now()
+	t.CreatorId = userID
 
 	id, err := teamColl.InsertOne(ctx, t)
 	if err != nil {
@@ -95,16 +111,15 @@ func (t TeamSchema) CreateTeam(ctx context.Context, userID primitive.ObjectID) (
 }
 
 func DeleteTeam(ctx context.Context, teamID, userID primitive.ObjectID) error {
-	count, err := teamMembersColl.CountDocuments(ctx, bson.M{
-		"team_id": teamID,
-		"user_id": userID,
-		"role":    "owner",
+	count, err := teamColl.CountDocuments(ctx, bson.M{
+		"creator_id": userID,
+		"_id":        teamID,
 	})
 	if err != nil {
 		return err
 	}
 	if count == 0 {
-		return errors.New("only team owner can delete the team")
+		return errors.New("only the team owner can delete the team")
 	}
 
 	_, err = teamColl.DeleteOne(ctx, bson.M{"_id": teamID})
@@ -121,14 +136,11 @@ func DeleteTeam(ctx context.Context, teamID, userID primitive.ObjectID) error {
 }
 
 func CheckMemberRoleMatch(userId, teamId primitive.ObjectID, ctx context.Context, roles []string) bool {
-
-	number, err := teamMembersColl.CountDocuments(ctx, bson.M{
+	memberExist := teamMembersColl.FindOne(ctx, bson.M{
 		"user_id": userId, "team_id": teamId, "role": bson.M{"$in": roles},
-	})
-	if err != nil {
-		return false
-	}
+	}).Err() == nil
 
-	return number > 0
+	log.Println(memberExist)
 
+	return memberExist
 }

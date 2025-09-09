@@ -3,7 +3,6 @@ package email_controllers
 import (
 	"log"
 	"main/cookies"
-	"main/db"
 	"main/models"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,8 +19,7 @@ func SendEmailTokenController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	client := db.GetClient().Collection("users")
-	data, err := models.GetUser(user.ID, client, ctx.Context())
+	data, err := models.GetUser(user.ID, ctx.Context())
 	if err != nil {
 		log.Println("Error getting user: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{

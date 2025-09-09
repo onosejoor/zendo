@@ -7,7 +7,6 @@ import (
 	"os"
 	"sync"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -78,15 +77,4 @@ func GetClientWithoutDB() *mongo.Client {
 	}
 
 	return client
-}
-
-func CreateReminderTTLIndex(collection *mongo.Collection) {
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{Key: "expiresAt", Value: 1}},
-		Options: options.Index().SetExpireAfterSeconds(0),
-	}
-	_, err := collection.Indexes().CreateOne(context.Background(), indexModel)
-	if err != nil {
-		log.Fatalf("Failed to create TTL index: %v", err)
-	}
 }

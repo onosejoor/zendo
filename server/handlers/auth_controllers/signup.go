@@ -48,7 +48,7 @@ func HandleSignup(ctx *fiber.Ctx) error {
 		})
 	}
 
-	id, err := body.CreateUser(collection, ctx.Context())
+	id, err := body.CreateUser(ctx.Context())
 	if err != nil {
 		log.Println("error creating user: ", err)
 		return ctx.Status(500).JSON(fiber.Map{

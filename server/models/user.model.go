@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"log"
+	"main/db"
 	"strings"
 	"time"
 
@@ -35,6 +36,14 @@ type UserRes struct {
 	EmailVerified bool               `json:"email_verified"`
 }
 
+var userCol *mongo.Collection
+
+func init() {
+	if userCol == nil {
+		userCol = db.GetClient().Collection("users")
+	}
+}
+
 func (u *User) ComparePassword(password string) bool {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
 		return false
@@ -42,14 +51,14 @@ func (u *User) ComparePassword(password string) bool {
 	return true
 }
 
-func (p UserPayload) CreateUser(collection *mongo.Collection, ctx context.Context) (id primitive.ObjectID, err error) {
+func (p UserPayload) CreateUser(ctx context.Context) (id primitive.ObjectID, err error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(p.Password), 12)
 	if err != nil {
 		log.Println("error hasing password:", err)
 		return primitive.NilObjectID, err
 	}
 
-	data, err := collection.InsertOne(ctx, User{
+	data, err := userCol.InsertOne(ctx, User{
 		Email:         p.Email,
 		Username:      strings.TrimSpace(p.Username),
 		Password:      string(hashedPassword),
@@ -75,13 +84,13 @@ type GetUserByEmailPayload struct {
 	ID    primitive.ObjectID `bson:"_id" json:"_id"`
 }
 
-func GetUser(userId primitive.ObjectID, collection *mongo.Collection, ctx context.Context) (data GetUserPayload, err error) {
+func GetUser(userId primitive.ObjectID, ctx context.Context) (data GetUserPayload, err error) {
 	var user GetUserPayload
 	projection := bson.M{"email": 1, "username": 1, "_id": 0}
 
 	opts := options.FindOne().SetProjection(projection)
 
-	err = collection.FindOne(ctx, bson.M{"_id": userId}, opts).Decode(&user)
+	err = userCol.FindOne(ctx, bson.M{"_id": userId}, opts).Decode(&user)
 	if err != nil {
 		return GetUserPayload{}, err
 	}
@@ -89,16 +98,16 @@ func GetUser(userId primitive.ObjectID, collection *mongo.Collection, ctx contex
 	return user, nil
 }
 
-func GetUserByEmail(email string, collection *mongo.Collection, ctx context.Context) (data GetUserByEmailPayload, err error) {
+func GetUserByEmail(email string, ctx context.Context) (data *GetUserByEmailPayload, err error) {
 	var user GetUserByEmailPayload
 	projection := bson.M{"email": 1, "_id": 1}
 
 	opts := options.FindOne().SetProjection(projection)
 
-	err = collection.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
+	err = userCol.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 	if err != nil {
-		return GetUserByEmailPayload{}, err
+		return nil, err
 	}
 
-	return user, nil
+	return &user, nil
 }

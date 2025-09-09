@@ -10,7 +10,7 @@ import (
 
 func TeamsRoutes(app fiber.Router) {
 
-	app.Get("/teams/members/invite/callback", team_controllers.CreateTeamMemberController)
+	app.Get("/teams/members/invite", team_controllers.CreateTeamMemberController)
 	teamsRoute := app.Group("/teams")
 
 	teamsRoute.Use(middlewares.AuthMiddleware)

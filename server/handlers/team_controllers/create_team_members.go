@@ -40,10 +40,12 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	err = models.DeleteMemberInvite(ctx.Context(), teamMember.Email, teamMember.TeamID)
-	if err != nil {
-		log.Println("Error removing member invite: ", err)
-	}
+	go func() {
+		err = models.DeleteMemberInvite(ctx.Context(), teamMember.Email, teamMember.TeamID)
+		if err != nil {
+			log.Println("Error removing member invite: ", err)
+		}
+	}()
 
 	redis.ClearAllCache(ctx.Context(), teamMember.UserID.Hex())
 	return ctx.Status(201).JSON(fiber.Map{

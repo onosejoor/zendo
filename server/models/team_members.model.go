@@ -42,9 +42,7 @@ func init() {
 }
 
 func (t TeamMemberSchema) CreateTeamMember(ctx context.Context) (*primitive.ObjectID, error) {
-	var teamMember TeamMemberSchema
-
-	err := teamMembersColl.FindOne(ctx, bson.M{"user_id": t.UserID, "team_id": t.TeamID}).Decode(&teamMember)
+	err := teamMembersColl.FindOne(ctx, bson.M{"user_id": t.UserID, "team_id": t.TeamID}).Err()
 	if err == nil {
 		return nil, errors.New("user is already a member of the team")
 	}
