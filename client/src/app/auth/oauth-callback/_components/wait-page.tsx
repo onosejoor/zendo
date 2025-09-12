@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
 import { sendOauthCode } from "@/lib/actions/token";
-import SuccessComp from "./success-comp";
 import { useEffect, useState } from "react";
-import CustomOAuthErrorDisplay from "./custom-error-comp";
 import Loader from "@/components/loader-card";
+import SuccessComp from "@/app/_components/success-comp";
+import ErrorDisplay from "@/components/error-display";
 
 export default function WaitComponant({ code }: { code: string }) {
   const [result, setResult] = useState<APIRes | null>(null);
@@ -25,11 +25,17 @@ export default function WaitComponant({ code }: { code: string }) {
   }
 
   if (result?.success) {
-    return <SuccessComp />;
+    return (
+      <SuccessComp
+        title="Signin Successfully"
+        message=" Oauth Signing Successfull, redirecting now"
+        redirectRoute="/dashboard"
+      />
+    );
   }
 
   return (
-    <CustomOAuthErrorDisplay
+    <ErrorDisplay
       title="Error Signin In"
       message={result?.message}
     />

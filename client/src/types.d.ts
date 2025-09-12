@@ -6,10 +6,13 @@ declare global {
     description: string;
     subTasks?: ISubTask[];
     projectId?: string;
+    assignees?: string[];
+    team_id?: string;
     dueDate: Date | string;
     status: Status;
     created_at: Date;
   }
+
   interface ISubTask {
     _id: string;
     title: string;
@@ -23,6 +26,27 @@ declare global {
     ownerId: string;
     totalTasks: number;
     created_at: Date;
+  }
+
+  type ITeam = {
+    _id: string;
+    name: string;
+    description: string;
+    creatorId: string;
+    created_at: Date;
+    role: TeamRole;
+    joined_at: Date;
+    members_count: number;
+  };
+
+  type TeamRole = "owner" | "admin" | "member";
+
+  interface IMember extends IUser {
+    role: Role;
+  }
+
+  interface ITeamWithMember {
+    member: IMember;
   }
 
   type SignUpFormData = {
@@ -58,10 +82,11 @@ declare global {
     dueToday: number;
   }
 
-  type UserRes = {
-    success: boolean;
-    user: IUser;
-  };
+  interface Assignees {
+    _id: string;
+    username: string;
+    email: string;
+  }
 }
 
 export {};

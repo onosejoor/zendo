@@ -1,10 +1,7 @@
-import { Trash, Trash2, X } from "lucide-react";
+import { DeleteIcon, Trash, X } from "lucide-react";
 import { Button } from "../ui/button";
 
-import { handleDeleteProject } from "@/lib/actions/projects";
 import { useState } from "react";
-import { handleDeleteTask } from "@/lib/actions/tasks";
-import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,40 +13,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { handleDeleteTeam } from "@/lib/actions/teams";
+import { handleRemoveMember } from "@/lib/actions/members";
 
 type Props = {
   id: string;
-  type: "task" | "project" | "team";
-  card?: boolean;
+  teamId: string;
+  username: string
 };
 
-const typePrompts = {
-  task: {
-    message: "You are about to delete this task",
-    action: handleDeleteTask,
-  },
-  project: {
-    message:
-      "Are you sure you want to delete this project and all tasks in it?",
-    action: handleDeleteProject,
-  },
-  team: {
-    message:
-      "Are you sure you want to delete this team and all tasks and members in it?",
-    action: handleDeleteTeam,
-  },
-};
-
-export default function DeleteDataDialog({ id, type, card = false }: Props) {
+export default function RemoveMemberDialog({ id, teamId, username }: Props) {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const prompt = typePrompts[type];
-
   const handleAction = async () => {
     setLoading(true);
-    await prompt.action(id);
+    await handleRemoveMember(id, teamId);
     setLoading(false);
 
     setOpenDialog(false);
@@ -58,23 +36,14 @@ export default function DeleteDataDialog({ id, type, card = false }: Props) {
   return (
     <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
       <AlertDialogTrigger asChild>
-        <Button
-          onClick={() => setOpenDialog(!openDialog)}
-          disabled={loading}
-          className={cn(
-            "text-red-600 justify-start !px-2",
-            card ? "w-full" : "w-fit"
-          )}
-          variant={card ? "ghost" : "outline"}
-        >
-          <Trash2 className="h-4 w-4 " />
-          {loading ? "Deleting... " : "Delete"}
+        <Button variant={"destructive"} className="flex items-center">
+          <DeleteIcon /> {loading ? "Removing..." : "Remove Member"}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>{prompt.message}</AlertDialogDescription>
+          <AlertDialogDescription>{`Are you sure you want to remove ${username} from this team?`}</AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter className="flex !justify-start gap-5 items-center">
@@ -92,7 +61,7 @@ export default function DeleteDataDialog({ id, type, card = false }: Props) {
               className="flex space-x-2 bg-red-500 items-center"
               variant={"destructive"}
             >
-              <Trash className="size-5" /> {loading ? "Deleting..." : "Delete"}
+              <Trash className="size-5" /> {loading ? "Removing..." : "Remove"}
             </Button>
           </AlertDialogAction>
         </AlertDialogFooter>

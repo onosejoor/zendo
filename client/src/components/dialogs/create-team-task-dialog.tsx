@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { ChangeEvent, useState } from "react";
+import { KeyboardEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,65 +25,63 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useProjects } from "@/hooks/use-projects";
-import { createTask, mutateTasks } from "@/lib/actions/tasks";
-import { getLocalISOString, getTextNewLength } from "@/lib/functions";
+import { getLocalISOString, validateText } from "@/lib/functions";
 import SubTask from "@/app/dashboard/_components/sub-task-card";
 import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import { useRouter } from "next/navigation";
+import { useTeamMembers } from "@/hooks/use-teams";
+import { mutateTeam } from "@/lib/actions/teams";
+import { AssigneePopover } from "@/app/dashboard/teams/tasks/_components/assignee-card";
+import { createTeamTask } from "@/lib/actions/team-tasks";
+import { getErrorMesage } from "@/lib/utils";
 
 interface CreateTaskDialogProps {
-  defaultProjectId?: string;
+  defaultTeamId: string;
 }
 
-export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
+const statusArray = [
+  { value: "pending", label: "Pending" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
+
+const initialFormData = (defaultTeamId: string) => ({
+  title: "",
+  description: "",
+  status: "pending" as Status,
+  team_id: defaultTeamId,
+  dueDate: getLocalISOString(),
+  assignees: [""],
+  subTasks: [],
+});
+
+export default function CreateTeamTaskDialog({
+  defaultTeamId,
+}: CreateTaskDialogProps) {
   const [open, setOpenChange] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    status: "pending" as Status,
-    projectId: defaultProjectId || "",
-    dueDate: getLocalISOString(),
-    subTasks: [],
-  });
+  const [formData, setFormData] = useState(initialFormData(defaultTeamId));
 
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
-  const { title, description, status, dueDate, projectId, subTasks } = formData;
+  const { title, description, status, dueDate, team_id, subTasks, assignees } =
+    formData;
   const isDisabled = isLoading || !title.trim() || !dueDate;
 
   const onOpenChange = (value: boolean) => setOpenChange(value);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    const { value: newValue, isLong } = getTextNewLength({ id, value });
-    if (isLong) {
-      const chars = id === "title" ? 70 : 300;
-      toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
-        style: { textTransform: "capitalize" },
-      });
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddSubTask();
     }
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [id]: newValue,
-      };
-    });
   };
 
-  const handleSelect = (value: string, name: string) => {
-    setFormData((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+  const updateForm = (key: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [key]: validateText(key, value) }));
   };
 
   const handleAddSubTask = () => {
@@ -92,48 +90,42 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
   };
 
   const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      subTasks: [],
-      status: "pending",
-      projectId: "",
-      dueDate: new Date().toISOString().slice(0, 16),
-    });
+    setFormData(initialFormData(defaultTeamId));
     setNewSubTaskTitle("");
   };
 
-  const { data, isLoading: loading } = useProjects();
+  const { data, isLoading: loading } = useTeamMembers(team_id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsLoading(true);
     try {
-      const { success, message, taskId } = await createTask(formData, subTasks);
+      const { success, message, taskId } = await createTeamTask(
+        formData,
+        subTasks
+      );
 
       const options = success ? "success" : "error";
       toast[options](message);
 
       if (success) {
         onOpenChange(false);
-        mutateTasks("", projectId);
+        mutateTeam(team_id);
         resetForm();
         router.push(`/dashboard/tasks/${taskId}`);
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Internal server error"
-      );
+      toast.error(getErrorMesage(error));
       console.error("Failed to create task:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const { projects = [] } = data || {};
+  const { members } = data?.data || {};
 
-  const disabledSelect = loading || projects.length < 1;
+  // const disabledSelect = loading || members!.length < 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -159,7 +151,7 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
                   id="title"
                   placeholder="Enter task title"
                   value={title}
-                  onChange={handleChange}
+                  onChange={(e) => updateForm("title", e.target.value)}
                   required
                 />
               </div>
@@ -170,7 +162,7 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
                   placeholder="Enter task description"
                   value={description}
                   className="!max-h-30"
-                  onChange={handleChange}
+                  onChange={(e) => updateForm("description", e.target.value)}
                   rows={3}
                 />
               </div>
@@ -181,7 +173,7 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
                   type="datetime-local"
                   min={getLocalISOString()}
                   value={dueDate as string}
-                  onChange={handleChange}
+                  onChange={(e) => updateForm("dueDate", e.target.value)}
                   required
                 />
               </div>
@@ -190,38 +182,32 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
                 <Select
                   name="status"
                   value={status}
-                  onValueChange={(value) => handleSelect(value, "status")}
+                  onValueChange={(value) => updateForm("status", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
+                    {statusArray.map((stat) => (
+                      <SelectItem key={stat.label} value={stat.value}>
+                        {stat.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="project">Project</Label>
-                <Select
-                  name="projectId"
-                  value={projectId}
-                  onValueChange={(value) => handleSelect(value, "projectId")}
-                >
-                  <SelectTrigger disabled={disabledSelect}>
-                    <SelectValue placeholder="Select project (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loading
-                      ? "loading"
-                      : projects!.map((project) => (
-                          <SelectItem key={project._id} value={project._id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="asignees">Assignees</Label>
+
+                {loading
+                  ? "loading"
+                  : members && (
+                      <AssigneePopover
+                        assignees={assignees}
+                        members={members}
+                        setFormData={setFormData}
+                      />
+                    )}
               </div>
 
               <div className="grid gap-2">
@@ -232,12 +218,7 @@ export function CreateTaskDialog({ defaultProjectId }: CreateTaskDialogProps) {
                       placeholder="Add a subtask..."
                       value={newSubTaskTitle}
                       onChange={(e) => setNewSubTaskTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddSubTask();
-                        }
-                      }}
+                      onKeyDown={handleKeyDown}
                     />
                     <Button
                       type="button"

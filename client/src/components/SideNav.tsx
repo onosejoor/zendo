@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,6 +13,7 @@ import {
   Menu,
   X,
   RefreshCcw,
+  Users2,
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
 import Img from "./Img";
@@ -31,11 +30,13 @@ import {
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { KeyedMutator } from "swr";
 import VerifyEmailBtn from "@/app/auth/verify_email/_components/verify-btn";
+import { Badge } from "./ui/badge";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
+  { name: "Teams", href: "/dashboard/teams", icon: Users2, isNew: true },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -86,11 +87,19 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeClass}`}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-md w-full transition-colors ${activeClass}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
+                  {item.isNew && (
+                    <Badge
+                      className=" ml-auto rounded-full "
+                      variant={"secondary"}
+                    >
+                      New
+                    </Badge>
+                  )}
                 </Link>
               );
             })}
@@ -125,6 +134,14 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
                 >
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
+                  {item.isNew && (
+                    <Badge
+                      className=" ml-auto rounded-full "
+                      variant={"secondary"}
+                    >
+                      New
+                    </Badge>
+                  )}
                 </Link>
               );
             })}
@@ -171,7 +188,14 @@ export function Sidenav({ children }: { children: React.ReactNode }) {
   );
 }
 
-const Error = ({ mutate }: { mutate: KeyedMutator<UserRes> }) => (
+const Error = ({
+  mutate,
+}: {
+  mutate: KeyedMutator<{
+    success: boolean;
+    user: IUser;
+  }>;
+}) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
       <Button variant="ghost" className="relative h-8 w-8 rounded-full">

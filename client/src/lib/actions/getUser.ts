@@ -3,7 +3,10 @@ import axios from "axios";
 
 export async function getUser() {
   try {
-    const { data } = await axios.get<UserRes>(`${SERVER_URl}/auth/user`, {
+    const { data } = await axios.get<{
+      success: boolean;
+      user: IUser;
+    }>(`${SERVER_URl}/auth/user`, {
       withCredentials: true,
     });
 

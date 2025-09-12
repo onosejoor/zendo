@@ -8,10 +8,13 @@ import {
 import { Verified } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export default function SuccessComp() {
+type Props = { redirectRoute: string; title: string; message: string };
+
+export default function SuccessComp({ redirectRoute, title, message }: Props) {
   setTimeout(() => {
-    redirect("/dashboard");
-  }, 3000);
+    redirect(redirectRoute);
+  }, 1000);
+
   return (
     <Card className="max-w-md mx-auto my-5">
       <CardContent>
@@ -19,10 +22,8 @@ export default function SuccessComp() {
           <CardTitle>
             <Verified className="size-5 text-blue-500" />
           </CardTitle>
-          <CardTitle>Email Verified SuccessFully</CardTitle>
-          <CardDescription>
-            Email successfully verified, redirecting now
-          </CardDescription>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{message}</CardDescription>
         </CardHeader>
       </CardContent>
     </Card>

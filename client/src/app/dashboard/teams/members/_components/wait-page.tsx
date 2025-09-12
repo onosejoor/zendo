@@ -1,18 +1,20 @@
 "use client";
 
-import { sendEmailToken } from "@/lib/actions/token";
+import { sendInviteToken } from "@/lib/actions/token";
 import SuccessComp from "@/app/_components/success-comp";
 import { useEffect, useState } from "react";
 import Loader from "@/components/loader-card";
-import CustomEmailAuthErrorDisplay from "./custom-error-comp";
+import ErrorDisplay from "@/components/error-display";
 
 export default function WaitComponant({ token }: { token: string }) {
-  const [result, setResult] = useState<APIRes | null>(null);
+  const [result, setResult] = useState<(APIRes & { team_id: string }) | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function verifyToken() {
-      const res = await sendEmailToken(token);
+      const res = await sendInviteToken(token);
       setResult(res);
       setLoading(false);
     }
@@ -21,22 +23,22 @@ export default function WaitComponant({ token }: { token: string }) {
   }, [token]);
 
   if (loading) {
-    return <Loader text="Verifying email..." />;
+    return <Loader text="Creating Member..." />;
   }
 
   if (result?.success) {
     return (
       <SuccessComp
-        title="Email Verified SuccessFully"
-        message="Email successfully verified, redirecting now"
-        redirectRoute="/dashboard"
+        title="Team member Created Successfully"
+        message="You have been added to the team, redirecting now"
+        redirectRoute={`/dashboard/teams/${result?.team_id}`}
       />
     );
   }
 
   return (
-    <CustomEmailAuthErrorDisplay
-      title="Error Verifying Email"
+    <ErrorDisplay
+      title="Error Adding New member To Team"
       message={result?.message}
     />
   );

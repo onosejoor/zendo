@@ -154,7 +154,7 @@ export default function TaskHeader({ task }: { task: ITask }) {
         <Card>
           <CardContent className="p-6 space-y-3">
             <div className="flex gap-2 items-center">
-              <div className="size-2.5 rounded-full bg-accent-blue animate-bounce"></div>{" "}
+              <div className="size-2.5 rounded-full bg-accent-blue animate-bounce"></div>
               <h3 className="font-semibold">SubTasks</h3>
             </div>
 
