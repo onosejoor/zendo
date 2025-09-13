@@ -4,6 +4,7 @@ import { mutate } from "swr";
 import { getErrorMesage } from "../utils";
 import dayjs from "dayjs";
 import { returnAssigneeId } from "../functions";
+import { mutateTeam } from "./teams";
 
 type APIResponse = APIRes & {
   taskId: string;
@@ -31,9 +32,14 @@ export async function createTeamTask(
   }
 }
 
-export async function deleteTask(id: ITask["_id"]) {
+export async function deleteTeamTask(
+  teamId: ITask["team_id"],
+  id: ITask["_id"]
+) {
   try {
-    const { data } = await axiosInstance.delete<APIRes>(`/tasks/${id}`);
+    const { data } = await axiosInstance.delete<APIRes>(
+      `/teams/${teamId}/tasks/${id}`
+    );
     return { success: data.success, message: data.message };
   } catch (error) {
     return {
@@ -43,13 +49,17 @@ export async function deleteTask(id: ITask["_id"]) {
   }
 }
 
-export const handleDeleteTask = async (taskId: ITask["_id"]) => {
-  const { success, message } = await deleteTask(taskId);
+export const handleDeleteTeamTask = async (
+  taskId: ITask["_id"],
+  teamId: string
+) => {
+  const { success, message } = await deleteTeamTask(teamId, taskId);
   const options = success ? "success" : "error";
 
   toast[options](message);
   if (success) {
     mutateTasks(taskId);
+    mutateTeam(teamId)
   }
 };
 

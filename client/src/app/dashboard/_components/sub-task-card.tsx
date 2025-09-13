@@ -99,7 +99,7 @@ export const SubTaskCard = ({ subTask, task }: SubTaskExportProps) => {
 
   const deleteSubtask = async () => {
     setIsLoading(true);
-    await handleDeleteSubTask(subTask._id, task._id, task.projectId);
+    await handleDeleteSubTask(subTask._id, task._id, task.projectId, task.team_id);
     setIsLoading(false);
   };
 

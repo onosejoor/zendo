@@ -17,10 +17,12 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { handleDeleteTeam } from "@/lib/actions/teams";
+import { handleDeleteTeamTask } from "@/lib/actions/team-tasks";
 
 type Props = {
   id: string;
-  type: "task" | "project" | "team";
+  teamId?: string;
+  type: "task" | "project" | "team" | "team_task";
   card?: boolean;
 };
 
@@ -39,9 +41,18 @@ const typePrompts = {
       "Are you sure you want to delete this team and all tasks and members in it?",
     action: handleDeleteTeam,
   },
+  team_task: {
+    message: "Are you sure you want to delete this team task? ",
+    action: handleDeleteTeamTask,
+  },
 };
 
-export default function DeleteDataDialog({ id, type, card = false }: Props) {
+export default function DeleteDataDialog({
+  id,
+  type,
+  card = false,
+  teamId,
+}: Props) {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +60,7 @@ export default function DeleteDataDialog({ id, type, card = false }: Props) {
 
   const handleAction = async () => {
     setLoading(true);
-    await prompt.action(id);
+    await prompt.action(id, teamId || "");
     setLoading(false);
 
     setOpenDialog(false);

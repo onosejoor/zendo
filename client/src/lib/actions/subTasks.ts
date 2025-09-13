@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { axiosInstance } from "@/api/api";
 import { mutateTasks } from "./tasks";
 import { getErrorMesage } from "../utils";
+import { mutateTeam } from "./teams";
 
 export async function toggleSubTasks(
   subTaskId: ISubTask["_id"],
@@ -42,7 +43,8 @@ export async function deleteSubTasks(
 export const handleDeleteSubTask = async (
   subTaskId: ISubTask["_id"],
   taskId: ITask["_id"],
-  projectId: ITask["projectId"]
+  projectId: ITask["projectId"],
+  teamId: ITask["team_id"]
 ) => {
   try {
     const { message, success } = await deleteSubTasks(subTaskId, taskId);
@@ -51,6 +53,9 @@ export const handleDeleteSubTask = async (
 
     if (success) {
       mutateTasks(taskId, projectId);
+      if (teamId) {
+        mutateTeam(teamId)
+      }
     }
     toast[options](message);
   } catch (error) {

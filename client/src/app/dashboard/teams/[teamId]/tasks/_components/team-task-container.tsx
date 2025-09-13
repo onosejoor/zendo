@@ -8,6 +8,7 @@ import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 import { useTeamTask } from "@/hooks/use-teams";
 import TeamTaskDialog from "@/components/dialogs/team-task-dialog";
 import Loader from "@/components/loader-card";
+import { checkRolesMatch } from "../../actions";
 
 export function TeamTaskContainer({
   taskId,
@@ -36,7 +37,7 @@ export function TeamTaskContainer({
   }
 
   const {
-    data: { task },
+    data: { task, role },
   } = taskData!;
 
   if (!task.team_id) {
@@ -57,17 +58,19 @@ export function TeamTaskContainer({
         <div className="flex sm:items-baseline sm:flex-row flex-col gap-5 justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Team Task: {task.title}
+              Title: <span className="text-muted-foreground">{task.title}</span>
             </h1>
             <p className="text-muted-foreground mt-1">
-              <span className="text-foreground"> Description:</span>
+              <span className="text-foreground"> Description: </span>
               {task.description || "No description"}
             </p>
           </div>
-          <div className="space-x-3 flex">
-            <TeamTaskDialog defaultTeamId={teamId} initialData={task} />
-            <DeleteDataDialog id={taskId} type="task" />
-          </div>
+          {checkRolesMatch(role, ["owner"]) && (
+            <div className="space-x-3 flex">
+              <TeamTaskDialog defaultTeamId={teamId} initialData={task} />
+              <DeleteDataDialog id={taskId} type="team_task" />
+            </div>
+          )}
         </div>
 
         {/* Team Task Details */}

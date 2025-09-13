@@ -2,10 +2,19 @@
 
 import { SubTaskCard } from "@/app/dashboard/_components/sub-task-card";
 import { formatDate } from "@/app/dashboard/tasks/_components/constants";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { mutateTasks, updateTask } from "@/lib/actions/tasks";
+import { mutateTeam } from "@/lib/actions/teams";
 import { getStatusBadge } from "@/lib/functions";
 import { checkExpired, cn, containsOnly } from "@/lib/utils";
 import {
@@ -14,6 +23,7 @@ import {
   FileText,
   Link2Icon,
   LinkIcon,
+  PanelTopOpen,
   Timer,
   Users,
 } from "lucide-react";
@@ -34,7 +44,8 @@ export default function TeamTaskHeader({ task }: { task: ITask }) {
       const options = success ? "success" : "error";
 
       if (success) {
-        mutateTasks(task._id, task.projectId);
+        mutateTasks(task._id);
+        mutateTeam(task.team_id);
       }
       toast[options](message);
     } catch (error) {
@@ -49,7 +60,7 @@ export default function TeamTaskHeader({ task }: { task: ITask }) {
 
   return (
     <>
-      <Card className="relative">
+      <Card className="relative shadow-none border-none">
         <CardContent className={"p-6"}>
           {isExpired && task.status !== "completed" && (
             <Badge className="absolute bg-red-500 text-white -rotate-40 -left-3 top-1">
@@ -114,17 +125,7 @@ export default function TeamTaskHeader({ task }: { task: ITask }) {
                     <p className="text-sm font-medium text-muted-foreground">
                       Assignees
                     </p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {task.assignees.map((assignee) => (
-                        <Badge
-                          key={assignee._id}
-                          variant="secondary"
-                          className="text-xs"
-                        >
-                          {assignee.username}
-                        </Badge>
-                      ))}
-                    </div>
+                    <AssigneesCard assignees={task.assignees} />
                   </div>
                 </div>
               )}
@@ -195,3 +196,48 @@ export default function TeamTaskHeader({ task }: { task: ITask }) {
     </>
   );
 }
+
+const AssigneesCard = ({ assignees }: { assignees: IAssignee[] }) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant={"outline"}
+          className="flex gap-3 items-center my-3 text-gray-500"
+        >
+          <PanelTopOpen /> View Assignees
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="ring-2 ring-blue-400">
+        <DialogHeader>
+          <DialogTitle>Assignees Assigned To This Task</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 divide-y divide-blue-200">
+          {assignees.map((assignee) => (
+            <div key={assignee._id} className="flex not-last:pb-5 gap-3 items-center">
+              <Avatar className="size-12.5">
+                <AvatarImage
+                  src={assignee.avatar}
+                  className="object-cover"
+                  alt={assignee.username}
+                />
+                <AvatarFallback>
+                  {assignee.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="">
+                <h4 className="text-gray-800 font-medium">
+                  {assignee.username}
+                </h4>
+                <h4 className="text-gray-500 text-sm italic">
+                  {assignee.email}
+                </h4>
+              </div>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

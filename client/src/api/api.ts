@@ -32,7 +32,7 @@ const processQueue = (
 };
 
 const refreshToken = async (useBackup = false) => {
-  const baseURL = useBackup ? "/backup-api" : "/api"; // Use Next.js rewrite routes
+  const baseURL = useBackup ? "/backup-api" : "/api";
   try {
     await axios.get(`${baseURL}/auth/refresh-token`, {
       withCredentials: true,
