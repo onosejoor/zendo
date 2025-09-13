@@ -6,14 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Search } from "lucide-react";
 
 const CreateTeamTaskDialog = dynamic(
-  () => import("@/components/dialogs/create-team-task-dialog")
+  () => import("@/components/dialogs/team-task-dialog")
 );
 const PaginationBtn = dynamic(
   () => import("@/app/dashboard/_components/pagination-btn")
 );
 
 const TeamTaskCard = dynamic(
-  () => import("../../tasks/_components/team-task-card")
+  () => import("../tasks/_components/team-task-card")
 );
 
 import Loader from "@/components/loader-card";

@@ -116,3 +116,7 @@ export function getTeamRoleColor(role: TeamRole) {
     </Badge>
   );
 }
+
+export function returnAssigneeId(assignees: IAssignee[]) {
+  return assignees.map((assignee) => assignee._id);
+}

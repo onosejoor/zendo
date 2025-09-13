@@ -5,15 +5,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getAndDeleteCookie } from "@/lib/actions/cookie";
 import { Verified } from "lucide-react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 type Props = { redirectRoute: string; title: string; message: string };
 
 export default function SuccessComp({ redirectRoute, title, message }: Props) {
-  setTimeout(() => {
-    redirect(redirectRoute);
-  }, 1000);
+  const router = useRouter();
+
+useEffect(() => {
+  let id: NodeJS.Timeout;
+
+  getAndDeleteCookie("zendo_redirect_url")
+    .then((url) => {
+      id = setTimeout(
+        () => router.push(url ? decodeURIComponent(url) : redirectRoute),
+        1000
+      );
+    })
+    .catch(() => {
+      id = setTimeout(() => router.push(redirectRoute), 1000);
+    });
+
+  return () => clearTimeout(id);
+}, [redirectRoute, router]);
+
 
   return (
     <Card className="max-w-md mx-auto my-5">

@@ -9,20 +9,20 @@ import dynamic from "next/dynamic";
 import Loader from "@/components/loader-card";
 
 type Props = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ teamId: string }>;
   searchParams: Promise<{ section: string }>;
 };
 
 export default async function DynamicTeam({ params, searchParams }: Props) {
-  const id = (await params).id;
+  const teamId = (await params).teamId;
   const queryParams = (await searchParams).section;
 
   return (
     <div className="space-y-7.5">
-      <TeamContainer teamId={id} />
+      <TeamContainer teamId={teamId} />
       <TabBtns section={queryParams} />
       <Suspense fallback={<Loader text="Loading..." />}>
-        {returnCompOnQuery(queryParams, id)}
+        {returnCompOnQuery(queryParams, teamId)}
       </Suspense>
     </div>
   );

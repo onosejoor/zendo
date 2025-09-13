@@ -31,7 +31,7 @@ export default function TeamCard({ team }: { team: ITeam }) {
         <CardFooter>
           <div className="flex gap-2.5 items-center">
             <div className="flex">
-              {[...Array(team.member_count)].map((_, idx) => {
+              {[...Array(team.members_count)].map((_, idx) => {
                 return (
                   <div
                     className="size-5 rounded-full bg-gray-400 border border-white -mr-1.5"
@@ -41,7 +41,7 @@ export default function TeamCard({ team }: { team: ITeam }) {
               })}
             </div>
             <small className="text-gray-400">
-              {team.member_count} Members In this Team
+              {team.members_count} Members In this Team
             </small>
           </div>
         </CardFooter>

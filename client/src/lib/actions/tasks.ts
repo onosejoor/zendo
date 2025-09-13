@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { getErrorMesage } from "../utils";
 import dayjs from "dayjs";
+import { mutateTeam } from "./teams";
+import { returnAssigneeId } from "../functions";
 
 type APIResponse = APIRes & {
   taskId: string;
@@ -31,16 +33,23 @@ export async function createTask(
 }
 
 export async function updateTask(task: Partial<ITask>) {
+  const payload = {
+    ...task,
+    dueDate: new Date(task.dueDate!),
+    assignees: returnAssigneeId(task.assignees || []),
+  };
+  
   try {
-    const { data } = await axiosInstance.put<APIRes>(`/tasks/${task._id}`, {
-      ...task,
-      dueDate: new Date(task.dueDate!),
-    });
-    return { success: data.success, message: data.message };
+    const { data } = await axiosInstance.put<APIRes>(
+      `/tasks/${task._id}`,
+      payload
+    );
+    return { ...data, taskId: task._id };
   } catch (error) {
     return {
       success: false,
       message: getErrorMesage(error),
+      taskId: task._id,
     };
   }
 }
@@ -79,6 +88,7 @@ export const handleToggleTask = async (task: ITask) => {
 
     if (success) {
       mutateTasks(task._id, task.projectId);
+      mutateTeam(task.team_id);
     }
     toast[options](message);
   } catch (error) {
@@ -103,3 +113,4 @@ export function mutateTasks(taskId?: string, projectId?: string) {
   mutate("/stats");
   mutate(`/projects/${projectId}/tasks`);
 }
+

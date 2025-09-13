@@ -4,9 +4,9 @@ declare global {
     _id: string;
     title: string;
     description: string;
-    subTasks?: ISubTask[];
+    subTasks: ISubTask[];
     projectId?: string;
-    assignees?: string[];
+    assignees: IAssignee[];
     team_id?: string;
     dueDate: Date | string;
     status: Status;
@@ -45,6 +45,11 @@ declare global {
     role: Role;
   }
 
+  interface IAssignee {
+    email: string;
+    _id: string;
+    username: string;
+  }
   interface ITeamWithMember {
     member: IMember;
   }

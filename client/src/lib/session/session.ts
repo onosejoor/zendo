@@ -17,6 +17,12 @@ export async function getSession() {
   };
 }
 
+export async function createRedirectUrlCookie(url: string) {
+  const cookie = await cookies();
+
+  cookie.set("zendo_redirect_url", encodeURIComponent(url));
+}
+
 export async function signOut() {
   const cookie = await cookies();
   cookie.delete("zendo_session_token");

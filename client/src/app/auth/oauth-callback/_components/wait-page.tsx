@@ -29,15 +29,10 @@ export default function WaitComponant({ code }: { code: string }) {
       <SuccessComp
         title="Signin Successfully"
         message=" Oauth Signing Successfull, redirecting now"
-        redirectRoute="/dashboard"
+        redirectRoute={"/dashboard"}
       />
     );
   }
 
-  return (
-    <ErrorDisplay
-      title="Error Signin In"
-      message={result?.message}
-    />
-  );
+  return <ErrorDisplay title="Error Signin In" message={result?.message} />;
 }

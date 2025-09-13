@@ -8,20 +8,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { handleToggleTask } from "@/lib/actions/tasks";
 import { MoreHorizontal, Subtitles, Timer, Users2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { checkExpired, cn } from "@/lib/utils";
 import Link from "next/link";
 import { getStatusBadge } from "@/lib/functions";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
-import { EditTaskDialog } from "@/components/dialogs/edit-task-dialog";
 
 import {
   formatDate,
   getStatusColor,
 } from "@/app/dashboard/tasks/_components/constants";
-import { checkRolesMatch } from "../../[id]/actions";
+import { checkRolesMatch } from "../../actions";
+import TeamTaskDialog from "@/components/dialogs/team-task-dialog";
+import { handleToggleTask } from "@/lib/actions/tasks";
 
 type Props = {
   task: ITask;
@@ -93,7 +93,7 @@ export default function TeamTaskCard({ task, userRole }: Props) {
                 </div>
               </div>
             </div>
-            {checkRolesMatch(userRole, ["owner"]) && <CrudDialog task={task} />}
+            {checkRolesMatch(userRole, ["owner", "admin"]) && <CrudDialog task={task} />}
           </div>
         </CardContent>
       </Card>
@@ -110,7 +110,11 @@ const CrudDialog = ({ task }: { task: ITask }) => (
     </DropdownMenuTrigger>
     <DropdownMenuContent onClick={(e) => e.stopPropagation()} align="end">
       <DropdownMenuItem asChild>
-        <EditTaskDialog isCard task={task} />
+        <TeamTaskDialog
+          isCard
+          defaultTeamId={task.team_id!}
+          initialData={task}
+        />
       </DropdownMenuItem>
       <DropdownMenuItem asChild>
         <DeleteDataDialog card type="task" id={task._id} />

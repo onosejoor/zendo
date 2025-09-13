@@ -31,13 +31,33 @@ import { addSubTask, SubTaskProps } from "@/lib/actions/sub-task-states";
 import { useRouter } from "next/navigation";
 import { useTeamMembers } from "@/hooks/use-teams";
 import { mutateTeam } from "@/lib/actions/teams";
-import { AssigneePopover } from "@/app/dashboard/teams/tasks/_components/assignee-card";
+import { AssigneePopover } from "@/app/dashboard/teams/[teamId]/tasks/_components/assignee-card";
 import { createTeamTask } from "@/lib/actions/team-tasks";
 import { getErrorMesage } from "@/lib/utils";
+import { updateTask } from "@/lib/actions/tasks";
 
 interface CreateTaskDialogProps {
   defaultTeamId: string;
+  isCard?: boolean;
+  initialData?: ITask;
 }
+
+const dialogTexts = {
+  create: {
+    title: "Create New Task",
+    description: "Add a new task to your list. Fill in the details below.",
+    submit: "Create Task",
+    submitting: "Creating...",
+    action: createTeamTask,
+  },
+  edit: {
+    title: "Edit Task",
+    description: "Update the details of this task.",
+    submit: "Save Changes",
+    submitting: "Saving...",
+    action: updateTask,
+  },
+};
 
 const statusArray = [
   { value: "pending", label: "Pending" },
@@ -45,22 +65,30 @@ const statusArray = [
   { value: "completed", label: "Completed" },
 ];
 
-const initialFormData = (defaultTeamId: string) => ({
-  title: "",
-  description: "",
-  status: "pending" as Status,
-  team_id: defaultTeamId,
-  dueDate: getLocalISOString(),
-  assignees: [""],
-  subTasks: [],
-});
+const initialFormData = (defaultTeamId: string, initialData?: ITask) => {
+  return initialData
+    ? { ...initialData, dueDate: getLocalISOString(initialData.dueDate) }
+    : {
+        title: "",
+        description: "",
+        status: "pending" as Status,
+        team_id: defaultTeamId,
+        dueDate: getLocalISOString(),
+        assignees: [],
+        subTasks: [],
+      };
+};
 
-export default function CreateTeamTaskDialog({
+export default function TeamTaskDialog({
   defaultTeamId,
+  initialData,
+  isCard = false,
 }: CreateTaskDialogProps) {
   const [open, setOpenChange] = useState(false);
 
-  const [formData, setFormData] = useState(initialFormData(defaultTeamId));
+  const [formData, setFormData] = useState<Partial<ITask>>(
+    initialFormData(defaultTeamId, initialData)
+  );
 
   const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +97,10 @@ export default function CreateTeamTaskDialog({
 
   const { title, description, status, dueDate, team_id, subTasks, assignees } =
     formData;
-  const isDisabled = isLoading || !title.trim() || !dueDate;
+  const isDisabled = isLoading || !title!.trim() || !dueDate;
+
+  const mode = initialData ? "edit" : "create";
+  const texts = dialogTexts[mode];
 
   const onOpenChange = (value: boolean) => setOpenChange(value);
 
@@ -94,16 +125,17 @@ export default function CreateTeamTaskDialog({
     setNewSubTaskTitle("");
   };
 
-  const { data, isLoading: loading } = useTeamMembers(team_id);
+  const { data, isLoading: loading } = useTeamMembers(team_id!);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsLoading(true);
+
     try {
-      const { success, message, taskId } = await createTeamTask(
+      const { success, message, taskId } = await texts.action(
         formData,
-        subTasks
+        subTasks || []
       );
 
       const options = success ? "success" : "error";
@@ -112,8 +144,10 @@ export default function CreateTeamTaskDialog({
       if (success) {
         onOpenChange(false);
         mutateTeam(team_id);
-        resetForm();
-        router.push(`/dashboard/tasks/${taskId}`);
+        if (mode === "create") {
+          resetForm();
+          router.push(`/dashboard/teams/${team_id}/tasks/${taskId}`);
+        }
       }
     } catch (error) {
       toast.error(getErrorMesage(error));
@@ -130,18 +164,20 @@ export default function CreateTeamTaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button onClick={() => setOpenChange(true)}>
+        <Button
+          variant={isCard ? "ghost" : "outline"}
+          className={isCard ? "w-full flex justify-start !px-2" : "w-fit"}
+          onClick={() => setOpenChange(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
-          New Task
+          {mode === "create" ? "New Task" : "Edit Task"}
         </Button>
       </DialogTrigger>
       {open && (
         <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-            <DialogDescription>
-              Add a new task to your list. Fill in the details below.
-            </DialogDescription>
+            <DialogTitle>{texts.title}</DialogTitle>
+            <DialogDescription>{texts.description}</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4 py-4">
@@ -203,7 +239,7 @@ export default function CreateTeamTaskDialog({
                   ? "loading"
                   : members && (
                       <AssigneePopover
-                        assignees={assignees}
+                        assignees={assignees!}
                         members={members}
                         setFormData={setFormData}
                       />
@@ -246,7 +282,7 @@ export default function CreateTeamTaskDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={isDisabled}>
-                {isLoading ? "Creating..." : "Create Task"}
+                {isLoading ? texts.submitting : texts.submit}
               </Button>
             </DialogFooter>
           </form>

@@ -5,8 +5,8 @@ import { ArrowDown } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 
 type Props = {
-  assignee: IMember;
-  handleToggleAssignee: (assignee: IMember, checked: boolean) => void;
+  assignee: IAssignee;
+  handleToggleAssignee: (assignee: IAssignee, checked: boolean) => void;
   checked: boolean;
 };
 
@@ -29,21 +29,12 @@ export function AssigneeCard({
   );
 }
 
-type FormData = {
-  title: string;
-  description: string;
-  status: Status;
-  team_id: string;
-  dueDate: string;
-  assignees: string[];
-  subTasks: never[];
-};
-
 type PopOverProps = {
   members: IMember[];
-  setFormData: Dispatch<SetStateAction<FormData>>;
-  assignees: string[];
+  setFormData: Dispatch<SetStateAction<Partial<ITask>>>;
+  assignees: IAssignee[];
 };
+
 export function AssigneePopover({
   members,
   assignees,
@@ -51,16 +42,19 @@ export function AssigneePopover({
 }: PopOverProps) {
   const [open, setOpen] = useState(false);
 
-  const handleToggleAssignee = (assignee: IMember, checked: boolean) => {
+  const handleToggleAssignee = (assignee: IAssignee, checked: boolean) => {
     setFormData((prev) => {
-      let newAssignees = [...prev.assignees, assignee._id];
+      let newAssignees: IAssignee[];
+
       if (checked) {
-        newAssignees = [...prev.assignees.filter((id) => id !== assignee._id)];
+        newAssignees = prev.assignees!.filter((a) => a._id !== assignee._id);
+      } else {
+        newAssignees = [...(prev.assignees ?? []), assignee];
       }
 
       return {
         ...prev,
-        assignees: newAssignees as never[],
+        assignees: newAssignees,
       };
     });
   };
@@ -78,11 +72,11 @@ export function AssigneePopover({
       {open && (
         <div className="animate-in fade-in zoom-in space-y-3 p-3 shadow-sm shadow-gray-300 rounded-md">
           {members.map((member) => {
-            const checked = assignees.includes(member._id);
+            const checked = assignees.find((t) => t._id == member._id);
             return (
               <AssigneeCard
                 assignee={member}
-                checked={checked}
+                checked={!!checked}
                 key={member._id}
                 handleToggleAssignee={handleToggleAssignee}
               />

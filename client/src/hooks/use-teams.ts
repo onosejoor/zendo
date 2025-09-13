@@ -35,3 +35,14 @@ export function useTeamTasks(id: string, limit: number = 10, page: number = 1) {
     }
   );
 }
+
+
+export function useTeamTask(teamId: string, taskId: string) {
+  return useSWR<{ success: boolean; data: { task: ITask; role: TeamRole } }>(
+    `/teams/${teamId}/tasks/${taskId}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+}

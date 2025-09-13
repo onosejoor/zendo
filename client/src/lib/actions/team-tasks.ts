@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 import { getErrorMesage } from "../utils";
 import dayjs from "dayjs";
+import { returnAssigneeId } from "../functions";
 
 type APIResponse = APIRes & {
   taskId: string;
@@ -17,27 +18,13 @@ export async function createTeamTask(
       ...formData,
       dueDate: dayjs(formData.dueDate).format(),
       subTasks,
+      assignees: returnAssigneeId(formData.assignees || []),
     });
 
     return data;
   } catch (error) {
     return {
       taskId: "",
-      success: false,
-      message: getErrorMesage(error),
-    };
-  }
-}
-
-export async function updateTask(task: Partial<ITask>) {
-  try {
-    const { data } = await axiosInstance.put<APIRes>(`/tasks/${task._id}`, {
-      ...task,
-      dueDate: new Date(task.dueDate!),
-    });
-    return { success: data.success, message: data.message };
-  } catch (error) {
-    return {
       success: false,
       message: getErrorMesage(error),
     };
@@ -63,25 +50,6 @@ export const handleDeleteTask = async (taskId: ITask["_id"]) => {
   toast[options](message);
   if (success) {
     mutateTasks(taskId);
-  }
-};
-
-export const handleToggleTask = async (task: ITask) => {
-  try {
-    const newStatus = task.status === "completed" ? "pending" : "completed";
-
-    const newTask = { ...task, status: newStatus };
-
-    const { message, success } = await updateTask(newTask as ITask);
-
-    const options = success ? "success" : "error";
-
-    if (success) {
-      mutateTasks(task._id, task.projectId);
-    }
-    toast[options](message);
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "internal error");
   }
 };
 
