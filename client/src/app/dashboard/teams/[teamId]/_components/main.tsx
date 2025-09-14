@@ -6,6 +6,14 @@ import { useTeam } from "@/hooks/use-teams";
 import ErrorDisplay from "@/components/error-display";
 import { getErrorMesage } from "@/lib/utils";
 import Loader from "@/components/loader-card";
+import { checkRolesMatch } from "../actions";
+import dynamic from "next/dynamic";
+
+const TeamCrudDialog = dynamic(() =>
+  import("@/components/dialogs/team-crud-dialog").then(
+    (team) => team.TeamCrudDialog
+  )
+);
 
 export default function TeamContainer({ teamId }: { teamId: string }) {
   const { data, error, isLoading } = useTeam(teamId);
@@ -37,6 +45,9 @@ export default function TeamContainer({ teamId }: { teamId: string }) {
 
   return (
     <>
+      {checkRolesMatch(team.role, ["owner"]) && (
+        <TeamCrudDialog isVariant initialData={team} />
+      )}
       <Card className="relative shadow-none border-none">
         <CardContent>
           <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>

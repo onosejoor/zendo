@@ -93,7 +93,9 @@ export default function TeamTaskCard({ task, userRole }: Props) {
                 </div>
               </div>
             </div>
-            {checkRolesMatch(userRole, ["owner", "admin"]) && <CrudDialog task={task} />}
+            {checkRolesMatch(userRole, ["owner"]) && (
+              <CrudDialog task={task} />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -117,7 +119,7 @@ const CrudDialog = ({ task }: { task: ITask }) => (
         />
       </DropdownMenuItem>
       <DropdownMenuItem asChild>
-        <DeleteDataDialog card type="task" id={task._id} />
+        <DeleteDataDialog card type="team_task" id={task._id} teamId={task.team_id} />
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

@@ -20,24 +20,57 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getTextNewLength } from "@/lib/functions";
 import { Plus } from "lucide-react";
-import { createTeam, mutateTeam } from "@/lib/actions/teams";
+import { createTeam, mutateTeam, updateTeam } from "@/lib/actions/teams";
 
-export function CreateTeamDialog({ isVariant }: { isVariant?: boolean }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
+type Props = {
+  initialData?: ITeam;
+  isVariant?: boolean;
+};
+
+const returnInitialData = (initialData?: ITeam) => {
+  return initialData
+    ? { ...initialData }
+    : {
+        name: "",
+        description: "",
+      };
+};
+
+const dialogTexts = {
+  edit: {
+    title: "Edit Team",
+    description: "Update the details of this team.",
+    submit: "Save Changes",
+    submitting: "Saving...",
+    action: updateTeam,
+  },
+  create: {
+    title: "Create New Team",
+    description:
+      "Create a new Team to collaborate with others. Fill in the details below.",
+    submit: "Create Team",
+    submitting: "Creating...",
+    action: createTeam,
+  },
+};
+
+export function TeamCrudDialog({ isVariant, initialData }: Props) {
+  const [formData, setFormData] = useState<
+    ITeam | { name: string; description: string }
+  >(returnInitialData(initialData));
+
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpenChange] = useState(false);
 
   const router = useRouter();
 
+  const mode = initialData ? "edit" : "create";
+  const texts = dialogTexts[mode];
+
   const onOpenChange = (value: boolean) => {
     setOpenChange(value);
-    setFormData({
-      name: "",
-      description: "",
-    });
+    if (!value) return;
+    setFormData(returnInitialData(initialData));
   };
 
   const { name, description } = formData;
@@ -48,26 +81,24 @@ export function CreateTeamDialog({ isVariant }: { isVariant?: boolean }) {
 
     setIsLoading(true);
     try {
-      const { success, message, id } = await createTeam(formData);
+      const { success, message, id } = await texts.action(formData);
 
-      const options = success ? "success" : "error";
-      toast[options](message);
+      toast[success ? "success" : "error"](message);
 
       if (success) {
-        setFormData({
-          description: "",
-          name: "",
-        });
-
+        setFormData({ description: "", name: "" });
         onOpenChange(false);
         mutateTeam();
-        router.push(`/dashboard/teams/${id}`);
+
+        if (mode === "create") {
+          router.push(`/dashboard/teams/${id}`);
+        }
       }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Internal server error"
       );
-      console.error("Failed to create project:", error);
+      console.error("Failed to submit team form:", error);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +112,7 @@ export function CreateTeamDialog({ isVariant }: { isVariant?: boolean }) {
     const { value: newValue, isLong } = getTextNewLength({ id, value });
 
     if (isLong) {
-      const chars = id === "title" ? 70 : 300;
+      const chars = id === "name" ? 70 : 300;
       toast.error(`${id} is too long, was shrinked to ${chars} characters`, {
         style: { textTransform: "capitalize" },
       });
@@ -103,16 +134,13 @@ export function CreateTeamDialog({ isVariant }: { isVariant?: boolean }) {
           onClick={() => setOpenChange(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Team
+          {texts.title}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]  max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Team</DialogTitle>
-          <DialogDescription>
-            Create a new Team to collaborate with others. Fill in the details
-            below.
-          </DialogDescription>
+          <DialogTitle>{texts.title}</DialogTitle>
+          <DialogDescription>{texts.description}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -147,7 +175,7 @@ export function CreateTeamDialog({ isVariant }: { isVariant?: boolean }) {
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim()}>
-              {isLoading ? "Creating..." : "Create Team"}
+              {isLoading ? texts.submitting : texts.submit}
             </Button>
           </DialogFooter>
         </form>

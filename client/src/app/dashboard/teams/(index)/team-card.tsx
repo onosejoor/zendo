@@ -14,11 +14,11 @@ export default function TeamCard({ team }: { team: ITeam }) {
     <Link href={`/dashboard/teams/${team._id}`}>
       <Card>
         <CardHeader className="flex justify-between items-start">
-          <div className="space-y-2">
+          <div className="space-y-2 truncate">
             <h3 className={`font-medium line-clamp-1`}>{team.name}</h3>
             <p className="text-gray-500 text-sm truncate">{team.description}</p>
           </div>
-          <div className="shrink-0"> {getTeamRoleColor(team.role)}</div>
+          <div className=""> {getTeamRoleColor(team.role)}</div>
         </CardHeader>
         <CardContent>
           <div className="space-y-5">
@@ -31,7 +31,7 @@ export default function TeamCard({ team }: { team: ITeam }) {
         <CardFooter>
           <div className="flex gap-2.5 items-center">
             <div className="flex">
-              {[...Array(team.members_count)].map((_, idx) => {
+              {[...Array(team.members_count)].slice(0, 3).map((_, idx) => {
                 return (
                   <div
                     className="size-5 rounded-full bg-gray-400 border border-white -mr-1.5"

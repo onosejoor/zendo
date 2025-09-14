@@ -29,13 +29,14 @@ export async function updateTeam(team: Partial<ITeam>) {
       `/teams/${team._id}`,
       team
     );
-    return { success: data.success, message: data.message };
+    return { ...data, id: team._id };
   } catch (error) {
     console.log(error);
 
     return {
       success: false,
       message: getErrorMesage(error),
+      id: team._id,
     };
   }
 }

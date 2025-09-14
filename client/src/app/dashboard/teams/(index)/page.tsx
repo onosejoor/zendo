@@ -4,14 +4,14 @@ import BreadCrumbs from "@/components/BreadCrumbs";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ListChecks, Users } from "lucide-react";
 import TeamsSection from "./teams-section";
-import { CreateTeamDialog } from "@/components/dialogs/create-team-dialog";
+import { TeamCrudDialog } from "@/components/dialogs/team-crud-dialog";
 
 export default function TeamPage() {
   return (
     <>
       <div className="flex items-center justify-between">
         <BreadCrumbs />
-        <CreateTeamDialog isVariant />
+        <TeamCrudDialog isVariant />
       </div>
 
       <div className="grid gap-7 5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-5">
