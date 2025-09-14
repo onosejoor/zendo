@@ -60,17 +60,16 @@ func DeleteMemberInvite(ctx context.Context, email string, teamId primitive.Obje
 	return nil
 }
 
-func CheckIfInviteExists(ctx context.Context, email string, teamId primitive.ObjectID) bool {
-	emailExists, err := inviteCollection.CountDocuments(ctx, bson.M{
+func CheckIfInviteExists(ctx context.Context, email string, teamId primitive.ObjectID) *TeamInviteSchema {
+	var invite TeamInviteSchema
+	err := inviteCollection.FindOne(ctx, bson.M{
 		"email":   email,
 		"team_id": teamId,
-		"status":  "sent",
-	})
+	}).Decode(&invite)
+
 	if err != nil {
-		return false
+		return nil
 	}
-	if emailExists > 0 {
-		return true
-	}
-	return false
+
+	return &invite
 }

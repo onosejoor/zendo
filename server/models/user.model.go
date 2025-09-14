@@ -74,37 +74,13 @@ func (p UserPayload) CreateUser(ctx context.Context) (id primitive.ObjectID, err
 	return data.InsertedID.(primitive.ObjectID), nil
 }
 
-type GetUserPayload struct {
-	Email    string `bson:"email" json:"email"`
-	Username string `bson:"username" json:"username"`
-}
-
-type GetUserByEmailPayload struct {
-	Email string             `bson:"email" json:"email"`
-	ID    primitive.ObjectID `bson:"_id" json:"_id"`
-}
-
-func GetUser(userId primitive.ObjectID, ctx context.Context) (data GetUserPayload, err error) {
-	var user GetUserPayload
+func GetUser(userId primitive.ObjectID, ctx context.Context) (data *User, err error) {
+	var user User
 	projection := bson.M{"email": 1, "username": 1, "_id": 0}
 
 	opts := options.FindOne().SetProjection(projection)
 
 	err = userCol.FindOne(ctx, bson.M{"_id": userId}, opts).Decode(&user)
-	if err != nil {
-		return GetUserPayload{}, err
-	}
-
-	return user, nil
-}
-
-func GetUserByEmail(email string, ctx context.Context) (data *GetUserByEmailPayload, err error) {
-	var user GetUserByEmailPayload
-	projection := bson.M{"email": 1, "_id": 1}
-
-	opts := options.FindOne().SetProjection(projection)
-
-	err = userCol.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
 	if err != nil {
 		return nil, err
 	}

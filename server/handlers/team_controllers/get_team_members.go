@@ -4,38 +4,51 @@ import (
 	"fmt"
 	"main/configs/redis"
 	"main/models"
-	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type GetTeamMembersResponse struct {
+	Members []models.UserWithRole `json:"members"`
+	Role    string                `json:"role"`
+}
+
 func GetTeamMembersController(ctx *fiber.Ctx) error {
+
 	user := ctx.Locals("user").(*models.UserRes)
-	teamId := utils.HexToObjectID(ctx.Params("id"))
+	teamId := ctx.Locals("teamId").(primitive.ObjectID)
+	role := ctx.Locals("role").(string)
+
 	page := ctx.QueryInt("page", 1)
 	limit := ctx.QueryInt("limit", 10)
 
-	var teamMembersSlice = make([]models.UserWithRole, 0)
+	var teamMembersSlice GetTeamMembersResponse
 
 	cacheKey := fmt.Sprintf("user:%s:teams:%s:members:page:%d:limit:%d", user.ID.Hex(), teamId.Hex(), page, limit)
 
 	redisClient := redis.GetRedisClient()
 
-	if redisClient.GetCacheHandler(ctx, &teamMembersSlice, cacheKey, "members") {
+	if redisClient.GetCacheHandler(ctx, &teamMembersSlice, cacheKey, "data") {
 		return nil
 	}
 
-	teamMembersSlice, err := models.GetUsersForTeam(ctx.Context(), teamId, page, limit)
+	teamMembers, err := models.GetUsersForTeam(ctx.Context(), teamId, page, limit)
 	if err != nil {
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false, "message": "Failed to fetch team members, error: " + err.Error(),
 		})
 	}
 
-	redisClient.SetCacheData(cacheKey, ctx.Context(), teamMembersSlice)
+	res := GetTeamMembersResponse{
+		Role:    role,
+		Members: teamMembers,
+	}
+
+	redisClient.SetCacheData(cacheKey, ctx.Context(), res)
 
 	return ctx.JSON(fiber.Map{
 		"success": true,
-		"members": teamMembersSlice,
+		"data":    res,
 	})
 }

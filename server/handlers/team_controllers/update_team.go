@@ -1,13 +1,15 @@
-package project_controllers
+package team_controllers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	prometheus "main/configs/prometheus"
-	redis "main/configs/redis"
+	"main/configs/redis"
 	"main/db"
 	"main/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,8 +22,8 @@ type Payload struct {
 	Description string `json:"description" bson:"description,omitempty"`
 }
 
-func UpdateProjectController(ctx *fiber.Ctx) error {
-	projectId := ctx.Params("id")
+func UpdateTeamController(ctx *fiber.Ctx) error {
+	teamId := ctx.Locals("teamId").(primitive.ObjectID)
 	user := ctx.Locals("user").(*models.UserRes)
 
 	var updatePayload Payload
@@ -32,48 +34,40 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	collection := db.GetClient().Collection("projects")
-	objectId, err := primitive.ObjectIDFromHex(projectId)
-	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false,
-			"message": "Invalid project ID",
-		})
-	}
+	collection := db.GetClient().Collection("teams")
 
 	update := bson.M{
 		"$set": bson.M{
 			"description": updatePayload.Description,
 			"name":        updatePayload.Name,
+			"updated_at":  time.Now().Local(),
 		},
 	}
 
-	err = collection.FindOneAndUpdate(
+	err := collection.FindOneAndUpdate(
 		ctx.Context(),
-		bson.M{"_id": objectId, "ownerId": user.ID},
+		bson.M{"_id": teamId, "creator_id": user.ID},
 		update,
 	).Err()
 
 	if err != nil {
-		log.Println("Error updating project:", err.Error())
+		log.Println("Error updating team:", err.Error())
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false,
-				"message": fmt.Sprintf("project with id %v not found", projectId),
+				"message": fmt.Sprintf("team with id %v not found", teamId),
 			})
 		}
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
-			"message": "Error updating project",
+			"message": "Error updating team",
 		})
 	}
 
-	if err := redis.DeleteProjectCache(ctx.Context(), user.ID.Hex()); err != nil {
-		log.Println(err.Error())
-	}
+	go redis.ClearTeamMembersCache(context.Background(), teamId)
 	prometheus.RecordRedisOperation("delete_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
-		"message": "Project updated",
+		"message": "team updated",
 	})
 }

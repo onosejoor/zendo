@@ -6,74 +6,64 @@ import (
 	"log"
 	"main/configs/cron"
 	"main/cookies"
-	"main/db"
 	"main/models"
 	"main/utils"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const (
-	USER_DOES_NOT_EXIST = "user does not exist"
-)
-
-func teamMemberExist(ctx context.Context, invitePayload *TeamInvite, teamId primitive.ObjectID) (primitive.ObjectID, bool, error) {
-	membersColl := db.GetClient().Collection("team_members")
-
-	user, err := models.GetUserByEmail(invitePayload.Email, ctx)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return primitive.NilObjectID, false, errors.New(USER_DOES_NOT_EXIST)
-		}
-		return primitive.NilObjectID, false, err
-	}
-
-	filter := bson.M{"user_id": user.ID, "team_id": teamId}
-	exists := membersColl.FindOne(ctx, filter).Err() == nil
-
-	return user.ID, exists, nil
-}
-
 func SendTeamInvite(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
-	teamId := utils.HexToObjectID(ctx.Params("id"))
+	teamId := ctx.Locals("teamId").(primitive.ObjectID)
 	var invitePayload TeamInvite
 
 	if err := utils.ParseBodyAndValidateStruct(&invitePayload, ctx); err != nil {
 		return ctx.Status(400).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
-	userId, exists, err := teamMemberExist(ctx.Context(), &invitePayload, teamId)
+	invitePayload.Email = strings.ToLower(invitePayload.Email)
+
+	team, err := models.GetTeamById(ctx.Context(), teamId, user.ID)
 	if err != nil {
-		if err.Error() == USER_DOES_NOT_EXIST {
-			return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "User with this email does not exist"})
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "No Team with this ID exists"})
 		}
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Internal Server Error, try again"})
+	}
+
+	_, err = models.GetTeamMemberByEmail(ctx.Context(), teamId, invitePayload.Email)
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Error checking membership: " + err.Error()})
 	}
-	if exists {
-		return ctx.Status(400).JSON(fiber.Map{"success": false, "message": "User is already a member of the team"})
-	}
-	if models.CheckIfInviteExists(ctx.Context(), invitePayload.Email, teamId) {
-		return ctx.Status(400).JSON(fiber.Map{"success": false, "message": "Invite already exists for this team"})
+
+	invite := models.CheckIfInviteExists(ctx.Context(), invitePayload.Email, teamId)
+	if invite != nil {
+		if invite.Status == "sent" {
+			return ctx.Status(400).JSON(fiber.Map{"success": false, "message": "Invite already exists for this email"})
+		}
 	}
 
 	teamMember := &models.TeamMemberSchema{
 		TeamID: teamId,
-		UserID: userId,
 		Role:   invitePayload.Role,
 		Email:  invitePayload.Email,
 	}
 
-	token, err := cookies.GenerateTeamInviteEmailToken(teamMember)
-	if err != nil {
-		log.Println("Error generating invite token:", err)
-		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to generate invite token"})
+	token := ""
+	if invite == nil {
+		token, err = cookies.GenerateTeamInviteEmailToken(teamMember)
+		if err != nil {
+			log.Println("Error generating invite token:", err)
+			return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to generate invite token"})
+		}
+	} else {
+		token = invite.Token
 	}
 
-	inviteSchemaProps := models.TeamInviteSchema{
+	inviteSchemaProps := &models.TeamInviteSchema{
 		Email:  invitePayload.Email,
 		TeamID: teamId,
 		Token:  token,
@@ -88,7 +78,7 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 			Token:    token,
 			Role:     invitePayload.Role,
 			Username: user.Username,
-			TeamName: invitePayload.TeamName,
+			TeamName: team.Name,
 		}
 		emailBody := cookies.GenerateMagicTeamInviteLink(inviteProps)
 
@@ -99,7 +89,7 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		}
 
 		inviteSchemaProps.Status = status
-		_ = inviteSchemaProps.CreateOrUpdateInvite(ctx.Context())
+		_ = inviteSchemaProps.CreateOrUpdateInvite(context.Background())
 	}()
 
 	return ctx.Status(200).JSON(fiber.Map{

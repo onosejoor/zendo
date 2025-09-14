@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	"log"
 	"main/db"
 	"time"
 
@@ -22,13 +21,14 @@ type TeamMemberSchema struct {
 }
 
 type TeamWithRole struct {
-	Team     TeamSchema `bson:"team" json:"team"`
-	Role     string     `bson:"role" json:"role"`
-	JoinedAt time.Time  `bson:"joined_at" json:"joined_at"`
+	TeamSchema  `bson:"team" json:",inline"`
+	Role        string    `bson:"role" json:"role"`
+	MemberCount int       `bson:"members_count" json:"members_count"`
+	JoinedAt    time.Time `bson:"joined_at" json:"joined_at"`
 }
 
 type UserWithRole struct {
-	User     User      `bson:"user" json:"user"`
+	User     `bson:"user" json:",inline"`
 	Role     string    `bson:"role" json:"role"`
 	JoinedAt time.Time `bson:"joined_at" json:"joined_at"`
 }
@@ -61,11 +61,40 @@ func (t TeamMemberSchema) CreateTeamMember(ctx context.Context) (*primitive.Obje
 	return &oid, nil
 }
 
+func GetTeamMembersRaw(ctx context.Context, teamId primitive.ObjectID) (*[]TeamMemberSchema, error) {
+	var members []TeamMemberSchema
+	cursor, err := teamMembersColl.Find(ctx, bson.M{
+		"team_id": teamId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	if err := cursor.All(ctx, &members); err != nil {
+		return nil, err
+	}
+
+	return &members, nil
+}
+
 func GetTeamMember(ctx context.Context, teamId, userId primitive.ObjectID) (*TeamMemberSchema, error) {
 	var member TeamMemberSchema
 	err := teamMembersColl.FindOne(ctx, bson.M{
 		"team_id": teamId,
 		"user_id": userId,
+	}).Decode(&member)
+	if err != nil {
+		return nil, err
+	}
+	return &member, nil
+}
+
+func GetTeamMemberByEmail(ctx context.Context, teamId primitive.ObjectID, userEmail string) (*TeamMemberSchema, error) {
+	var member TeamMemberSchema
+	err := teamMembersColl.FindOne(ctx, bson.M{
+		"team_id": teamId,
+		"email":   userEmail,
 	}).Decode(&member)
 	if err != nil {
 		return nil, err
@@ -94,10 +123,20 @@ func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit
 			{Key: "as", Value: "team"},
 		}}},
 		{{Key: "$unwind", Value: "$team"}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "team_members"},
+			{Key: "localField", Value: "team_id"},
+			{Key: "foreignField", Value: "team_id"},
+			{Key: "as", Value: "members"},
+		}}},
+		{{Key: "$addFields", Value: bson.D{
+			{Key: "members_count", Value: bson.D{{Key: "$size", Value: "$members"}}},
+		}}},
 		{{Key: "$project", Value: bson.D{
 			{Key: "team", Value: 1},
 			{Key: "role", Value: 1},
 			{Key: "joined_at", Value: 1},
+			{Key: "members_count", Value: 1},
 		}}},
 		{{Key: "$skip", Value: (page - 1) * limit}},
 		{{Key: "$limit", Value: limit}},
@@ -150,7 +189,7 @@ func GetUsersForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit
 	return results, nil
 }
 
-func IsTeamMembers(ctx context.Context, userIds []primitive.ObjectID, teamId primitive.ObjectID, addRole bool) (bool, error) {
+func IsTeamMembers(ctx context.Context, userIds []primitive.ObjectID, teamId primitive.ObjectID, restrictToAdmins bool) (bool, string, error) {
 	membersColl := db.GetClient().Collection("team_members")
 
 	filter := bson.M{
@@ -158,15 +197,18 @@ func IsTeamMembers(ctx context.Context, userIds []primitive.ObjectID, teamId pri
 		"team_id": teamId,
 	}
 
-	if addRole {
+	if restrictToAdmins {
 		filter["role"] = bson.M{"$in": []string{"owner", "admin"}}
 	}
 
-	number, err := membersColl.CountDocuments(ctx, filter)
+	var member TeamMemberSchema
+	err := membersColl.FindOne(ctx, filter).Decode(&member)
 	if err != nil {
-		log.Println("Error counting IsTeamMember Documents: ", err)
-		return false, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, "", nil
+		}
+		return false, "", err
 	}
 
-	return number == int64(len(userIds)), nil
+	return true, member.Role, nil
 }

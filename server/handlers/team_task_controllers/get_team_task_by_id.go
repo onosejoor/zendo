@@ -4,38 +4,38 @@ import (
 	"errors"
 	"fmt"
 	"main/configs/redis"
-	"main/db"
 	"main/models"
 	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
+
+type GetTeamTaskByIdRes struct {
+	Task models.TaskWithAssignees `json:"task"`
+	Role string                   `json:"role"`
+}
 
 func GetTeamTaskByIdController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
+	role := ctx.Locals("role").(string)
 
-	teamID := utils.HexToObjectID(ctx.Params("teamId"))
+	teamID := ctx.Locals("teamId").(primitive.ObjectID)
 	taskId := utils.HexToObjectID(ctx.Params("id"))
 
-	var teamsTask models.Task
+	var response GetTeamTaskByIdRes
 
 	cacheKey := fmt.Sprintf("user:%s:teams:%s:tasks:%s", user.ID.Hex(), teamID.Hex(), taskId.Hex())
 
 	redisClient := redis.GetRedisClient()
 
-	if redisClient.GetCacheHandler(ctx, &teamsTask, cacheKey, "task") {
+	if redisClient.GetCacheHandler(ctx, &response, cacheKey, "data") {
 		return nil
 	}
 
-	taskCollection := db.GetClient().Collection("tasks")
-
-	err := taskCollection.FindOne(ctx.Context(), bson.M{
-		"_id":     taskId,
-		"team_id": teamID,
-	}).Decode(&teamsTask)
-
+	var teamTask *models.TaskWithAssignees
+	teamTask, err := models.GetTaskForTeamById(ctx.Context(), teamID, taskId)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
@@ -47,11 +47,15 @@ func GetTeamTaskByIdController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	redisClient.SetCacheData(cacheKey, ctx.Context(), teamsTask)
+	response = GetTeamTaskByIdRes{
+		Task: *teamTask, Role: role,
+	}
+
+	redisClient.SetCacheData(cacheKey, ctx.Context(), response)
 
 	return ctx.JSON(fiber.Map{
 		"success": true,
-		"task":    teamsTask,
+		"data":    response,
 	})
 
 }

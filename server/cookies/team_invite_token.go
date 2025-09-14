@@ -62,7 +62,7 @@ func VerifyTeamEmailInviteToken(tokenString string) (*InviteTokenPayload, error)
 }
 
 func GenerateMagicTeamInviteLink(props InviteTokenProps) string {
-	magicLink := fmt.Sprintf("%s/teams/members?token=%s", os.Getenv("FRONTEND_URL"), props.Token)
+	magicLink := fmt.Sprintf("%s/dashboard/teams/members?token=%s", os.Getenv("FRONTEND_URL"), props.Token)
 
 	return fmt.Sprintf(configs.TEAM_INVITATION_EMAIL_TEMPLATE, props.Username, props.TeamName, props.Role, props.Username, magicLink)
 }

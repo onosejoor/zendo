@@ -7,24 +7,18 @@ import (
 	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 	memberUserId := utils.HexToObjectID(ctx.Params("memberId"))
-	teamId := utils.HexToObjectID(ctx.Params("teamId"))
+	teamId := ctx.Locals("teamId").(primitive.ObjectID)
 
 	if teamExist := models.CheckTeamExist(teamId, ctx.Context()); !teamExist {
 		return ctx.Status(404).JSON(fiber.Map{
 			"success": false,
 			"message": "Team does not exist",
-		})
-	}
-
-	isOwnerOrAdmin := models.CheckMemberRoleMatch(user.ID, teamId, ctx.Context(), []string{"owner", "admin"})
-	if !isOwnerOrAdmin {
-		return ctx.Status(403).JSON(fiber.Map{
-			"success": false, "message": "Only Admins or Owner can remove members",
 		})
 	}
 
@@ -44,6 +38,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	}
 
 	go redis.DeleteTeamsCache(ctx.Context(), user.ID.Hex())
+	go redis.DeleteTeamsCache(ctx.Context(), memberUserId.Hex())
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Member Removed Successfully",
 	})

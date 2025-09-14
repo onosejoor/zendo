@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"main/db"
-	"main/utils"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,6 +24,25 @@ type Task struct {
 	Status      string               `json:"status" bson:"status" validate:"required"`
 	Assignees   []primitive.ObjectID `json:"assignees" bson:"assignees"`
 	CreatedAt   time.Time            `json:"created_at" bson:"created_at"`
+}
+
+type AssigneeInfo struct {
+	ID       primitive.ObjectID `bson:"_id" json:"_id"`
+	Username string             `bson:"username" json:"username"`
+	Email    string             `bson:"email" json:"email"`
+	Avatar   string             `bson:"avatar" json:"avatar"`
+}
+
+type TaskWithAssignees struct {
+	ID          primitive.ObjectID `bson:"_id" json:"_id"`
+	Title       string             `bson:"title" json:"title"`
+	Description string             `bson:"description" json:"description"`
+	TeamID      primitive.ObjectID `bson:"team_id" json:"team_id"`
+	DueDate     time.Time          `bson:"dueDate" json:"dueDate"`
+	Status      string             `bson:"status" json:"status"`
+	SubTask     []SubTask          `bson:"subTasks" json:"subTasks"`
+	Assignees   []AssigneeInfo     `bson:"assignee_details" json:"assignees"`
+	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`
 }
 
 var (
@@ -57,17 +75,10 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 		return id, nil
 	}
 
-	newTaskId, err := tasksCollection.InsertOne(ctx, Task{
-		Title:       p.Title,
-		Description: p.Description,
-		UserId:      userId,
-		SubTasks:    p.SubTasks,
-		DueDate:     p.DueDate,
-		TeamID:      p.TeamID,
-		Assignees:   p.Assignees,
-		Status:      p.Status,
-		CreatedAt:   time.Now(),
-	})
+	p.UserId = userId
+	p.CreatedAt = time.Now()
+
+	newTaskId, err := tasksCollection.InsertOne(ctx, p)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +87,7 @@ func CreateTask(p Task, ctx context.Context, userId primitive.ObjectID) (id any,
 }
 
 func CheckAssignee(assignees []primitive.ObjectID, teamId primitive.ObjectID, ctx context.Context) (bool, error) {
-	isMembers, err := IsTeamMembers(ctx, assignees, teamId, false)
+	isMembers, _, err := IsTeamMembers(ctx, assignees, teamId, false)
 	if err != nil {
 		return false, err
 	}
@@ -125,18 +136,89 @@ func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx 
 	return false, nil
 }
 
-func GetTasksForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit int) ([]Task, error) {
-	opts := utils.GeneratePaginationOptions(page, limit)
-	cursor, err := tasksCollection.Find(ctx, bson.M{"team_id": teamId}, opts)
+func GetTasksForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit int) ([]TaskWithAssignees, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{{Key: "team_id", Value: teamId}}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "assignees"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "assignee_details"},
+		}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "title", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "team_id", Value: 1},
+			{Key: "dueDate", Value: 1},
+			{Key: "status", Value: 1},
+			{Key: "assignees", Value: 1},
+			{Key: "assignee_details", Value: bson.D{
+				{Key: "username", Value: 1},
+				{Key: "avatar", Value: 1},
+				{Key: "email", Value: 1},
+				{Key: "_id", Value: 1},
+			}},
+		}}},
+		{{Key: "$skip", Value: (page - 1) * limit}},
+		{{Key: "$limit", Value: limit}},
+	}
+	cursor, err := tasksCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
-
-	var tasksSlice []Task
-	if err := cursor.All(ctx, &tasksSlice); err != nil {
+	var tasks []TaskWithAssignees
+	if err := cursor.All(ctx, &tasks); err != nil {
 		return nil, err
 	}
-	return tasksSlice, nil
+	return tasks, nil
+}
+
+func GetTaskForTeamById(ctx context.Context, teamId, taskId primitive.ObjectID) (*TaskWithAssignees, error) {
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{
+			{Key: "team_id", Value: teamId},
+			{Key: "_id", Value: taskId},
+		}}},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "users"},
+			{Key: "localField", Value: "assignees"},
+			{Key: "foreignField", Value: "_id"},
+			{Key: "as", Value: "assignee_details"},
+		}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "title", Value: 1},
+			{Key: "description", Value: 1},
+			{Key: "team_id", Value: 1},
+			{Key: "dueDate", Value: 1},
+			{Key: "subTasks", Value: 1},
+			{Key: "created_at", Value: 1},
+			{Key: "status", Value: 1},
+			{Key: "assignees", Value: 1},
+			{Key: "assignee_details", Value: bson.D{
+				{Key: "username", Value: 1},
+				{Key: "email", Value: 1},
+				{Key: "_id", Value: 1},
+				{Key: "avatar", Value: 1},
+			}},
+		}}},
+	}
+
+	cursor, err := tasksCollection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	if cursor.Next(ctx) {
+		var task TaskWithAssignees
+		if err := cursor.Decode(&task); err != nil {
+			return nil, err
+		}
+		return &task, nil
+	}
+
+	// No task found
+	return nil, mongo.ErrNoDocuments
 }
 
 func GetCompletionRateAndDueDate(t []Task) (int, int, int) {
@@ -174,16 +256,9 @@ func (task Task) CreateTaskWithTransaction(ctx context.Context, userId primitive
 	defer session.EndSession(ctx)
 
 	callback := func(sessCtx mongo.SessionContext) (any, error) {
-		id, err := tasksCollection.InsertOne(sessCtx, Task{
-			Title:       task.Title,
-			Description: task.Description,
-			UserId:      userId,
-			SubTasks:    task.SubTasks,
-			ProjectId:   task.ProjectId,
-			DueDate:     task.DueDate,
-			Status:      task.Status,
-			CreatedAt:   time.Now(),
-		})
+		task.UserId = userId
+		task.CreatedAt = time.Now()
+		id, err := tasksCollection.InsertOne(sessCtx, task)
 		if err != nil {
 			return nil, err
 		}

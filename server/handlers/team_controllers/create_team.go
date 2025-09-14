@@ -30,6 +30,6 @@ func CreateTeamController(ctx *fiber.Ctx) error {
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 
 	return ctx.Status(201).JSON(fiber.Map{
-		"success": true, "team_id": teamID.Hex(),
+		"success": true, "teamId": teamID.Hex(), "message": "Team Created Successfully",
 	})
 }

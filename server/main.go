@@ -71,7 +71,7 @@ func main() {
 	redis.GetRedisClient()
 	client := db.GetClient()
 
-	go db.CreateDbIndex(client)
+	go db.CreateModelIndexes(client)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

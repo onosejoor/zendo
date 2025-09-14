@@ -1,6 +1,7 @@
 package team_controllers
 
 import (
+	"context"
 	"log"
 	"main/configs/redis"
 	"main/cookies"
@@ -10,12 +11,13 @@ import (
 )
 
 type TeamInvite struct {
-	Email    string `json:"email" validate:"required,email"`
-	Role     string `json:"role" validate:"required,oneof=member admin"`
-	TeamName string `json:"team_name" validate:"required"`
+	Email string `json:"email" validate:"required,email"`
+	Role  string `json:"role" validate:"required,oneof=member admin"`
 }
 
 func CreateTeamMemberController(ctx *fiber.Ctx) error {
+	user := ctx.Locals("user").(*models.UserRes)
+
 	inviteToken := ctx.Query("token")
 	if inviteToken == "" {
 		return ctx.Status(400).JSON(fiber.Map{
@@ -32,6 +34,15 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 	}
 	teamMember := claims.TeamMemberSchema
 
+	teamMember.UserID = user.ID
+
+	inviteDoc := models.CheckIfInviteExists(ctx.Context(), teamMember.Email, teamMember.TeamID)
+	if inviteDoc == nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"success": false, "message": "Your Invite Has Expired, or It has been councelled by the team owner",
+		})
+	}
+
 	_, err = teamMember.CreateTeamMember(ctx.Context())
 	if err != nil {
 		log.Println("Error creating team_member: ", err)
@@ -41,7 +52,7 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 	}
 
 	go func() {
-		err = models.DeleteMemberInvite(ctx.Context(), teamMember.Email, teamMember.TeamID)
+		err = models.DeleteMemberInvite(context.Background(), teamMember.Email, teamMember.TeamID)
 		if err != nil {
 			log.Println("Error removing member invite: ", err)
 		}

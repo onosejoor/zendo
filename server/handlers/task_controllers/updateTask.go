@@ -1,12 +1,12 @@
 package task_controllers
 
 import (
-	"fmt"
+	"errors"
 	"log"
-	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"main/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,17 +16,18 @@ import (
 )
 
 type Payload struct {
-	Title       string             `json:"title" bson:"title,omitempty"`
-	Description string             `json:"description" bson:"description,omitempty"`
-	UserId      primitive.ObjectID `json:"userId" bson:"userId"`
-	SubTasks    []models.SubTask   `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
-	ProjectId   primitive.ObjectID `json:"projectId,omitempty" bson:"projectId,omitempty"`
-	DueDate     time.Time          `json:"dueDate" bson:"dueDate"`
-	Status      string             `json:"status" bson:"status,omitempty"`
+	Title       string               `json:"title" bson:"title,omitempty"`
+	Description string               `json:"description" bson:"description,omitempty"`
+	SubTasks    []models.SubTask     `json:"subTasks,omitempty" bson:"subTasks,omitempty"`
+	ProjectId   primitive.ObjectID   `json:"projectId,omitempty" bson:"projectId,omitempty"`
+	DueDate     time.Time            `json:"dueDate" bson:"dueDate"`
+	Status      string               `json:"status" bson:"status,omitempty"`
+	TeamID      primitive.ObjectID   `json:"team_id,omitempty" bson:"team_id,omitempty"`
+	Assignees   []primitive.ObjectID `json:"assignees" bson:"assignees"`
 }
 
 func UpdateTaskController(ctx *fiber.Ctx) error {
-	taskId := ctx.Params("id")
+	taskId := utils.HexToObjectID(ctx.Params("id"))
 	user := ctx.Locals("user").(*models.UserRes)
 
 	var updatePayload Payload
@@ -39,11 +40,26 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 
 	client := db.GetClient()
 	collection := client.Collection("tasks")
-	objectId, err := primitive.ObjectIDFromHex(taskId)
+
+	var task models.Task
+	err := collection.FindOne(ctx.Context(), bson.M{"_id": taskId}, findOneOpts).Decode(&task)
 	if err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.Status(404).JSON(fiber.Map{
+				"success": false,
+				"message": "Task not found",
+			})
+		}
+		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
-			"message": "Invalid task ID",
+			"message": "Internal error",
+		})
+	}
+
+	if !canModifyTask(&task, user, ctx.Context()) {
+		return ctx.Status(403).JSON(fiber.Map{
+			"success": false,
+			"message": "You are not authorized to update this task",
 		})
 	}
 
@@ -53,28 +69,23 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 
 	err = collection.FindOneAndUpdate(
 		ctx.Context(),
-		bson.M{"_id": objectId, "userId": user.ID},
+		bson.M{"_id": taskId},
 		update,
 	).Err()
 
 	if err != nil {
 		log.Println("Error updating task:", err.Error())
-		if err == mongo.ErrNoDocuments {
-			return ctx.Status(404).JSON(fiber.Map{
-				"success": false,
-				"message": fmt.Sprintf("Task with id %v not found", taskId),
-			})
-		}
 		return ctx.Status(500).JSON(fiber.Map{
 			"success": false,
 			"message": "Error updating task",
 		})
 	}
-
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
-		log.Println(err.Error())
+	if task.TeamID != primitive.NilObjectID {
+		go redis.ClearTeamMembersCache(ctx.Context(), task.TeamID)
+	} else {
+		redis.DeleteTaskCache(ctx.Context(), user.ID.Hex())
 	}
-	prometheus.RecordRedisOperation("clear_task_cache")
+
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "Task updated",

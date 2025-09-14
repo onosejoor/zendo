@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"main/configs/cron"
-	prometheus "main/configs/prometheus"
 	"main/configs/redis"
 	"main/models"
 	"main/utils"
@@ -33,7 +32,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 	userId := ctx.Locals("user").(*models.UserRes).ID
 
 	if body.TeamID != primitive.NilObjectID {
-		isMember, err := models.IsTeamMembers(ctx.Context(), []primitive.ObjectID{userId}, body.TeamID, true)
+		isMember, role, err := models.IsTeamMembers(ctx.Context(), []primitive.ObjectID{userId}, body.TeamID, true)
 		if err != nil {
 			log.Println("Error checking team membership: ", err)
 			return ctx.Status(500).JSON(fiber.Map{
@@ -43,6 +42,11 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		if !isMember {
 			return ctx.Status(403).JSON(fiber.Map{
 				"success": false, "message": "You are not a member of this team",
+			})
+		}
+		if role != "admin" && role != "owner" {
+			return ctx.Status(403).JSON(fiber.Map{
+				"success": false, "message": "You cannot create a task in this team",
 			})
 		}
 
@@ -72,7 +76,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	setReminders(id.(primitive.ObjectID), body, ctx.Context(), userId)
+	go setReminders(id.(primitive.ObjectID), body, context.Background(), userId)
 
 	if len(body.Assignees) > 0 {
 		for _, assigneeId := range body.Assignees {
@@ -81,7 +85,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 	}
 
 	redis.ClearAllCache(ctx.Context(), userId.Hex())
-	prometheus.RecordRedisOperation("clear_all_cache")
+
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "Task created successfully",
@@ -109,7 +113,7 @@ func setReminders(id primitive.ObjectID, body models.Task, ctx context.Context, 
 		payload := cron.ReminderProps{
 			TaskID:   id,
 			TaskName: body.Title,
-			UserID:   userId, // ✅ correct user here too
+			UserID:   userId,
 			DueDate:  body.DueDate.Local(),
 			Ctx:      ctx,
 		}
