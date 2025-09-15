@@ -28,6 +28,12 @@ type TeamWithMemberAndRole struct {
 	JoinedAt     time.Time `json:"joined_at" bson:"joined_at"`
 }
 
+type TeamStatsRes struct {
+	TotalTasks       int64  `json:"total_tasks"`
+	TotalTeamMembers int64  `json:"total_team_members"`
+	Role             string `json:"role"`
+}
+
 var teamColl *mongo.Collection
 
 func init() {
@@ -48,6 +54,26 @@ func CheckTeamExist(teamId primitive.ObjectID, ctx context.Context) bool {
 
 	return number > 0
 
+}
+
+func GetTeamByIdStats(teamId primitive.ObjectID, ctx context.Context, role string) (*TeamStatsRes, error) {
+
+	var teamStats TeamStatsRes
+
+	membersCount, err := teamMembersColl.CountDocuments(ctx, bson.M{"team_id": teamId})
+	if err != nil {
+		return nil, err
+	}
+	tasksCount, err := tasksCollection.CountDocuments(ctx, bson.M{"team_id": teamId})
+	if err != nil {
+		return nil, err
+	}
+
+	teamStats = TeamStatsRes{
+		TotalTasks: tasksCount, TotalTeamMembers: membersCount, Role: role,
+	}
+
+	return &teamStats, nil
 }
 
 func GetTeams(ctx context.Context, opts *options.FindOptions) ([]TeamSchema, error) {

@@ -1,9 +1,15 @@
-export function showDeleteBtn(role: TeamRole, memberRole: TeamRole) {
-  if (role !== "owner" || memberRole === "owner") {
-    return false;
-  }
-  return true;
+export function showDeleteBtn(
+  memberId: string,
+  userId: string,
+  myRole: TeamRole
+) {
+  if (memberId === userId && myRole !== "owner") return true;
+
+  if (myRole === "owner" && memberId !== userId) return true;
+
+  return false;
 }
+
 
 export function checkRolesMatch(role: TeamRole, matcher: string[]) {
   return matcher.includes(role);

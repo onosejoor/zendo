@@ -1,4 +1,4 @@
-import { DeleteIcon, Trash, X } from "lucide-react";
+import { LoaderIcon, Trash, TrashIcon, X } from "lucide-react";
 import { Button } from "../ui/button";
 
 import { useState } from "react";
@@ -13,49 +13,33 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
-import { handleRemoveMember } from "@/lib/actions/members";
+import { handleRemoveInvite } from "@/lib/actions/invite";
 
 type Props = {
-  id: string;
   teamId: string;
-  username: string;
-  userId: string;
+  email: string;
 };
 
 const dialogTexts = {
   remove: {
-    button: "Remove Member",
+    button: "Remove Invite",
     loading: "Removing...",
     title: "Are you absolutely sure?",
-    description: (username: string) =>
-      `Are you sure you want to remove ${username} from this team?`,
+    description: (email: string) =>
+      `Are you sure you want to remove ${email} invite?`,
     action: "Remove",
-  },
-  leave: {
-    button: "Exit Team",
-    loading: "Exiting...",
-    title: "Exit this team?",
-    description: () =>
-      "Are you sure you want to leave this team? You will lose access to its tasks and members.",
-    action: "Exit",
   },
 };
 
-export default function RemoveMemberDialog({
-  id,
-  teamId,
-  username,
-  userId,
-}: Props) {
+export default function RemoveInviteDialog({ teamId, email }: Props) {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const mode = userId === id ? "leave" : "remove";
-  const texts = dialogTexts[mode];
+  const texts = dialogTexts.remove;
 
   const handleAction = async () => {
     setLoading(true);
-    await handleRemoveMember(id, teamId);
+    await handleRemoveInvite(email, teamId);
     setLoading(false);
     setOpenDialog(false);
   };
@@ -64,14 +48,14 @@ export default function RemoveMemberDialog({
     <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" className="flex items-center">
-          <DeleteIcon /> {loading ? texts.loading : texts.button}
+          {loading ? <LoaderIcon className="animate-spin" /> : <TrashIcon />}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{texts.title}</AlertDialogTitle>
           <AlertDialogDescription>
-            {texts.description(username)}
+            {texts.description(email)}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

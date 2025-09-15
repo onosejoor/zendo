@@ -87,3 +87,17 @@ func GetUser(userId primitive.ObjectID, ctx context.Context) (data *User, err er
 
 	return &user, nil
 }
+
+func GetUserByEmail(email string, ctx context.Context) (data *User, err error) {
+	var user User
+	projection := bson.M{"email": 1, "username": 1, "_id": 0}
+
+	opts := options.FindOne().SetProjection(projection)
+
+	err = userCol.FindOne(ctx, bson.M{"email": email}, opts).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

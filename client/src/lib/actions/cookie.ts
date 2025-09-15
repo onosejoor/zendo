@@ -12,11 +12,7 @@ export async function getAndDeleteCookie(cookieName: string) {
 
   const returnValue = await getCookie(cookieName);
 
-  if (returnValue?.trim()) {
-    setTimeout(() => {
-      cookieStore.delete(cookieName);
-    }, 200);
-  }
+  cookieStore.delete(cookieName);
 
   return returnValue;
 }

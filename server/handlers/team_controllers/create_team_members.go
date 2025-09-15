@@ -8,6 +8,7 @@ import (
 	"main/models"
 
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TeamInvite struct {
@@ -34,7 +35,9 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 	}
 	teamMember := claims.TeamMemberSchema
 
-	teamMember.UserID = user.ID
+	if teamMember.UserID == primitive.NilObjectID {
+		teamMember.UserID = user.ID
+	}
 
 	inviteDoc := models.CheckIfInviteExists(ctx.Context(), teamMember.Email, teamMember.TeamID)
 	if inviteDoc == nil {
@@ -59,6 +62,7 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 	}()
 
 	redis.ClearAllCache(ctx.Context(), teamMember.UserID.Hex())
+	go redis.ClearTeamMembersCache(context.Background(), teamMember.TeamID)
 	return ctx.Status(201).JSON(fiber.Map{
 		"success": true, "team_id": teamMember.TeamID.Hex(), "message": "Team member created successfully",
 	})

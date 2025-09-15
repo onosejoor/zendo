@@ -49,7 +49,7 @@ declare global {
     email: string;
     _id: string;
     username: string;
-    avatar: string;
+    avatar?: string;
   }
   interface ITeamWithMember {
     member: IMember;

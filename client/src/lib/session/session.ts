@@ -2,6 +2,14 @@
 
 import { cookies } from "next/headers";
 
+type DecodeProps = {
+  email_verified: boolean;
+  exp: number;
+  iat: number;
+  id: string;
+  username: string;
+};
+
 export async function getSession() {
   const cookie = await cookies();
 
@@ -11,7 +19,10 @@ export async function getSession() {
     return { isAuth: false, message: "Unauthenticated" };
   }
 
+  const decodedData = JSON.parse(atob(session.split(".")[1])) as DecodeProps;
+
   return {
+    data: decodedData,
     isAuth: true,
     message: "Authenticated",
   };

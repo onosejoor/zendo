@@ -9,24 +9,33 @@ import (
 )
 
 func TeamsRoutes(app fiber.Router) {
-	teamsRoute := app.Group("/teams")
+	teams := app.Group("/teams", middlewares.AuthMiddleware)
 
-	teamsRoute.Use(middlewares.AuthMiddleware)
+	// top-level
+	teams.Get("/", team_controllers.GetTeamsController)
+	teams.Get("/stats", team_controllers.GetTeamStatsController)
+	teams.Post("/new", team_controllers.CreateTeamController)
+	teams.Get("/members/invite", team_controllers.CreateTeamMemberController)
 
-	teamsRoute.Get("/", team_controllers.GetTeamsController)
-	teamsRoute.Get("/stats", team_controllers.GetTeamStatsController)
-	teamsRoute.Post("/new", team_controllers.CreateTeamController)
-	teamsRoute.Get("/teams/members/invite", team_controllers.CreateTeamMemberController)
+	// team-specific
+	team := teams.Group("/:teamId", middlewares.RequireTeamMember())
 
-	teamsRoute.Get("/:teamId", middlewares.RequireTeamMember(), team_controllers.GetTeamByIDController)
-	teamsRoute.Put("/:teamId", middlewares.RequireTeamMember("owner"), team_controllers.UpdateTeamController)
-	teamsRoute.Get("/:teamId/members", middlewares.RequireTeamMember(), team_controllers.GetTeamMembersController)
-	teamsRoute.Post("/:teamId/members/invite", middlewares.RequireTeamMember("admin", "owner"), team_controllers.SendTeamInvite)
-	teamsRoute.Delete("/:teamId", middlewares.RequireTeamMember("owner"), team_controllers.DeleteTeamController)
+	team.Get("/", team_controllers.GetTeamByIDController)
+	team.Get("/stats", team_controllers.GetTeamByIdStatsController)
+	team.Get("/invites", middlewares.RequireTeamMember("owner"), team_controllers.GetTeamInvitesController)
+	team.Put("/", middlewares.RequireTeamMember("owner"), team_controllers.UpdateTeamController)
+	team.Delete("/", middlewares.RequireTeamMember("owner"), team_controllers.DeleteTeamController)
+	team.Delete("/invites/:email", middlewares.RequireTeamMember("owner"), team_controllers.CancelInviteController)
 
-	teamsRoute.Get("/:teamId/tasks", middlewares.RequireTeamMember(), team_task_controllers.GetTeamTasksController)
-	teamsRoute.Delete("/:teamId/members/:memberId", middlewares.RequireTeamMember("owner"), team_controllers.RemoveTeamMemberController)
-	teamsRoute.Get("/:teamId/tasks/:id", middlewares.RequireTeamMember(), team_task_controllers.GetTeamTaskByIdController)
-	teamsRoute.Delete("/:teamId/tasks/:taskId", middlewares.RequireTeamMember("owner"), team_task_controllers.DeleteTeamTaskController)
+	// members
+	members := team.Group("/members")
+	members.Get("/", team_controllers.GetTeamMembersController)
+	members.Post("/invite", middlewares.RequireTeamMember("admin", "owner"), team_controllers.SendTeamInvite)
+	members.Delete("/:memberId", team_controllers.RemoveTeamMemberController)
 
+	// tasks
+	tasks := team.Group("/tasks")
+	tasks.Get("/", team_task_controllers.GetTeamTasksController)
+	tasks.Get("/:id", team_task_controllers.GetTeamTaskByIdController)
+	tasks.Delete("/:taskId", middlewares.RequireTeamMember("owner"), team_task_controllers.DeleteTeamTaskController)
 }

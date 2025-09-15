@@ -9,14 +9,15 @@ import { useTeamTask } from "@/hooks/use-teams";
 import TeamTaskDialog from "@/components/dialogs/team-task-dialog";
 import Loader from "@/components/loader-card";
 import { checkRolesMatch } from "../../actions";
+import { getErrorMesage } from "@/lib/utils";
 
-export function TeamTaskContainer({
-  taskId,
-  teamId,
-}: {
+type Props = {
   taskId: string;
   teamId: string;
-}) {
+  userId?: string;
+};
+
+export function TeamTaskContainer({ taskId, teamId, userId }: Props) {
   const { data: taskData, isLoading, error } = useTeamTask(teamId, taskId);
 
   if (error) {
@@ -29,7 +30,7 @@ export function TeamTaskContainer({
         />
       );
     }
-    return <ErrorDisplay />;
+    return <ErrorDisplay message={getErrorMesage(error)} />;
   }
 
   if (isLoading) {
@@ -50,6 +51,9 @@ export function TeamTaskContainer({
     );
   }
 
+  const findAssigneebyId = !!task.assignees.find((a) => a._id === userId);
+  const isOwner = checkRolesMatch(role, ["owner"]);
+
   return (
     <>
       <div className="max-w-7xl mx-auto space-y-8">
@@ -65,10 +69,10 @@ export function TeamTaskContainer({
               {task.description || "No description"}
             </p>
           </div>
-          {checkRolesMatch(role, ["owner"]) && (
+          {(findAssigneebyId || isOwner) && (
             <div className="space-x-3 flex">
               <TeamTaskDialog defaultTeamId={teamId} initialData={task} />
-              <DeleteDataDialog id={taskId} type="team_task" />
+              {isOwner && <DeleteDataDialog id={taskId} type="team_task" />}
             </div>
           )}
         </div>

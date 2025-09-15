@@ -9,8 +9,8 @@ import (
 	"main/utils"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type SigninPayload struct {

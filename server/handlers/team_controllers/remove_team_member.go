@@ -1,6 +1,7 @@
 package team_controllers
 
 import (
+	"context"
 	"log"
 	"main/configs/redis"
 	"main/models"
@@ -14,6 +15,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 	memberUserId := utils.HexToObjectID(ctx.Params("memberId"))
 	teamId := ctx.Locals("teamId").(primitive.ObjectID)
+	role := ctx.Locals("role").(string)
 
 	if teamExist := models.CheckTeamExist(teamId, ctx.Context()); !teamExist {
 		return ctx.Status(404).JSON(fiber.Map{
@@ -29,6 +31,12 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
+	if role != "owner" && user.ID != memberUserId {
+		return ctx.Status(403).JSON(fiber.Map{
+			"success": false, "message": "You cannot remove this member",
+		})
+	}
+
 	err := models.DeleteTeamMember(memberUserId, teamId, ctx.Context())
 	if err != nil {
 		log.Println("ERROR REMOVING TEAM MEMBER FROM TEAM: ", err)
@@ -37,8 +45,8 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go redis.DeleteTeamsCache(ctx.Context(), user.ID.Hex())
-	go redis.DeleteTeamsCache(ctx.Context(), memberUserId.Hex())
+	go redis.ClearTeamMembersCache(context.Background(), teamId)
+
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Member Removed Successfully",
 	})

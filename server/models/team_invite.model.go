@@ -5,19 +5,20 @@ import (
 	"main/db"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type TeamInviteSchema struct {
 	Email     string             `json:"email" bson:"email" validate:"required,email"`
 	TeamID    primitive.ObjectID `json:"team_id" bson:"team_id" validate:"required"`
-	ExpiresAt time.Time          `json:"expires_at" bson:"expires_at"`
+	UserID    primitive.ObjectID `json:"user_id" bson:"user_id"`
+	ExpiresAt time.Time          `json:"expiresAt" bson:"expiresAt"`
 	Token     string             `json:"token" bson:"token"`
 	Status    string             `json:"status" bson:"status"`
-	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
 }
 
 var inviteCollection *mongo.Collection
@@ -41,6 +42,7 @@ func (invite *TeamInviteSchema) CreateOrUpdateInvite(ctx context.Context) error 
 			"expiresAt": time.Now().Add(7 * 24 * time.Hour),
 		},
 		"$setOnInsert": bson.M{
+			"user_id":   invite.UserID,
 			"createdAt": time.Now(),
 		},
 	}
@@ -72,4 +74,9 @@ func CheckIfInviteExists(ctx context.Context, email string, teamId primitive.Obj
 	}
 
 	return &invite
+}
+
+func DeleteInvite(email string, teamId primitive.ObjectID, ctx context.Context) error {
+	_, err := inviteCollection.DeleteOne(ctx, bson.M{"email": email, "team_id": teamId})
+	return err
 }

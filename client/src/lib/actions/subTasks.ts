@@ -53,8 +53,9 @@ export const handleDeleteSubTask = async (
 
     if (success) {
       mutateTasks(taskId, projectId);
+
       if (teamId) {
-        mutateTeam(teamId)
+        mutateTeam(teamId);
       }
     }
     toast[options](message);
@@ -82,6 +83,10 @@ export const handleToggleSubTask = async (
 
     if (success) {
       mutateTasks(task._id, task.projectId);
+
+      if (task.team_id) {
+        mutateTeam(task.team_id);
+      }
     }
     toast[options](message);
   } catch (error) {

@@ -7,9 +7,15 @@ type Props = {
   member: IMember;
   userRole: TeamRole;
   teamId: string;
+  userId: string;
 };
 
-export default function MemberCard({ member, userRole, teamId }: Props) {
+export default function MemberCard({
+  member,
+  userRole,
+  teamId,
+  userId,
+}: Props) {
   return (
     <div className="flex justify-between not-last:pb-5">
       <div className="flex gap-3 items-center">
@@ -30,9 +36,10 @@ export default function MemberCard({ member, userRole, teamId }: Props) {
       </div>
       <div className="flex space-x-10">
         {getTeamRoleColor(member.role)}
-        {showDeleteBtn(userRole, member.role) && (
+        {showDeleteBtn(member._id, userId, userRole) && (
           <RemoveMemberDialog
             id={member._id}
+            userId={userId}
             teamId={teamId}
             username={member.username}
           />

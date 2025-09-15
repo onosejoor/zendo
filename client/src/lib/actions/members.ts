@@ -23,9 +23,14 @@ export async function sendMemberInvite(payload: CreateProps, teamId: string) {
   }
 }
 
-export async function removeMember(memberId: IMember["_id"], teamId: ITeam["_id"]) {
+export async function removeMember(
+  memberId: IMember["_id"],
+  teamId: ITeam["_id"]
+) {
   try {
-    const { data } = await axiosInstance.delete<APIRes>(`/teams/${teamId}/members/${memberId}`);
+    const { data } = await axiosInstance.delete<APIRes>(
+      `/teams/${teamId}/members/${memberId}`
+    );
     if (data.success) {
       mutateMember();
     }
@@ -40,13 +45,20 @@ export async function removeMember(memberId: IMember["_id"], teamId: ITeam["_id"
   }
 }
 
-export const handleRemoveMember = async (memberId: IProject["_id"], teamId: string) => {
+export const handleRemoveMember = async (
+  memberId: IProject["_id"],
+  teamId: string
+) => {
   const { success, message } = await removeMember(memberId, teamId);
   const options = success ? "success" : "error";
 
   toast[options](message);
+
+  if (success) {
+    mutateMember();
+  }
 };
 
 export function mutateMember() {
-  mutate((key) => typeof key === "string" && key.startsWith("/teams?"));
+  mutate((key) => typeof key === "string" && key.startsWith("/teams"));
 }

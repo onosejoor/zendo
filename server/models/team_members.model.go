@@ -110,7 +110,18 @@ func DeleteTeamMember(memberId, teamId primitive.ObjectID, ctx context.Context) 
 	if err != nil {
 		return err
 	}
-	return nil
+
+	_, err = tasksCollection.UpdateMany(
+		ctx,
+		bson.M{
+			"team_id":   teamId,
+			"assignees": bson.M{"$in": []primitive.ObjectID{memberId}},
+		},
+		bson.M{
+			"$pull": bson.M{"assignees": memberId},
+		},
+	)
+	return err
 }
 
 func GetTeamsForUser(ctx context.Context, userID primitive.ObjectID, page, limit int) ([]TeamWithRole, error) {

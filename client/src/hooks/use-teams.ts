@@ -11,10 +11,11 @@ export function useTeams(limit: number = 10, page: number = 1) {
   );
 }
 
+type TeamMemberData = { members: IMember[]; role: TeamRole; userId: string };
 export function useTeamMembers(teamId: string) {
   return useSWR<{
     success: boolean;
-    data: { members: IMember[]; role: TeamRole };
+    data: TeamMemberData;
   }>(`/teams/${teamId}/members`, fetcher, {
     revalidateOnFocus: false,
   });
@@ -24,6 +25,22 @@ export function useTeam(id: string) {
   return useSWR<{ success: boolean; team: ITeam }>(`/teams/${id}`, fetcher, {
     revalidateOnFocus: false,
   });
+}
+
+export type TeamStat = {
+  total_tasks: number;
+  total_team_members: number;
+  total_pending_invites?: number;
+  role: TeamRole;
+};
+export function useTeamStats(id: string) {
+  return useSWR<{ success: boolean; stats: TeamStat }>(
+    `/teams/${id}/stats`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
 }
 
 export function useTeamTasks(id: string, limit: number = 10, page: number = 1) {
@@ -36,10 +53,26 @@ export function useTeamTasks(id: string, limit: number = 10, page: number = 1) {
   );
 }
 
-
 export function useTeamTask(teamId: string, taskId: string) {
   return useSWR<{ success: boolean; data: { task: ITask; role: TeamRole } }>(
     `/teams/${teamId}/tasks/${taskId}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+}
+
+type TeamInviteRes = {
+  _id: string;
+  email: string;
+  expiresAt: Date;
+  status: "sent" | "pending" | "failed";
+  createdAt: Date;
+};
+export function useTeamInvites(teamId: string) {
+  return useSWR<{ success: boolean; invitees: TeamInviteRes[] }>(
+    `/teams/${teamId}/invites`,
     fetcher,
     {
       revalidateOnFocus: false,

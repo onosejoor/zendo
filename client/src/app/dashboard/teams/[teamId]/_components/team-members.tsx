@@ -13,7 +13,13 @@ const SendMemberInviteDialog = dynamic(
   () => import("@/components/dialogs/create-member-dialog")
 );
 
-export default function TeamMembers({ teamId }: { teamId: string }) {
+export default function TeamMembers({
+  teamId,
+  userId,
+}: {
+  teamId: string;
+  userId: string;
+}) {
   const { data, error, isLoading } = useTeamMembers(teamId);
 
   if (error) {
@@ -52,6 +58,7 @@ export default function TeamMembers({ teamId }: { teamId: string }) {
               <MemberCard
                 key={member._id}
                 member={member}
+                userId={userId}
                 userRole={role}
                 teamId={teamId}
               />

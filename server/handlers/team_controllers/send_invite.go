@@ -3,8 +3,10 @@ package team_controllers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"main/configs/cron"
+	"main/configs/redis"
 	"main/cookies"
 	"main/models"
 	"main/utils"
@@ -46,7 +48,13 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		}
 	}
 
+	userByEmail, err := models.GetUserByEmail(invitePayload.Email, ctx.Context())
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Internal error, check internet and try again"})
+	}
+
 	teamMember := &models.TeamMemberSchema{
+		UserID: userByEmail.ID,
 		TeamID: teamId,
 		Role:   invitePayload.Role,
 		Email:  invitePayload.Email,
@@ -65,6 +73,7 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 
 	inviteSchemaProps := &models.TeamInviteSchema{
 		Email:  invitePayload.Email,
+		UserID: userByEmail.ID,
 		TeamID: teamId,
 		Token:  token,
 		Status: "pending",
@@ -91,6 +100,8 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		inviteSchemaProps.Status = status
 		_ = inviteSchemaProps.CreateOrUpdateInvite(context.Background())
 	}()
+
+	redis.DeleteKeysByPattern(context.Background(), fmt.Sprintf("user:%s:teams:%s:invites", user.ID.Hex(), teamId), user.ID.String())
 
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
