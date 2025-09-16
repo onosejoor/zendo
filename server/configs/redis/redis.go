@@ -182,7 +182,7 @@ func DeleteKeysByPattern(ctx context.Context, pattern, userId string) error {
 
 	var keys = make([]string, 0)
 
-	keys = append(keys, fmt.Sprintf("user:%s:stats", userId))
+	keys = append(keys, fmt.Sprintf("user:%s:stats", userId), fmt.Sprintf("user:%s:teams:stats", userId))
 
 	for iter.Next(ctx) {
 		keys = append(keys, iter.Val())
