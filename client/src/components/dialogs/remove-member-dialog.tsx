@@ -63,7 +63,7 @@ export default function RemoveMemberDialog({
   return (
     <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" className="flex items-center">
+        <Button variant="destructive" className="flex w-fit items-center">
           <DeleteIcon /> {loading ? texts.loading : texts.button}
         </Button>
       </AlertDialogTrigger>
