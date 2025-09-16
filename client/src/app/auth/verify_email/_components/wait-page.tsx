@@ -1,7 +1,7 @@
 "use client";
 
 import { sendEmailToken } from "@/lib/actions/token";
-import SuccessComp from "./success-comp";
+import SuccessComp from "@/app/_components/success-comp";
 import { useEffect, useState } from "react";
 import Loader from "@/components/loader-card";
 import CustomEmailAuthErrorDisplay from "./custom-error-comp";
@@ -25,7 +25,13 @@ export default function WaitComponant({ token }: { token: string }) {
   }
 
   if (result?.success) {
-    return <SuccessComp />;
+    return (
+      <SuccessComp
+        title="Email Verified SuccessFully"
+        message="Email successfully verified, redirecting now"
+        redirectRoute="/dashboard"
+      />
+    );
   }
 
   return (

@@ -1,6 +1,7 @@
 package task_controllers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	prometheus "main/configs/prometheus"
@@ -33,9 +34,9 @@ func GetTaskByIdController(ctx *fiber.Ctx) error {
 	client := db.GetClient()
 	collection := client.Collection("tasks")
 
-	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
+	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID, "team_id": nil}).Decode(&task)
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "Task not found",
 			})

@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"main/configs/prometheus"
+	"main/models"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
-	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type RedisStore struct {
@@ -96,11 +99,22 @@ func DeleteTaskCache(ctx context.Context, userId string) error {
 		log.Println("Error deleting data from cache: ", err.Error())
 		return err
 	}
+	prometheus.RecordRedisOperation("clear_task_cache")
 	return nil
 }
 
 func DeleteProjectCache(ctx context.Context, userId string) error {
 	pattern := fmt.Sprintf("user:%s:projects*", userId)
+
+	if err := DeleteKeysByPattern(ctx, pattern, userId); err != nil {
+		log.Println("Error deleting data from cache: ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func DeleteTeamsCache(ctx context.Context, userId string) error {
+	pattern := fmt.Sprintf("user:%s:teams*", userId)
 
 	if err := DeleteKeysByPattern(ctx, pattern, userId); err != nil {
 		log.Println("Error deleting data from cache: ", err.Error())
@@ -134,13 +148,31 @@ func (redisClient *RedisStore) GetCacheHandler(ctx *fiber.Ctx, result any, key s
 
 }
 
-func ClearAllCache(ctx context.Context, userId, taskId, projectId string) {
+func ClearTeamMembersCache(ctx context.Context, teamId primitive.ObjectID) {
+	teamMembers, err := models.GetTeamMembersRaw(ctx, teamId)
+	if err != nil {
+		log.Println("Error fetching team members:", err)
+	} else {
+		for _, member := range *teamMembers {
+			DeleteTaskCache(ctx, member.UserID.Hex())
+			DeleteTeamsCache(ctx, member.UserID.Hex())
+		}
+	}
+}
+
+func ClearAllCache(ctx context.Context, userId string) {
+
 	if err := DeleteTaskCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}
 	if err := DeleteProjectCache(ctx, userId); err != nil {
 		log.Println(err.Error())
 	}
+	if err := DeleteTeamsCache(ctx, userId); err != nil {
+		log.Println(err.Error())
+	}
+	prometheus.RecordRedisOperation("clear_all_cache")
+
 }
 
 func DeleteKeysByPattern(ctx context.Context, pattern, userId string) error {

@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { checkExpired } from "./utils";
 import dayjs from "dayjs";
+import { Crown, Shield, User } from "lucide-react";
+import { toast } from "sonner";
 
 export const getStatusBadge = (
   status: ITask["status"],
@@ -47,6 +49,17 @@ export function getTextNewLength({ id, value }: { id: string; value: string }) {
   return { value, isLong: false };
 }
 
+export const validateText = (id: string, value: string) => {
+  const { value: newValue, isLong } = getTextNewLength({ id, value });
+  if (isLong) {
+    const chars = id === "title" ? 70 : 300;
+    toast.error(`${id} is too long, trimmed to ${chars} characters`, {
+      style: { textTransform: "capitalize" },
+    });
+  }
+  return newValue;
+};
+
 export const generateId = () => {
   const chars = "abcdefghijklmnopqrstuvwxyz1234567890";
 
@@ -64,4 +77,46 @@ export const generateId = () => {
 export function getLocalISOString(date?: string | Date) {
   const now = dayjs(date);
   return now.format("YYYY-MM-DDTHH:mm");
+}
+
+const icon = {
+  owner: <Crown />,
+  admin: <Shield />,
+  member: <User />,
+};
+
+export function getTeamRoleColor(role: TeamRole) {
+  let color = "";
+  let textColor = "";
+
+  switch (role) {
+    case "owner":
+      color = "bg-yellow-500";
+      textColor = "text-black";
+
+      break;
+
+    case "member":
+      color = "bg-yellow-950";
+      break;
+
+    case "admin":
+      color = "bg-gray-200";
+      textColor = "text-gray-700";
+      break;
+  }
+
+  return (
+    <Badge
+      variant={"destructive"}
+      className={` h-fit capitalize ${textColor} ${color}`}
+    >
+      {icon[role]}
+      {role}
+    </Badge>
+  );
+}
+
+export function returnAssigneeId(assignees: IAssignee[]) {
+  return assignees.map((assignee) => assignee._id);
 }

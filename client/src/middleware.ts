@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "./lib/session/session";
+import { createRedirectUrlCookie, getSession } from "./lib/session/session";
 
 const protectedRoute = ["/dashboard"];
 
@@ -11,6 +11,7 @@ export async function middleware(req: NextRequest) {
   );
 
   if (!isAuth && isProtectedRoute) {
+    await createRedirectUrlCookie(req.nextUrl.href)
     return NextResponse.redirect(new URL("/auth/signin", req.nextUrl));
   }
 }

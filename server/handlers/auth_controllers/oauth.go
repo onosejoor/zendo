@@ -1,6 +1,7 @@
 package auth_controllers
 
 import (
+	"errors"
 	"log"
 	"main/configs"
 	prometheus "main/configs/prometheus"
@@ -26,7 +27,7 @@ func HandleOauth(ctx *fiber.Ctx, body configs.GooglePayload) (bool, int) {
 	if err := collection.FindOne(ctx.Context(), bson.M{"email": body.Email}).Decode(&userData); err != nil {
 		dbDuration := time.Since(start)
 		prometheus.RecordDatabaseQueryOperation(dbDuration, "users", "findOne")
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			err := createUser(body, collection, ctx)
 			if err != nil {
 				log.Println("error creating user: ", err)

@@ -16,10 +16,11 @@ import (
 func GetAllProjectsController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
 	var projects = make([]models.Project, 0)
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
 
-	cacheKey := fmt.Sprintf("user:%s:projects:page:%s:limit:%s", user.ID.Hex(), page, limit)
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 10)
+
+	cacheKey := fmt.Sprintf("user:%s:projects:page:%d:limit:%d", user.ID.Hex(), page, limit)
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &projects, cacheKey, "projects") {

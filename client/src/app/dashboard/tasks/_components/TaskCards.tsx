@@ -28,10 +28,7 @@ export default function TaskCard({ task }: Props) {
 
   return (
     <Link href={`/dashboard/tasks/${task._id}`}>
-      <Card
-        key={task._id}
-        className="hover:shadow-md relative h-full !p-0 transition-shadow"
-      >
+      <Card className="hover:shadow-md relative h-full !p-0 transition-shadow">
         <CardContent className="p-6">
           {isExpired && task.status !== "completed" && (
             <Badge className="absolute bg-red-500 text-white -rotate-40 -left-3 top-1">

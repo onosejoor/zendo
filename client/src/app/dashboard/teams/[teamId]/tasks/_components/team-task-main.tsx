@@ -1,0 +1,243 @@
+"use client";
+
+import { SubTaskCard } from "@/app/dashboard/_components/sub-task-card";
+import { formatDate } from "@/app/dashboard/tasks/_components/constants";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { mutateTasks, updateTask } from "@/lib/actions/tasks";
+import { mutateTeam } from "@/lib/actions/teams";
+import { getStatusBadge } from "@/lib/functions";
+import { checkExpired, cn, containsOnly } from "@/lib/utils";
+import {
+  Activity,
+  Calendar,
+  FileText,
+  Link2Icon,
+  LinkIcon,
+  PanelTopOpen,
+  Timer,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+
+export default function TeamTaskHeader({ task }: { task: ITask }) {
+  const isExpired = checkExpired(task.dueDate);
+
+  const handleToggleTask = async (task: ITask) => {
+    try {
+      const newStatus = task.status === "completed" ? "pending" : "completed";
+
+      const newTask = { ...task, status: newStatus };
+
+      const { message, success } = await updateTask(newTask as ITask);
+
+      const options = success ? "success" : "error";
+
+      if (success) {
+        mutateTasks(task._id);
+        mutateTeam(task.team_id);
+      }
+      toast[options](message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "internal error");
+    }
+  };
+
+  const description =
+    task.description.length > 250
+      ? task.description.slice(0, 250) + "..."
+      : task.description;
+
+  return (
+    <>
+      <Card className="relative shadow-none border-none">
+        <CardContent className={"p-6"}>
+          {isExpired && task.status !== "completed" && (
+            <Badge className="absolute bg-red-500 text-white -rotate-40 -left-3 top-1">
+              Expired
+            </Badge>
+          )}
+          <div className="flex space-x-5 items-center mb-6">
+            <input
+              type="checkbox"
+              checked={task.status === "completed"}
+              onChange={() => handleToggleTask(task)}
+              className="size-4 text-blue-600 rounded border-gray-300 focus:ring-accent-blue"
+            />
+            <h2 className="text-lg font-semibold h-fit text-foreground">
+              Team Task Details
+            </h2>
+          </div>
+
+          <div
+            className={cn(
+              "grid grid-cols-1 md:grid-cols-2 gap-6",
+              task.status === "completed" && "**:!text-gray-400"
+            )}
+          >
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <FileText className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Title
+                  </p>
+                  <p className="text-foreground line-clamp-1 ">{task.title}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <FileText className="h-5 shrink-0 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Description
+                  </p>
+                  <p className="text-foreground">
+                    {description || "No description provided"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Activity className="h-5 w-5  shrink-0 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </p>
+                  {getStatusBadge(task.status, task.dueDate)}
+                </div>
+              </div>
+
+              {task.assignees && task.assignees.length > 0 && (
+                <div className="flex items-start space-x-3">
+                  <Users className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Assignees
+                    </p>
+                    <AssigneesCard assignees={task.assignees} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3 text-sm text-gray-500">
+                <Timer className="size-5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Due Date:
+                  </p>
+                  <p className="text-foreground">{formatDate(task.dueDate)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Created Date
+                  </p>
+                  <p className="text-foreground">
+                    {new Date(task.created_at).toDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {!containsOnly("0", task.team_id) && (
+                <div className="flex items-start space-x-3">
+                  <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      View Team
+                    </p>
+                    <Link href={`/dashboard/teams/${task.team_id}`}>
+                      <Button
+                        variant={"outline"}
+                        className="flex gap-3 items-center my-3 text-gray-500"
+                      >
+                        <Link2Icon /> View Team
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {task.subTasks && task.subTasks.length > 0 && (
+        <Card>
+          <CardContent className="p-6 space-y-3">
+            <div className="flex gap-2 items-center">
+              <div className="size-2.5 rounded-full bg-accent-blue animate-bounce"></div>
+              <h3 className="font-semibold">SubTasks</h3>
+            </div>
+
+            <div className="grid gap-5">
+              {task.subTasks.map((subTask, i) => (
+                <SubTaskCard key={i} subTask={subTask} task={task} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+const AssigneesCard = ({ assignees }: { assignees: IAssignee[] }) => {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant={"outline"}
+          className="flex gap-3 items-center my-3 text-gray-500"
+        >
+          <PanelTopOpen /> View Assignees
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="ring-2 ring-blue-400">
+        <DialogHeader>
+          <DialogTitle>Assignees Assigned To This Task</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-5 divide-y divide-blue-200">
+          {assignees.map((assignee) => (
+            <div key={assignee._id} className="flex not-last:pb-5 gap-3 items-center">
+              <Avatar className="size-12.5">
+                <AvatarImage
+                  src={assignee.avatar}
+                  className="object-cover"
+                  alt={assignee.username}
+                />
+                <AvatarFallback>
+                  {assignee.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="">
+                <h4 className="text-gray-800 font-medium">
+                  {assignee.username}
+                </h4>
+                <h4 className="text-gray-500 text-sm italic">
+                  {assignee.email}
+                </h4>
+              </div>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

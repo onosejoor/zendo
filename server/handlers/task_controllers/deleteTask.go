@@ -1,12 +1,14 @@
 package task_controllers
 
 import (
+	"errors"
 	"log"
 	"main/configs/cron"
 	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"main/utils"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,7 +22,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 
 	user := ctx.Locals("user").(*models.UserRes)
 
-	objectId, _ := primitive.ObjectIDFromHex(taskId)
+	objectId := utils.HexToObjectID(taskId)
 
 	client := db.GetClient()
 	collection := client.Collection("tasks")
@@ -29,7 +31,8 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 
 	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}).Decode(&task)
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		log.Println(err)
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "Task not found",
 			})
@@ -52,7 +55,7 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 	} else {
 		if _, err := collection.DeleteOne(ctx.Context(), bson.M{"_id": objectId, "userId": user.ID}); err != nil {
 			log.Println("Error deleting task: ", err.Error())
-			prometheus.RecordRedisOperation("clear_all_cache")
+
 			return ctx.Status(500).JSON(fiber.Map{
 				"success": false, "message": "Internal error",
 			})
@@ -73,8 +76,8 @@ func DeleteTaskController(ctx *fiber.Ctx) error {
 		prometheus.RecordCronJobOperation("delete_job")
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), task.ID.Hex(), task.ProjectId.Hex())
-	prometheus.RecordRedisOperation("clear_all_cache")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
+
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Task deleted",
 	})
@@ -100,9 +103,8 @@ func DeleteAllTasksController(ctx *fiber.Ctx) error {
 		}
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
-	prometheus.RecordRedisOperation("clear_all_cache")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 	return ctx.Status(200).JSON(fiber.Map{
-		"success": true, "message": "Task deleted",
+		"success": true, "message": "All tasks deleted",
 	})
 }

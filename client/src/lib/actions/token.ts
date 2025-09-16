@@ -11,43 +11,53 @@ export async function sendEmailToken(token: string) {
     return data;
   } catch (error) {
     console.log("SEND EMAIL ERROR: ", error);
-    
+
     return { success: false, message: getErrorMesage(error) };
   }
 }
 
 export async function postToken() {
   try {
-    const { data } = await axiosInstance.post<APIRes>(
-      `/auth/verify_email`
-    );
+    const { data } = await axiosInstance.post<APIRes>(`/auth/verify_email`);
 
     if (data.success) {
-      mutate("/auth/user")
+      mutate("/auth/user");
     }
     return data;
-    
   } catch (error) {
     console.log("SEND NEW TOKEN TO EMAIL ERROR: ", error);
-    
+
     return { success: false, message: getErrorMesage(error) };
   }
 }
 
-export async function sendOauthCode(code:string) {
+export async function sendOauthCode(code: string) {
   try {
     const { data } = await axiosInstance.post<APIRes>(
       `/auth/oauth/exchange?code=${code}`
     );
 
     if (data.success) {
-      mutate("/auth/user")
+      mutate("/auth/user");
     }
     return data;
-    
   } catch (error) {
     console.log("SEND OAUTH CODE ERROR: ", error);
-    
+
     return { success: false, message: getErrorMesage(error) };
+  }
+}
+
+export async function sendInviteToken(token: string) {
+  try {
+    const { data } = await axiosInstance.get<APIRes & { team_id: string }>(
+      `/teams/members/invite?token=${token}`
+    );
+
+    return data;
+  } catch (error) {
+    console.log("SEND INVITE TOKEN ERROR: ", error);
+
+    return { success: false, message: getErrorMesage(error), team_id: "" };
   }
 }

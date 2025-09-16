@@ -1,6 +1,7 @@
 package auth_controllers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	prometheus "main/configs/prometheus"
@@ -35,7 +36,7 @@ func HandleGetUser(ctx *fiber.Ctx) error {
 	dbDuration := time.Since(start)
 	prometheus.RecordDatabaseQueryOperation(dbDuration, "users", "findOne")
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "User does not exist",
 			})

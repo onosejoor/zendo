@@ -27,7 +27,7 @@ export default function Dashboard() {
                 "Error getting user profile, refresh to try again."
               ) : (
                 <>
-                  Welcome back,{" "}
+                  Welcome back,
                   <span className="text-accent-blue">
                     {user?.username || "E"}!
                   </span>

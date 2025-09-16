@@ -72,7 +72,7 @@ export default function DeleteAllDataDialog({ type }: Props) {
               className="flex space-x-2 bg-red-500 items-center"
               variant={"destructive"}
             >
-              <Trash className="size-5" />{" "}
+              <Trash className="size-5" />
               {loading ? "Deleting..." : `Yes, delete all ${type}`}
             </Button>
           </AlertDialogAction>

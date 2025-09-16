@@ -6,6 +6,7 @@ import (
 	"log"
 	prometheus "main/configs/prometheus"
 	"main/configs/redis"
+	"main/cookies"
 	"main/db"
 	"main/models"
 	"mime/multipart"
@@ -58,6 +59,8 @@ func UpdateUserController(ctx *fiber.Ctx) error {
 	}
 
 	_ = redis.DeleteUserCache(ctx.Context(), user.ID.Hex())
+	cookies.CreateSession(models.UserRes{Username: payload.Username, ID: user.ID, EmailVerified: user.EmailVerified}, ctx)
+
 	prometheus.RecordRedisOperation("delete_user_cache")
 	return ctx.JSON(fiber.Map{
 		"success": true,

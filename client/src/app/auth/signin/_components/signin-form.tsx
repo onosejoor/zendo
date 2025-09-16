@@ -19,6 +19,7 @@ import { getErrorMesage, validateFields } from "@/lib/utils";
 import { signIn } from "@/lib/actions/signin";
 import { useRouter } from "next/navigation";
 import GoogleBtn from "../../GoogleBtn";
+import { getAndDeleteCookie } from "@/lib/actions/cookie";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +59,10 @@ export default function SignInForm() {
       toast[toastType](message);
 
       if (success) {
-        router.push("/dashboard");
+        const redirectUrl = await getAndDeleteCookie("zendo_redirect_url");
+        router.push(
+          redirectUrl ? decodeURIComponent(redirectUrl) : "/dashboard"
+        );
 
         setIsLoading(false);
       }

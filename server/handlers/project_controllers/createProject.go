@@ -14,17 +14,9 @@ func CreateProjectController(ctx *fiber.Ctx) error {
 	var payload models.Project
 	user := ctx.Locals("user").(*models.UserRes)
 
-	if err := ctx.BodyParser(&payload); err != nil {
+	if err := utils.ParseBodyAndValidateStruct(&payload, ctx); err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
-			"success": false,
-			"message": err.Error(),
-		})
-	}
-
-	if err := utils.Validate.Struct(payload); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false,
-			"message": "Invalid fields",
+			"success": false, "message": err.Error(),
 		})
 	}
 
@@ -38,8 +30,8 @@ func CreateProjectController(ctx *fiber.Ctx) error {
 	}
 
 	prometheus.RecordProjectCreation()
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
-	prometheus.RecordRedisOperation("clear_all_cache")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
+
 	return ctx.Status(201).JSON(fiber.Map{
 		"success":   true,
 		"message":   "project created successfully",

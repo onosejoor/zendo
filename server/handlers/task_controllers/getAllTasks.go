@@ -15,11 +15,11 @@ import (
 
 func GetAllTasksController(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*models.UserRes)
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 10)
 	var dbTaks = make([]models.Task, 0)
 
-	cacheKey := fmt.Sprintf("user:%s:tasks:page:%s:limit:%s", user.ID.Hex(), page, limit)
+	cacheKey := fmt.Sprintf("user:%s:tasks:page:%d:limit:%d", user.ID.Hex(), page, limit)
 	redisClient := redis.GetRedisClient()
 
 	if redisClient.GetCacheHandler(ctx, &dbTaks, cacheKey, "tasks") {
@@ -32,7 +32,7 @@ func GetAllTasksController(ctx *fiber.Ctx) error {
 
 	opts := utils.GeneratePaginationOptions(page, limit)
 
-	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID}, opts)
+	cursor, err := collection.Find(ctx.Context(), bson.M{"userId": user.ID, "team_id": nil}, opts)
 	if err != nil {
 		log.Println("Error querying db: ", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{

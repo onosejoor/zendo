@@ -1,9 +1,9 @@
 package project_controllers
 
 import (
+	"errors"
 	"fmt"
 	"log"
-	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
@@ -25,7 +25,7 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 	taskCollection := client.Collection("tasks")
 
 	if err := projectCollection.FindOneAndDelete(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Err(); err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false,
 				"message": "Project not found",
@@ -46,8 +46,8 @@ func DeleteProjectController(ctx *fiber.Ctx) error {
 		log.Println("Error deleting related tasks: ", err.Error())
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", id)
-	prometheus.RecordRedisOperation("clear_all_cache")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
+
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,
 		"message": "Project and related tasks deleted",
@@ -65,8 +65,8 @@ func DeleteAllProjectsController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	redis.ClearAllCache(ctx.Context(), user.ID.Hex(), "", "")
-	prometheus.RecordRedisOperation("clear_all_cache")
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
+
 	message := fmt.Sprintf("Deleted %v tasks and %v project(s)", deletedData.TotalTasksDeleted, deletedData.TotalProjectsDeleted)
 
 	return ctx.Status(200).JSON(fiber.Map{

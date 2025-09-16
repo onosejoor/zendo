@@ -2,6 +2,7 @@ package email_controllers
 
 import (
 	"context"
+	"errors"
 	"log"
 	"main/configs/redis"
 	"main/cookies"
@@ -28,7 +29,7 @@ func HandleVerifyEmailController(ctx *fiber.Ctx) error {
 	objectId, _ := primitive.ObjectIDFromHex(claims.ID)
 	err = UpdateUser(objectId, ctx.Context())
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "User already verified or not found",
 			})

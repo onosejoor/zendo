@@ -1,6 +1,7 @@
 package project_controllers
 
 import (
+	"errors"
 	"fmt"
 	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
@@ -35,7 +36,7 @@ func GetProjectByIdController(ctx *fiber.Ctx) error {
 
 	err := collection.FindOne(ctx.Context(), bson.M{"_id": objectId, "ownerId": user.ID}).Decode(&project)
 	if err != nil {
-		if err.Error() == mongo.ErrNoDocuments.Error() {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false, "message": "Project not found",
 			})

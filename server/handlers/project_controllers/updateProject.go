@@ -1,6 +1,7 @@
 package project_controllers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	prometheus "main/configs/prometheus"
@@ -55,7 +56,7 @@ func UpdateProjectController(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		log.Println("Error updating project:", err.Error())
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return ctx.Status(404).JSON(fiber.Map{
 				"success": false,
 				"message": fmt.Sprintf("project with id %v not found", projectId),

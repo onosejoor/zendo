@@ -4,16 +4,13 @@ import (
 	"context"
 	"log"
 	"main/configs/cron"
-	oauth_config "main/configs/oauth"
 	prometheus_config "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/handlers"
-	"main/handlers/auth_controllers"
-	"main/handlers/email_controllers"
-	"main/handlers/project_controllers"
-	"main/handlers/task_controllers"
 	"main/middlewares"
+	"main/routes"
+	"main/utils"
 	"net/http"
 	"os"
 	"time"
@@ -22,19 +19,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func main() {
+
+	utils.PullEnv()
+
 	if os.Getenv("ENVIRONMENT") == "development" {
 		prometheus.DefaultRegisterer = prometheus.NewRegistry()
 		prometheus.DefaultGatherer = prometheus.NewRegistry()
 	}
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("No .env file found, using environment variables")
-	}
 	prometheus_config.Init()
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -50,66 +46,30 @@ func main() {
 		ExposeHeaders:    "Set-Cookie",
 	}))
 
-	app.Use(prometheus_config.NewMiddleware())
-	app.Get("/metrics", handlers.MetricsHandler)
-	app.Use(middlewares.LoggerMiddleware)
-	app.Get("/health", func(ctx *fiber.Ctx) error {
-		return ctx.JSON(fiber.Map{
-			"success": true, "message": "Healthy",
-		})
-	})
-
-	oauth := oauth_config.InitializeOauthConfig()
+	app.Use(logger.New(logger.Config{
+		Format: "${time} | ${status} | ${method} | ${path} | ${latency}\n",
+	}))
 
 	// stats
 	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
 
 	// auth
-	auth := app.Group("/auth")
-
-	auth.Get("/user", middlewares.AuthMiddleware, auth_controllers.HandleGetUser)
-	auth.Put("/user", middlewares.AuthMiddleware, auth_controllers.UpdateUserController)
-	auth.Get("/verify_email", email_controllers.HandleVerifyEmailController)
-	auth.Post("/verify_email", middlewares.AuthMiddleware, email_controllers.SendEmailTokenController)
-	auth.Get("/refresh-token", auth_controllers.HandleAccessToken)
-	auth.Post("/signup", auth_controllers.HandleSignup)
-	auth.Post("/signin", auth_controllers.HandleSignin)
-
-	auth.Get("/oauth/google", oauth.GetOauthController)
-	auth.Get("/oauth/callback", oauth.OauthCallBackController)
-	auth.Post("/oauth/exchange", oauth.OauthExchangeController)
+	routes.AuthRoutes(app)
 
 	// task
-	taskRoute := app.Group("/tasks")
-	taskRoute.Use(middlewares.AuthMiddleware)
-
-	taskRoute.Get("", task_controllers.GetAllTasksController)
-	taskRoute.Get("/search", task_controllers.GetSearchedTasksController)
-	taskRoute.Get("/:id", task_controllers.GetTaskByIdController)
-	taskRoute.Post("/new", task_controllers.CreateTaskController)
-	taskRoute.Put("/:id", task_controllers.UpdateTaskController)
-	taskRoute.Put("/:id/subtask/:subTaskId", task_controllers.UpdateSubTaskController)
-	taskRoute.Delete("/:id/subtask/:subTaskId", task_controllers.DeleteSubTaskController)
-	taskRoute.Delete("/all", task_controllers.DeleteAllTasksController)
-	taskRoute.Delete("/:id", task_controllers.DeleteTaskController)
+	routes.TaskRoutes(app)
 
 	// projects
-	projectRoute := app.Group("/projects")
-	projectRoute.Use(middlewares.AuthMiddleware)
+	routes.ProjectRoutes(app)
 
-	projectRoute.Get("", project_controllers.GetAllProjectsController)
-	projectRoute.Get("/search", project_controllers.GetSearchedProjectsController)
-	projectRoute.Get("/:id/tasks", project_controllers.GetTaskInProjectsController)
-	projectRoute.Get("/:id", project_controllers.GetProjectByIdController)
-	projectRoute.Post("/new", project_controllers.CreateProjectController)
-	projectRoute.Put("/:id", project_controllers.UpdateProjectController)
-	projectRoute.Delete("/all", project_controllers.DeleteAllProjectsController)
-	projectRoute.Delete("/:id", project_controllers.DeleteProjectController)
+	// Teams and Team Members
+	routes.TeamsRoutes(app)
 
 	cron.InitializeGoCron()
 	redis.GetRedisClient()
 	client := db.GetClient()
-	db.CreateReminderTTLIndex(client.Collection("reminders"))
+
+	go db.CreateModelIndexes(client)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

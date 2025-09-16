@@ -79,7 +79,7 @@ func (params ReminderProps) ScheduleReminderJob() error {
 		return fmt.Errorf("due date is too soon to schedule a future reminder")
 	}
 
-	_, err := scheduler.Every(1).Day().At(reminderTime).LimitRunsTo(1).
+	_, err := scheduler.Every(1).Day().StartAt(reminderTime).LimitRunsTo(1).
 		Tag(params.TaskID.Hex()).
 		Do(params.sendEmailReminder)
 	if err != nil {
@@ -94,9 +94,9 @@ func (params ReminderProps) ScheduleReminderJob() error {
 func calculateReminderTime(due time.Time) time.Time {
 	diff := time.Until(due)
 	switch {
-	case diff <= 5*time.Minute:
+	case diff <= 10*time.Minute:
 		adjusted := time.Now().Add(30 * time.Second)
-		log.Println("🟡 Due soon (<=5min). Reminder in 30s:", adjusted)
+		log.Println("🟡 Due soon (<=10min). Reminder in 30s:", adjusted)
 		return adjusted
 
 	case diff <= 1*time.Hour:
@@ -113,9 +113,8 @@ func calculateReminderTime(due time.Time) time.Time {
 
 func (params ReminderProps) sendEmailReminder() {
 	client := db.GetClient()
-	usersCollection := client.Collection("users")
 
-	user, err := models.GetUser(params.UserID, usersCollection, params.Ctx)
+	user, err := models.GetUser(params.UserID, params.Ctx)
 	if err != nil {
 		log.Println("[Reminder] Error getting user data:", err)
 		return
@@ -207,4 +206,21 @@ func SetTasksCron(ctx context.Context) error {
 
 	log.Println("✅ total reminders added to cron: ", len(reminders))
 	return nil
+}
+
+func SetMultipleReminders(userIds []primitive.ObjectID, title string, dueDate time.Time, id primitive.ObjectID, ctx context.Context) {
+	for _, userId := range userIds {
+		reminderPayload := models.Reminder{
+			TaskID:     id,
+			TaskName:   title,
+			UserID:     userId,
+			DueDate:    dueDate.Local(),
+			Expires_At: dueDate.Local(),
+			CreatedAt:  time.Now().Local(),
+		}
+		err := reminderPayload.CreateReminder(ctx)
+		if err != nil {
+			log.Printf("CREATE REMINDER FAILED FOR USER %s, %v \n", userId, err)
+		}
+	}
 }

@@ -1,12 +1,15 @@
 package task_controllers
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	prometheus "main/configs/prometheus"
 	redis "main/configs/redis"
 	"main/db"
 	"main/models"
+	"main/utils"
+	"slices"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,102 +22,115 @@ type SubTaskPayload struct {
 	Completed bool `json:"completed" bson:"completed,omitempty"`
 }
 
+var findOneOpts = options.FindOne().SetProjection(bson.M{"userId": 1, "assignees": 1, "team_id": 1})
+
+func canModifyTask(task *models.Task, user *models.UserRes, ctx context.Context) bool {
+	if task.UserId == user.ID {
+		return true
+	}
+	if slices.Contains(task.Assignees, user.ID) {
+		return true
+	}
+	if task.TeamID != primitive.NilObjectID {
+		return models.CheckMemberRoleMatch(user.ID, task.TeamID, ctx, []string{"owner"})
+	}
+	return false
+}
+
+func clearTaskCache(ctx context.Context, task *models.Task, userID primitive.ObjectID) {
+	if task.TeamID != primitive.NilObjectID {
+		go redis.ClearTeamMembersCache(context.Background(), task.TeamID)
+	} else {
+		redis.DeleteTaskCache(ctx, userID.Hex())
+		prometheus.RecordRedisOperation("delete_task_cache")
+	}
+}
+
 func UpdateSubTaskController(ctx *fiber.Ctx) error {
-	taskId := ctx.Params("id")
-	subTaskIdParam := ctx.Params("subTaskId")
+	taskId := utils.HexToObjectID(ctx.Params("id"))
+	subTaskId := ctx.Params("subTaskId")
 
 	user := ctx.Locals("user").(*models.UserRes)
 
 	var updatePayload SubTaskPayload
 	if err := ctx.BodyParser(&updatePayload); err != nil {
-		return ctx.Status(400).JSON(fiber.Map{
-			"success": false,
-			"message": err.Error(),
-		})
+		return ctx.Status(400).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	collection := db.GetClient().Collection("tasks")
-	objectId, _ := primitive.ObjectIDFromHex(taskId)
 
-	update := bson.M{
-		"$set": bson.M{
-			"subTasks.$[elem].completed": updatePayload.Completed,
-		},
+	var task models.Task
+	if err := collection.FindOne(ctx.Context(),
+		bson.M{"_id": taskId},
+		findOneOpts,
+	).Decode(&task); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "Task not found"})
+		}
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Error finding task"})
 	}
 
-	arrayFilters := options.ArrayFilters{
-		Filters: bson.A{
-			bson.M{"elem._id": subTaskIdParam},
-		},
+	if !canModifyTask(&task, user, ctx.Context()) {
+		return ctx.Status(403).JSON(fiber.Map{"success": false, "message": "Not authorized to update this subtask"})
 	}
 
-	_, err := collection.UpdateOne(
+	update := bson.M{"$set": bson.M{"subTasks.$[elem].completed": updatePayload.Completed}}
+	arrayFilters := options.ArrayFilters{Filters: bson.A{bson.M{"elem._id": subTaskId}}}
+
+	res, err := collection.UpdateOne(
 		ctx.Context(),
-		bson.M{"_id": objectId, "userId": user.ID},
+		bson.M{"_id": taskId},
 		update,
 		options.Update().SetArrayFilters(arrayFilters),
 	)
-
 	if err != nil {
-		log.Println("Error updating subtask:", err.Error())
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": false,
-			"message": "Error updating subtask",
-		})
+		log.Println("Error updating subtask:", err)
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Error updating subtask"})
+	}
+	if res.MatchedCount == 0 {
+		return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "Subtask not found"})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
-		log.Println(err.Error())
-	}
-	prometheus.RecordRedisOperation("clear_task_cache")
-	return ctx.Status(200).JSON(fiber.Map{
-		"success": true,
-		"message": "SubTask updated",
-	})
+	clearTaskCache(ctx.Context(), &task, user.ID)
+
+	return ctx.Status(200).JSON(fiber.Map{"success": true, "message": "SubTask updated"})
 }
 
+// 🔹 delete subtask
 func DeleteSubTaskController(ctx *fiber.Ctx) error {
-	taskId := ctx.Params("id")
-	subTaskIdParam := ctx.Params("subTaskId")
+	taskId := utils.HexToObjectID(ctx.Params("id"))
+	subTaskId := ctx.Params("subTaskId")
 
 	user := ctx.Locals("user").(*models.UserRes)
-
 	collection := db.GetClient().Collection("tasks")
-	objectId, _ := primitive.ObjectIDFromHex(taskId)
 
-	update := bson.M{
-		"$pull": bson.M{
-			"subTasks": bson.M{
-				"_id": subTaskIdParam,
-			},
-		},
-	}
-
-	_, err := collection.UpdateOne(
-		ctx.Context(),
-		bson.M{"_id": objectId, "userId": user.ID},
-		update,
-	)
-	if err != nil {
-		log.Println("Error deleting sub_task:", err.Error())
-		if err == mongo.ErrNoDocuments {
-			return ctx.Status(404).JSON(fiber.Map{
-				"success": false,
-				"message": fmt.Sprintf("Subtask with id %v not found", subTaskIdParam),
-			})
+	var task models.Task
+	if err := collection.FindOne(ctx.Context(),
+		bson.M{"_id": taskId},
+		findOneOpts,
+	).Decode(&task); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "Task not found"})
 		}
-		return ctx.Status(500).JSON(fiber.Map{
-			"success": false,
-			"message": "Error deleting subtask",
-		})
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Error finding task"})
 	}
 
-	if err := redis.DeleteTaskCache(ctx.Context(), user.ID.Hex()); err != nil {
-		log.Println(err.Error())
+	if !canModifyTask(&task, user, ctx.Context()) {
+		return ctx.Status(403).JSON(fiber.Map{"success": false, "message": "Not authorized"})
 	}
-	prometheus.RecordRedisOperation("delete_task_cache")
-	return ctx.Status(200).JSON(fiber.Map{
-		"success": true,
-		"message": "SubTask deleted",
-	})
+
+	update := bson.M{"$pull": bson.M{"subTasks": bson.M{"_id": subTaskId}}}
+
+	res, err := collection.UpdateOne(ctx.Context(), bson.M{"_id": taskId}, update)
+	if err != nil {
+		log.Println("Error deleting subtask:", err)
+		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Error deleting subtask"})
+	}
+	if res.MatchedCount == 0 {
+		return ctx.Status(404).JSON(fiber.Map{"success": false, "message": "Subtask not found"})
+	}
+
+	clearTaskCache(ctx.Context(), &task, user.ID)
+
+	return ctx.Status(200).JSON(fiber.Map{"success": true, "message": "SubTask deleted"})
 }

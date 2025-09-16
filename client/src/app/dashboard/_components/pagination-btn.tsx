@@ -18,7 +18,7 @@ export default function PaginationBtn({page, setPage,  dataLength}: Props) {
     setPage((prev) => (prev > 1 ? prev - 1 : 1));
   };
   return (
-    <div className="flex gap-5 items-center justify-center">
+    <div className="flex gap-5 items-center mt-5 justify-center">
       <Button onClick={handlePreviousPage} disabled={page === 1}>
         <ArrowLeft /> Previous
       </Button>

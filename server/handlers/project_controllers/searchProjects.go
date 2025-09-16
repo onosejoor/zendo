@@ -15,8 +15,8 @@ func GetSearchedProjectsController(ctx *fiber.Ctx) error {
 	var projects = make([]models.Project, 0)
 
 	search := ctx.Query("search")
-	page := ctx.Query("page")
-	limit := ctx.Query("limit")
+	page := ctx.QueryInt("page", 1)
+	limit := ctx.QueryInt("limit", 10)
 
 	client := db.GetClient()
 	collection := client.Collection("projects")
