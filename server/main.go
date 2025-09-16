@@ -15,6 +15,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -23,6 +25,11 @@ import (
 func main() {
 
 	utils.PullEnv()
+
+	if os.Getenv("ENVIRONMENT") == "development" {
+		prometheus.DefaultRegisterer = prometheus.NewRegistry()
+		prometheus.DefaultGatherer = prometheus.NewRegistry()
+	}
 
 	prometheus_config.Init()
 	port := os.Getenv("PORT")
@@ -42,15 +49,6 @@ func main() {
 	app.Use(logger.New(logger.Config{
 		Format: "${time} | ${status} | ${method} | ${path} | ${latency}\n",
 	}))
-
-	app.Use(prometheus_config.NewMiddleware())
-
-	app.Get("/metrics", handlers.MetricsHandler)
-	app.Get("/health", func(ctx *fiber.Ctx) error {
-		return ctx.JSON(fiber.Map{
-			"success": true, "message": "Healthy",
-		})
-	})
 
 	// stats
 	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
