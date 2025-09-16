@@ -43,6 +43,21 @@ export function useTeamStats(id: string) {
   );
 }
 
+type AllTeamStatsRes = {
+  number_of_teams: number;
+  number_of_tasks_assigned_to_me: number;
+  number_of_tasks_due_today: number;
+};
+export function useAllTeamStats() {
+  return useSWR<{ success: boolean; stat: AllTeamStatsRes }>(
+    `/teams/stats`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+    }
+  );
+}
+
 export function useTeamTasks(id: string, limit: number = 10, page: number = 1) {
   return useSWR<{ success: boolean; data: { tasks: ITask[]; role: TeamRole } }>(
     `/teams/${id}/tasks?limit=${limit}&page=${page}`,
