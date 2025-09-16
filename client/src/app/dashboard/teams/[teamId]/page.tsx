@@ -41,6 +41,6 @@ function returnCompOnQuery(query: string, teamId: string, userId: string) {
     case "overview":
       return <TeamStats teamId={teamId} />;
     default:
-      return <TeamMembers userId={userId} teamId={teamId} />;
+      return <TeamStats teamId={teamId} />;
   }
 }

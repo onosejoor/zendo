@@ -18,7 +18,7 @@ const TeamTaskCard = dynamic(
 
 import Loader from "@/components/loader-card";
 import ErrorDisplay from "@/components/error-display";
-// import useDebounce from "@/hooks/use-debounce";
+import useDebounce from "@/hooks/use-debounce";
 
 import { useTeamTasks } from "@/hooks/use-teams";
 import { checkRolesMatch } from "../actions";
@@ -28,10 +28,8 @@ export default function TeamTasksSection({ teamId }: { teamId: string }) {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
-  //   const [filter, setFilter] = useState<Status | "all" | "expired">("all");
-
   const { data, isLoading, error } = useTeamTasks(teamId, 5, page);
-  //   const debouncedSearchTerm = useDebounce(searchTerm, 200);
+  const debouncedSearchTerm = useDebounce(searchTerm, 200);
 
   if (error) {
     return (
@@ -44,6 +42,17 @@ export default function TeamTasksSection({ teamId }: { teamId: string }) {
   } = data || { data: {} };
 
   const isAuthorized = checkRolesMatch(role!, ["owner", "admin"]);
+
+  const filteredTasks = () => {
+    if (!searchTerm) {
+      return tasks;
+    }
+    return tasks.filter(
+      (task) =>
+        task.title.toLocaleLowerCase().includes(debouncedSearchTerm) ||
+        task.description.toLocaleLowerCase().includes(debouncedSearchTerm)
+    );
+  };
 
   if (!isLoading && tasks.length < 1) {
     return (
@@ -96,7 +105,7 @@ export default function TeamTasksSection({ teamId }: { teamId: string }) {
           ) : (
             <>
               <div className="grid gap-5 md:grid-cols-2 grid-cols-1">
-                {tasks.map((task) => (
+                {filteredTasks().map((task) => (
                   <TeamTaskCard key={task._id} task={task} userRole={role!} />
                 ))}
               </div>

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 
-const btnArray = ["tasks", "members", "overview"];
+const btnArray = ["overview", "tasks", "members"];
 
-export default function TabBtns({ section = "members" }: { section: string }) {
+export default function TabBtns({ section = "overview" }: { section: string }) {
   const router = useRouter();
 
   const handleAddQuery = (text: string) => {

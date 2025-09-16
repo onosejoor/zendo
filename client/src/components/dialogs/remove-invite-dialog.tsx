@@ -17,7 +17,9 @@ import { handleRemoveInvite } from "@/lib/actions/invite";
 
 type Props = {
   teamId: string;
+  id: string;
   email: string;
+
 };
 
 const dialogTexts = {
@@ -31,7 +33,7 @@ const dialogTexts = {
   },
 };
 
-export default function RemoveInviteDialog({ teamId, email }: Props) {
+export default function RemoveInviteDialog({ teamId, id, email }: Props) {
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -39,7 +41,7 @@ export default function RemoveInviteDialog({ teamId, email }: Props) {
 
   const handleAction = async () => {
     setLoading(true);
-    await handleRemoveInvite(email, teamId);
+    await handleRemoveInvite(id, teamId);
     setLoading(false);
     setOpenDialog(false);
   };

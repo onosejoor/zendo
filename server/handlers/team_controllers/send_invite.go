@@ -101,9 +101,9 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 		_ = inviteSchemaProps.CreateOrUpdateInvite(context.Background())
 	}()
 
-	redis.DeleteKeysByPattern(context.Background(), fmt.Sprintf("user:%s:teams:%s:invites", user.ID.Hex(), teamId), user.ID.String())
+	redis.DeleteKeysByPattern(ctx.Context(), fmt.Sprintf("user:%s:teams:%s:invitees", user.ID.Hex(), teamId.Hex()), user.ID.Hex())
 
-	return ctx.Status(200).JSON(fiber.Map{
+	return ctx.Status(201).JSON(fiber.Map{
 		"success": true,
 		"message": "Invite created successfully. Email will be sent shortly.",
 	})

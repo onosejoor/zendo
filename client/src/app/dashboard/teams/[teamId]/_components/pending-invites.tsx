@@ -44,8 +44,6 @@ export default function PendingInvites({ teamId }: { teamId: string }) {
         ) : (
           <ul className="list-inside list-disc">
             {invitees.map((invitee) => {
-              console.log(invitee);
-
               return (
                 <li
                   key={invitee._id}
@@ -67,7 +65,11 @@ export default function PendingInvites({ teamId }: { teamId: string }) {
                       </h4>
                     </div>
                   </div>
-                  <RemoveInviteDialog email={invitee.email} teamId={teamId} />
+                  <RemoveInviteDialog
+                    email={invitee.email}
+                    id={invitee._id}
+                    teamId={teamId}
+                  />
                 </li>
               );
             })}

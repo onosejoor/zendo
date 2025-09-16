@@ -82,7 +82,7 @@ export async function searchForTeams(search: string) {
 
 export function mutateTeam(teamId?: string) {
   mutate(
-    (key) => typeof key === "string" && key.startsWith(`/teams/${teamId}/tasks`)
+    (key) => typeof key === "string" && key.startsWith(`/teams/${teamId}`)
   );
   mutate((key) => typeof key === "string" && key.startsWith("/teams?"));
   mutate("/stats");

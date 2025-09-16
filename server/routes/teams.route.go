@@ -24,8 +24,8 @@ func TeamsRoutes(app fiber.Router) {
 	team.Get("/stats", team_controllers.GetTeamByIdStatsController)
 	team.Get("/invites", middlewares.RequireTeamMember("owner"), team_controllers.GetTeamInvitesController)
 	team.Put("/", middlewares.RequireTeamMember("owner"), team_controllers.UpdateTeamController)
+	team.Delete("/invites/:inviteId", middlewares.RequireTeamMember("owner"), team_controllers.CancelInviteController)
 	team.Delete("/", middlewares.RequireTeamMember("owner"), team_controllers.DeleteTeamController)
-	team.Delete("/invites/:email", middlewares.RequireTeamMember("owner"), team_controllers.CancelInviteController)
 
 	// members
 	members := team.Group("/members")

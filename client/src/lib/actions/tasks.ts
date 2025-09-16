@@ -38,7 +38,7 @@ export async function updateTask(task: Partial<ITask>) {
     dueDate: new Date(task.dueDate!),
     assignees: returnAssigneeId(task.assignees || []),
   };
-  
+
   try {
     const { data } = await axiosInstance.put<APIRes>(
       `/tasks/${task._id}`,
@@ -88,7 +88,9 @@ export const handleToggleTask = async (task: ITask) => {
 
     if (success) {
       mutateTasks(task._id, task.projectId);
-      mutateTeam(task.team_id);
+      if (task.team_id) {
+        mutateTeam(task.team_id);
+      }
     }
     toast[options](message);
   } catch (error) {
@@ -113,4 +115,3 @@ export function mutateTasks(taskId?: string, projectId?: string) {
   mutate("/stats");
   mutate(`/projects/${projectId}/tasks`);
 }
-

@@ -32,7 +32,7 @@ export default function TeamMembers({
   }
 
   if (isLoading) {
-    return <Loader text="Fetching Teams..." />;
+    return <Loader text="Fetching Team members..." />;
   }
 
   const {

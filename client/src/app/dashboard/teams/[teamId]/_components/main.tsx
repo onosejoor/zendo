@@ -8,6 +8,7 @@ import { getErrorMesage } from "@/lib/utils";
 import Loader from "@/components/loader-card";
 import { checkRolesMatch } from "../actions";
 import dynamic from "next/dynamic";
+import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 
 const TeamCrudDialog = dynamic(() =>
   import("@/components/dialogs/team-crud-dialog").then(
@@ -46,7 +47,10 @@ export default function TeamContainer({ teamId }: { teamId: string }) {
   return (
     <>
       {checkRolesMatch(team.role, ["owner"]) && (
-        <TeamCrudDialog isVariant initialData={team} />
+        <div className="flex gap-5 sm:flex-row flex-col">
+          <TeamCrudDialog isVariant initialData={team} />
+          <DeleteDataDialog type="team" id={teamId} teamId={team._id} />
+        </div>
       )}
       <Card className="relative shadow-none border-none">
         <CardContent>

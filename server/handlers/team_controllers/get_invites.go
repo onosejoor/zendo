@@ -37,7 +37,7 @@ func GetTeamInvitesController(ctx *fiber.Ctx) error {
 
 	collection := db.GetClient().Collection("team_invites")
 
-	opts := options.Find().SetProjection(bson.M{"email": 1, "expiresAt": 1, "status": 1, "createdAt": 1})
+	opts := options.Find().SetProjection(bson.M{"email": 1, "expiresAt": 1, "status": 1, "createdAt": 1, "_id": 1})
 
 	cursor, err := collection.Find(ctx.Context(), bson.M{"team_id": teamId}, opts)
 	if err != nil {

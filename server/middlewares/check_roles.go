@@ -22,7 +22,14 @@ func RequireTeamMember(roles ...string) fiber.Handler {
 		}
 
 		exists, role, err := models.IsTeamMembers(c.Context(), []primitive.ObjectID{user.ID}, teamId, false)
-		if err != nil || !exists {
+		if err != nil {
+			return c.Status(403).JSON(fiber.Map{
+				"success": false,
+				"message": "error performing tasks",
+			})
+		}
+
+		if !exists {
 			return c.Status(403).JSON(fiber.Map{
 				"success": false,
 				"message": "You are not a member of this team",

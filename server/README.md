@@ -1,4 +1,4 @@
-# **Zendo Task Management Backend**
+# Zendo Task Management Backend
 
 Zendo is a robust and efficient backend API built with Go, designed to power a modern task and project management application. This system provides a comprehensive set of functionalities, from secure user authentication and detailed task tracking to project organization and automated reminders, ensuring a seamless and productive user experience. It's engineered for performance and scalability, leveraging powerful technologies like MongoDB for data persistence and Redis for intelligent caching.
 
@@ -63,6 +63,10 @@ APP_PASSWORD="your_gmail_app_password" # Generated from Google Account Security
 # Cloudinary (for avatar uploads)
 CLOUDINARY_URL="cloudinary://your_api_key:your_api_secret@your_cloud_name"
 UPLOAD_PRESET="your_cloudinary_upload_preset"
+
+# Prometheus (Optional, for basic authentication to /metrics endpoint)
+# METRICS_USERNAME="metricsuser"
+# METRICS_PASSWORD="metricspassword"
 ```
 
 ### Run the Server
@@ -87,6 +91,15 @@ To verify the server is running:
 
 ```http
 GET /health
+```
+
+### Metrics (Optional Basic Auth)
+
+To access Prometheus metrics (if `METRICS_USERNAME` and `METRICS_PASSWORD` are set in `.env`):
+
+```http
+GET /metrics
+Authorization: Basic <base64_encoded_username:password>
 ```
 
 ### Authentication Endpoints (`/auth`)
@@ -150,7 +163,11 @@ All task endpoints require authentication via `zendo_access_token` cookie.
 
 *   **Get All Tasks:**
     ```http
-    GET /tasks
+    GET /tasks?page=1&limit=10
+    ```
+*   **Search Tasks:**
+    ```http
+    GET /tasks/search?search=keyword
     ```
 *   **Create a New Task:**
     ```http
@@ -166,7 +183,9 @@ All task endpoints require authentication via `zendo_access_token` cookie.
             {"_id": "sub1", "title": "Design UI", "completed": false},
             {"_id": "sub2", "title": "Implement API integration", "completed": false}
         ],
-        "projectId": "optionalProjectId"
+        "projectId": "optionalProjectId",
+        "team_id": "optionalTeamId",
+        "assignees": ["optionalAssigneeId1", "optionalAssigneeId2"]
     }
     ```
 *   **Get Task by ID:**
@@ -180,7 +199,8 @@ All task endpoints require authentication via `zendo_access_token` cookie.
 
     {
         "title": "Updated Task Title",
-        "status": "completed"
+        "status": "completed",
+        "dueDate": "2025-01-15T10:00:00Z"
     }
     ```
 *   **Update Subtask:**
@@ -211,7 +231,11 @@ All project endpoints require authentication via `zendo_access_token` cookie.
 
 *   **Get All Projects:**
     ```http
-    GET /projects
+    GET /projects?page=1&limit=10
+    ```
+*   **Search Projects:**
+    ```http
+    GET /projects/search?search=keyword
     ```
 *   **Create a New Project:**
     ```http
@@ -250,7 +274,101 @@ All project endpoints require authentication via `zendo_access_token` cookie.
     DELETE /projects/all
     ```
 
-### Statistics Endpoint
+### Team Endpoints (`/teams`)
+
+All team endpoints require authentication via `zendo_access_token` cookie. Team-specific endpoints often require `teamId` in the path and role-based authorization.
+
+*   **Get All Teams for User:**
+    ```http
+    GET /teams?page=1&limit=10
+    ```
+*   **Get User's Overall Team Statistics:**
+    ```http
+    GET /teams/stats
+    ```
+*   **Create a New Team:**
+    ```http
+    POST /teams/new
+    Content-Type: application/json
+
+    {
+        "name": "Team Alpha",
+        "description": "Our primary development team."
+    }
+    ```
+*   **Accept Team Invite:** (After receiving a magic link in email)
+    ```http
+    GET /teams/members/invite?token=yourTeamInviteToken
+    ```
+
+*   **Get Team by ID (Team Member Only):**
+    ```http
+    GET /teams/:teamId
+    ```
+*   **Get Team Statistics by ID (Team Member Only):**
+    ```http
+    GET /teams/:teamId/stats
+    ```
+*   **Update Team (Owner Only):**
+    ```http
+    PUT /teams/:teamId
+    Content-Type: application/json
+
+    {
+        "name": "Updated Team Name",
+        "description": "New team description."
+    }
+    ```
+*   **Delete Team (Owner Only):**
+    ```http
+    DELETE /teams/:teamId
+    ```
+*   **Get Team Invites (Owner Only):**
+    ```http
+    GET /teams/:teamId/invites
+    ```
+*   **Cancel Team Invite (Owner Only):**
+    ```http
+    DELETE /teams/:teamId/invites/:inviteId
+    ```
+
+### Team Members Endpoints (`/teams/:teamId/members`)
+
+*   **Get All Team Members (Team Member Only):**
+    ```http
+    GET /teams/:teamId/members?page=1&limit=10
+    ```
+*   **Invite Member to Team (Admin/Owner Only):**
+    ```http
+    POST /teams/:teamId/members/invite
+    Content-Type: application/json
+
+    {
+        "email": "new.member@example.com",
+        "role": "member" # or "admin"
+    }
+    ```
+*   **Remove Team Member (Owner/Admin Only - can remove members/admins, owner can remove anyone including self):**
+    ```http
+    DELETE /teams/:teamId/members/:memberId
+    ```
+
+### Team Task Endpoints (`/teams/:teamId/tasks`)
+
+*   **Get All Tasks for a Team (Team Member Only):**
+    ```http
+    GET /teams/:teamId/tasks?page=1&limit=10
+    ```
+*   **Get a Specific Task for a Team (Team Member Only):**
+    ```http
+    GET /teams/:teamId/tasks/:id
+    ```
+*   **Delete Team Task (Owner Only):**
+    ```http
+    DELETE /teams/:teamId/tasks/:taskId
+    ```
+
+### Statistics Endpoint (`/stats`)
 
 *   **Get User Statistics (Authenticated):**
     ```http
@@ -264,38 +382,41 @@ Zendo is packed with features designed for effective task and project management
 
 *   🔒 **Secure User Authentication**: Full user lifecycle management including sign-up, sign-in, JWT-based authentication (access and refresh tokens), and cookie-based session handling.
 *   📧 **Email Verification**: Ensures account security and validity with a magic link email verification system.
-*   🌐 **Google OAuth2 Integration**: Seamless sign-in experience using Google accounts (currently commented out but fully implemented).
-*   ✅ **Comprehensive Task Management**: Create, retrieve, update, and delete tasks. Each task can include a title, description, due date, status, and sub-tasks for granular control.
+*   🌐 **Google OAuth2 Integration**: Seamless sign-in experience using Google accounts (fully implemented but optional via environment variables).
+*   ✅ **Comprehensive Task Management**: Create, retrieve, update, and delete tasks. Each task can include a title, description, due date, status, sub-tasks, assignees, and can be linked to projects or teams.
 *   🔗 **Sub-task Functionality**: Break down complex tasks into manageable sub-tasks with their own completion status.
 *   📅 **Automated Email Reminders**: Utilizes cron jobs to send timely email notifications for tasks nearing their due date, helping users stay on track.
 *   📊 **Project Organization**: Create and manage projects, linking tasks to specific projects for better organization and overview. Projects track their total number of associated tasks.
+*   👨‍👩‍👧‍👦 **Team Collaboration**: Create teams, invite members with specific roles (owner, admin, member), and manage team-specific tasks and projects.
 *   📈 **User Performance Statistics**: Provides a personal dashboard with key metrics such as total tasks, total projects, task completion rate, and tasks due today.
 *   ⚡ **High Performance & Scalability**: Built with Go and Fiber for lightweight, fast API responses and high concurrency.
 *   🚀 **Intelligent Caching with Redis**: Implements Redis for caching frequently accessed data, significantly improving API response times and reducing database load.
 *   🛡️ **Robust Input Validation**: Ensures data integrity and security with comprehensive server-side input validation using `go-playground/validator`.
 *   ☁️ **Cloud-based Asset Management**: Integrates with Cloudinary for secure and efficient storage and delivery of user avatars.
 *   🗄️ **Transactional Data Operations**: Leverages MongoDB's transactional capabilities for critical operations like deleting all projects (and their associated tasks) or creating tasks within projects, ensuring data consistency.
+*   📉 **Prometheus Metrics**: Exposes metrics for monitoring HTTP requests, database operations, Redis interactions, cron jobs, and user/project/task creation counts, enabling detailed observability.
 
 ## 🛠️ Technologies Used
 
 The Zendo backend is built with a modern tech stack, ensuring reliability and performance:
 
-| Category        | Technology                                                              | Description                                                      |
-| :-------------- | :---------------------------------------------------------------------- | :--------------------------------------------------------------- |
-| **Language**    | [Go](https://go.dev/)                                                   | A compiled, statically typed programming language.               |
-| **Web Framework** | [Fiber](https://gofiber.io/)                                            | An Express-inspired web framework for Go, built on Fasthttp.     |
-| **Database**    | [MongoDB](https://www.mongodb.com/)                                     | A NoSQL document database for flexible data storage.             |
-| **ORM/Driver**  | [MongoDB Go Driver](https://github.com/mongodb/mongo-go-driver)         | Official MongoDB driver for Go.                                  |
-| **Caching**     | [Redis](https://redis.io/)                                              | An in-memory data structure store, used as a cache and message broker. |
-| **Redis Client**| [go-redis/v9](https://github.com/redis/go-redis)                        | Popular Redis client for Go.                                     |
-| **Authentication** | [golang-jwt/jwt/v5](https://github.com/golang-jwt/jwt)               | A Go package for JSON Web Tokens (JWT).                         |
-| **Scheduling**  | [go-co-op/gocron](https://github.com/go-co-op/gocron)                   | A modern Go library for scheduling jobs.                         |
-| **Cloud Storage**| [Cloudinary Go SDK](https://github.com/cloudinary/cloudinary-go/v2) | Official Cloudinary SDK for Go for media management.             |
-| **OAuth**       | [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2)          | Go's official OAuth2 client library.                             |
-| **Environment** | [joho/godotenv](https://github.com/joho/godotenv)                       | A Go port of the Ruby dotenv library to load .env files.         |
-| **Validation**  | [go-playground/validator/v10](https://github.com/go-playground/validator) | Struct and field validation for Go.                              |
-| **Emailing**    | [gopkg.in/mail.v2](https://github.com/go-mail/mail)                     | A Go package for sending emails.                                 |
-| **Hashing**     | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)          | Cryptographic functions for Go (bcrypt for password hashing).    |
+| Category          | Technology                                                             | Description                                                                  | Link                                                           |
+| :---------------- | :--------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :------------------------------------------------------------- |
+| **Language**      | [Go](https://go.dev/)                                                  | A compiled, statically typed programming language.                           | [go.dev](https://go.dev/)                                      |
+| **Web Framework** | [Fiber](https://gofiber.io/)                                           | An Express-inspired web framework for Go, built on Fasthttp.                 | [gofiber.io](https://gofiber.io/)                              |
+| **Database**      | [MongoDB](https://www.mongodb.com/)                                    | A NoSQL document database for flexible data storage.                         | [mongodb.com](https://www.mongodb.com/)                        |
+| **ORM/Driver**    | [MongoDB Go Driver](https://github.com/mongodb/mongo-go-driver)        | Official MongoDB driver for Go.                                              | [github.com/mongodb/mongo-go-driver](https://github.com/mongodb/mongo-go-driver) |
+| **Caching**       | [Redis](https://redis.io/)                                             | An in-memory data structure store, used as a cache and message broker.       | [redis.io](https://redis.io/)                                  |
+| **Redis Client**  | [go-redis/v9](https://github.com/redis/go-redis)                       | Popular Redis client for Go.                                                 | [github.com/redis/go-redis](https://github.com/redis/go-redis) |
+| **Authentication**| [golang-jwt/jwt/v5](https://github.com/golang-jwt/jwt)                 | A Go package for JSON Web Tokens (JWT).                                      | [github.com/golang-jwt/jwt](https://github.com/golang-jwt/jwt) |
+| **Password Hashing** | [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto)       | Cryptographic functions for Go (bcrypt for password hashing).                | [pkg.go.dev/golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) |
+| **Scheduling**    | [go-co-op/gocron](https://github.com/go-co-op/gocron)                  | A modern Go library for scheduling jobs.                                     | [github.com/go-co-op/gocron](https://github.com/go-co-op/gocron) |
+| **Cloud Storage** | [Cloudinary Go SDK](https://github.com/cloudinary/cloudinary-go/v2)    | Official Cloudinary SDK for Go for media management.                         | [github.com/cloudinary/cloudinary-go](https://github.com/cloudinary/cloudinary-go/v2) |
+| **OAuth**         | [golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2)          | Go's official OAuth2 client library.                                         | [pkg.go.dev/golang.org/x/oauth2](https://pkg.go.dev/golang.org/x/oauth2) |
+| **Environment**   | [joho/godotenv](https://github.com/joho/godotenv)                      | A Go port of the Ruby dotenv library to load .env files.                     | [github.com/joho/godotenv](https://github.com/joho/godotenv) |
+| **Validation**    | [go-playground/validator/v10](https://github.com/go-playground/validator) | Struct and field validation for Go.                                          | [github.com/go-playground/validator](https://github.com/go-playground/validator) |
+| **Emailing**      | [gopkg.in/mail.v2](https://github.com/go-mail/mail)                    | A Go package for sending emails.                                             | [github.com/go-mail/mail](https://github.com/go-mail/mail)     |
+| **Monitoring**    | [Prometheus](https://prometheus.io/) / [client_golang](https://github.com/prometheus/client_golang) | Open-source monitoring system for metrics collection and alerting.           | [prometheus.io](https://prometheus.io/)                        |
 
 ## 🤝 Contributing
 
@@ -330,7 +451,7 @@ This project does not yet have an explicit license file. Please contact the auth
 
 ## ✍️ Author
 
-Hi, I'm Onos, and I built the Zendo Task Management Backend! I'm passionate about crafting robust and scalable software solutions.
+Hi, I'm Onos Ejoor, and I built the Zendo Task Management Backend! I'm passionate about crafting robust and scalable software solutions.
 
 Feel free to connect with me:
 
@@ -339,4 +460,4 @@ Feel free to connect with me:
 
 ---
 
-[![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)
+[![Readme was generated by Readmit](https://img.shields.io/badge/Readme%20was%20generated%20by-Readmit-brightred)](https://readmit.vercel.app)

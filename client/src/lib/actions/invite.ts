@@ -3,10 +3,10 @@ import { mutateMember } from "./members";
 import { toast } from "sonner";
 import { getErrorMesage } from "../utils";
 
-export async function removeInvite(email: string, teamId: ITeam["_id"]) {
+export async function removeInvite(id: string, teamId: ITeam["_id"]) {
   try {
     const { data } = await axiosInstance.delete<APIRes>(
-      `/teams/${teamId}/invites/${email}`
+      `/teams/${teamId}/invites/${id}`
     );
     if (data.success) {
       mutateMember();
@@ -22,8 +22,8 @@ export async function removeInvite(email: string, teamId: ITeam["_id"]) {
   }
 }
 
-export const handleRemoveInvite = async (email: string, teamId: string) => {
-  const { success, message } = await removeInvite(email, teamId);
+export const handleRemoveInvite = async (id: string, teamId: string) => {
+  const { success, message } = await removeInvite(id, teamId);
   const options = success ? "success" : "error";
 
   toast[options](message);

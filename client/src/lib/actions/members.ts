@@ -2,6 +2,7 @@ import { axiosInstance } from "@/api/api";
 import { getErrorMesage } from "../utils";
 import { mutate } from "swr";
 import { toast } from "sonner";
+import { mutateTeam } from "./teams";
 
 type CreateProps = {
   email: string;
@@ -14,6 +15,9 @@ export async function sendMemberInvite(payload: CreateProps, teamId: string) {
       `/teams/${teamId}/members/invite`,
       payload
     );
+    if (data.success) {
+      mutateTeam(teamId)
+    }
     return data;
   } catch (error) {
     return {

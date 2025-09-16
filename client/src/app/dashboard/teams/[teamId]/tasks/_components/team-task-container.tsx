@@ -2,7 +2,7 @@
 
 import TeamTaskMain from "./team-task-main";
 
-import BreadCrumbs from "@/components/BreadCrumbs";
+// import BreadCrumbs from "@/components/BreadCrumbs";
 import ErrorDisplay from "@/components/error-display";
 import DeleteDataDialog from "@/components/dialogs/delete-data-dialog";
 import { useTeamTask } from "@/hooks/use-teams";
@@ -14,10 +14,9 @@ import { getErrorMesage } from "@/lib/utils";
 type Props = {
   taskId: string;
   teamId: string;
-  userId?: string;
 };
 
-export function TeamTaskContainer({ taskId, teamId, userId }: Props) {
+export function TeamTaskContainer({ taskId, teamId }: Props) {
   const { data: taskData, isLoading, error } = useTeamTask(teamId, taskId);
 
   if (error) {
@@ -51,13 +50,12 @@ export function TeamTaskContainer({ taskId, teamId, userId }: Props) {
     );
   }
 
-  const findAssigneebyId = !!task.assignees.find((a) => a._id === userId);
   const isOwner = checkRolesMatch(role, ["owner"]);
 
   return (
     <>
       <div className="max-w-7xl mx-auto space-y-8">
-        <BreadCrumbs />
+        {/* <BreadCrumbs /> */}
         {/* Header */}
         <div className="flex sm:items-baseline sm:flex-row flex-col gap-5 justify-between">
           <div>
@@ -69,7 +67,7 @@ export function TeamTaskContainer({ taskId, teamId, userId }: Props) {
               {task.description || "No description"}
             </p>
           </div>
-          {(findAssigneebyId || isOwner) && (
+          {isOwner && (
             <div className="space-x-3 flex">
               <TeamTaskDialog defaultTeamId={teamId} initialData={task} />
               {isOwner && <DeleteDataDialog id={taskId} type="team_task" />}

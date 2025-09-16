@@ -76,7 +76,7 @@ func CheckIfInviteExists(ctx context.Context, email string, teamId primitive.Obj
 	return &invite
 }
 
-func DeleteInvite(email string, teamId primitive.ObjectID, ctx context.Context) error {
-	_, err := inviteCollection.DeleteOne(ctx, bson.M{"email": email, "team_id": teamId})
+func DeleteInvite(inviteId, teamId primitive.ObjectID, ctx context.Context) error {
+	_, err := inviteCollection.DeleteOne(ctx, bson.M{"_id": inviteId, "team_id": teamId})
 	return err
 }

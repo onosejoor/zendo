@@ -1,126 +1,113 @@
-# Zendo - Task Management Made Simple 🚀
+# Zendo Task Manager ✔️
 
-Zendo is a modern and intuitive task management application designed to help individuals and teams organize their work, track progress, and boost productivity effortlessly. This project provides a robust frontend experience built with Next.js, offering comprehensive features for managing tasks and projects.
+Zendo is a sleek and powerful task management application built with Next.js and TypeScript. It provides an intuitive interface for individuals and teams to organize projects, track tasks, and boost productivity through a clean, responsive dashboard.
 
 ## ✨ Features
 
-*   **Intuitive Dashboard**: Get a clear overview of your total tasks, active projects, completion rates, and tasks due today at a glance.
-*   **Comprehensive Task Management**: Create, view, edit, and mark tasks as complete. Tasks can include titles, descriptions, due dates, and status (pending, in-progress, completed).
-*   **Robust Project Organization**: Group related tasks into projects for better structure and efficient tracking. Manage project details, view associated tasks, and monitor overall progress.
-*   **User Authentication**: Secure sign-up and sign-in processes to ensure personalized and protected user data.
-*   **Dynamic Data Fetching**: Leverages SWR for efficient, real-time data fetching and caching, providing a smooth user experience.
-*   **Modern UI/UX**: Built with shadcn/ui and Tailwind CSS, ensuring a sleek, responsive, and accessible interface across various devices.
-*   **API Interception**: Centralized Axios interceptor handles authentication token refresh and robust error management for seamless backend communication.
+-   **📝 Task Management**: Create, edit, and delete tasks with detailed descriptions, due dates, and status tracking (Pending, In-Progress, Completed).
+-   **📂 Project Organization**: Group related tasks into projects to maintain a clear and organized workflow.
+-   **🤝 Team Collaboration**: Create teams, invite members via email, and manage collaborative tasks and projects seamlessly.
+-   **🔐 Secure Authentication**: Robust user authentication system supporting both email/password sign-up and Google OAuth for quick access.
+-   **📊 Interactive Dashboard**: Get a quick overview of your productivity with stats on total tasks, active projects, and completion rates.
+-   **✅ Sub-task Functionality**: Break down complex tasks into smaller, manageable sub-tasks for better tracking.
+-   **📱 Fully Responsive**: A seamless experience across all devices, from desktops to mobile phones.
+
+## 🛠️ Technologies Used
+
+| Technology         | Description                                        |
+| ------------------ | -------------------------------------------------- |
+| **Next.js**        | A React framework for building fast, modern web apps. |
+| **TypeScript**     | Superset of JavaScript for type-safe code.         |
+| **Tailwind CSS**   | A utility-first CSS framework for rapid UI development. |
+| **SWR**            | React Hooks for data fetching and state management. |
+| **shadcn/ui**      | Re-usable UI components built on Radix UI.         |
+| **Axios**          | Promise-based HTTP client for making API requests. |
+| **Lucide React**   | A library of simply beautiful open-source icons.   |
+| **NextAuth.js**    | Authentication handling and session management.    |
 
 ## 🚀 Getting Started
 
-Follow these steps to get Zendo up and running on your local machine.
+Follow these instructions to get a local copy up and running for development and testing purposes.
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-*   Node.js (v18.x or later)
-*   npm or Yarn or pnpm
+Make sure you have the following installed on your machine:
+-   [Node.js](https://nodejs.org/en/) (v18 or higher)
+-   [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
 ### Installation
 
-1.  **Clone the repository**:
+1.  **Clone the Repository**
     ```bash
     git clone https://github.com/onosejoor/zendo.git
     ```
-2.  **Navigate to the client directory**:
+
+2.  **Navigate to the Project Directory**
     ```bash
-    cd task-manager/client
+    cd zendo/client
     ```
-3.  **Install dependencies**:
+
+3.  **Install Dependencies**
     ```bash
     npm install
-    # or yarn install
-    # or pnpm install
     ```
-4.  **Set up environment variables**:
-    Create a `.env.local` file in the `client` directory based on `env.example`:
-    ```
-    JWT_SECRET="YOUR_JWT_SECRET"
-    SERVER_URL="YOUR_BACKEND_SERVER_URL"
-    ```
-    Replace `YOUR_JWT_SECRET` with a strong, random secret key and `YOUR_BACKEND_SERVER_URL` with the URL of your backend server (e.g., `http://localhost:8080` if running locally).
 
-5.  **Run the development server**:
+4.  **Set Up Environment Variables**
+    Create a `.env.local` file in the `client` directory and add the following variables.
+
+    ```env
+    # This is only used on the server-side for middleware, not exposed to the client
+    JWT_SECRET="your-jwt-secret-here"
+    
+    # URL of your backend server (for server-to-server communication if needed)
+    SERVER_URL="http://localhost:8080"
+    
+    # Publicly accessible URL of your backend server (for client-side requests)
+    NEXT_PUBLIC_SERVER_URL="http://localhost:8080"
+    ```
+
+5.  **Run the Development Server**
     ```bash
     npm run dev
-    # or yarn dev
-    # or pnpm dev
     ```
-    Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+    Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-## 💡 Usage
+## Usage
 
 Once the application is running, you can:
 
-1.  **Sign Up / Sign In**:
-    Navigate to the `/auth/signup` or `/auth/signin` pages to create a new account or log in with existing credentials. This secures your personal dashboard and data.
-
-2.  **Explore the Dashboard**:
-    Upon successful login, you'll land on the dashboard. Here, you'll find key statistics like total tasks, active projects, and completion rates. Recent tasks and projects are also displayed for quick access.
-
-3.  **Manage Tasks**:
-    *   Go to the `/dashboard/tasks` page to view all your tasks.
-    *   Click the "New Task" button to create a new task, providing a title, description, due date, and optional project association.
-    *   Edit existing tasks by clicking on them or using the dropdown menu on task cards.
-    *   Mark tasks as completed directly from the dashboard or the tasks list by checking the checkbox.
-
-4.  **Manage Projects**:
-    *   Visit the `/dashboard/projects` page to oversee all your projects.
-    *   Use the "New Project" button to start a new project, assigning a name and description.
-    *   Click on any project card to view its details and all tasks associated with it. From here, you can also add new tasks directly to that project.
-    *   Projects can be edited or deleted from their respective detail pages.
-
-## 🛠 Technologies Used
-
-| Technology    | Description                                       | Link                                                 |
-| :------------ | :------------------------------------------------ | :--------------------------------------------------- |
-| Next.js       | React framework for production                    | [Next.js](https://nextjs.org/)                       |
-| React         | JavaScript library for building user interfaces   | [React](https://react.dev/)                          |
-| TypeScript    | Strongly typed JavaScript                         | [TypeScript](https://www.typescriptlang.org/)        |
-| Tailwind CSS  | Utility-first CSS framework                       | [Tailwind CSS](https://tailwindcss.com/)             |
-| shadcn/ui     | Reusable UI components built with Radix UI & Tailwind | [shadcn/ui](https://ui.shadcn.com/)                  |
-| SWR           | React Hooks for data fetching                     | [SWR](https://swr.vercel.app/)                       |
-| Axios         | Promise-based HTTP client                         | [Axios](https://axios-http.com/)                     |
-| Day.js        | Fast, minimalist `Date` library                   | [Day.js](https://day.js.org/)                        |
-| Sonner        | An opinionated toast component for React          | [Sonner](https://sonner.emilkowalski.no/)            |
-| Lucide React  | A beautiful & consistent icon toolkit             | [Lucide React](https://lucide.dev/guide/packages/lucide-react) |
+-   **Sign Up**: Create a new account using your email and password or sign in with Google.
+-   **Dashboard**: After logging in, you'll be directed to your personal dashboard which displays key statistics about your tasks and projects.
+-   **Create Projects**: Navigate to the "Projects" page and create a new project to group your tasks.
+-   **Create Tasks**: Create tasks individually from the "Tasks" page or directly within a project. Assign due dates, descriptions, and sub-tasks.
+-   **Manage Teams**: Go to the "Teams" section to create a new team, invite members, and start collaborating on shared tasks.
 
 ## 🤝 Contributing
 
-We welcome contributions to Zendo! If you're interested in improving the project, please follow these guidelines:
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-1.  **Fork the repository**.
-2.  **Create a new branch** for your feature or bug fix: `git checkout -b feature/your-feature-name` or `bugfix/fix-description`.
-3.  **Make your changes**, ensuring they adhere to the project's coding style.
-4.  **Write clear and concise commit messages**.
-5.  **Push your branch** to your forked repository.
-6.  **Open a Pull Request** to the `main` branch of this repository. Provide a detailed description of your changes.
+1.  🍴 Fork the Project
+2.  🌿 Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  ✨ Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  🚀 Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  🎉 Open a Pull Request
 
 ## 📄 License
 
-This project does not currently have an explicit license. Please contact the author for licensing information.
+This project is licensed under the MIT License.
 
-## 👤 Author
+## 👨‍💻 Author
 
-*   **Onos Ejoor**
-    *   GitHub: [@onosejoor](https://github.com/onosejoor)
-    *   X (Twitter): [@DevText15](https://twitter.com/DevText16)
+**Onos Ejoor**
 
----
-
-[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-000000.svg?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Styled with Tailwind CSS](https://img.shields.io/badge/Styled%20with-Tailwind%20CSS-06B6D4.svg?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Type-Checked with TypeScript](https://img.shields.io/badge/Type--Checked%20with-TypeScript-3178C6.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Powered by SWR](https://img.shields.io/badge/Powered%20by-SWR-FF5733.svg?style=for-the-badge&logo=swr)](https://swr.vercel.app/)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000.svg?style=for-the-badge&logo=vercel)](https://vercel.com/)
+-   **Website**: [onos-ejoor.vercel.app](https://onos-ejoor.vercel.app)
+-   **Twitter**: `[@DevText16]`
 
 ---
+
+![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![SWR](https://img.shields.io/badge/SWR-000000?style=for-the-badge&logo=swr&logoColor=white)
 
 [![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)
