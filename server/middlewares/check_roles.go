@@ -32,7 +32,7 @@ func RequireTeamMember(roles ...string) fiber.Handler {
 		if !exists {
 			return c.Status(403).JSON(fiber.Map{
 				"success": false,
-				"message": "You are not a member of this team",
+				"message": "Team not found or You are not a member of this team",
 			})
 		}
 

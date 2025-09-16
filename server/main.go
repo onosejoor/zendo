@@ -50,6 +50,15 @@ func main() {
 		Format: "${time} | ${status} | ${method} | ${path} | ${latency}\n",
 	}))
 
+	app.Use(prometheus_config.NewMiddleware())
+
+	app.Get("/metrics", handlers.MetricsHandler)
+	app.Get("/health", func(ctx *fiber.Ctx) error {
+		return ctx.JSON(fiber.Map{
+			"success": true, "message": "Healthy",
+		})
+	})
+
 	// stats
 	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
 

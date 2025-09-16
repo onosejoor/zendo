@@ -46,6 +46,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 	}
 
 	go redis.ClearTeamMembersCache(context.Background(), teamId)
+	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true, "message": "Member Removed Successfully",
