@@ -17,7 +17,7 @@ export default function MemberCard({
   userId,
 }: Props) {
   return (
-    <div className="flex justify-between not-last:pb-5">
+    <div className="flex flex-col md:flex-row gap-2.5 md:justify-between not-last:pb-5">
       <div className="flex gap-3 items-center">
         <Avatar className="size-12.5">
           <AvatarImage
