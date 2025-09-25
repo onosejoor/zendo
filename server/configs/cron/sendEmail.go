@@ -1,12 +1,13 @@
 package cron
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"main/configs"
+	"net/http"
 	"os"
 	"time"
-
-	"gopkg.in/mail.v2"
 )
 
 type EmailProps struct {
@@ -14,6 +15,13 @@ type EmailProps struct {
 	DueDate  time.Time
 	TaskId   string
 	TaskName string
+}
+
+type EmailRequest struct {
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	HTML    string `json:"html,omitempty"`
+	From    string `json:"from"`
 }
 
 const (
@@ -29,22 +37,18 @@ func GenerateHtmlTemplate(props EmailProps) string {
 }
 
 func SendEmailToGmail(to, subject, body string) error {
-	email := os.Getenv("EMAIL")
-	app_password := os.Getenv("APP_PASSWORD")
 
-	mailData := mail.NewMessage()
-	mailData.SetHeader("From", fmt.Sprintf("Zendo <%s>", email))
-	mailData.SetHeader("To", to)
-	mailData.SetHeader("Subject", subject)
-	mailData.SetBody("text/html", body)
+	emailUrl := os.Getenv("EMAIL_API_URL")
 
-	// Use 587 for STARTTLS, or 465 for SSL/TLS
-	d := mail.NewDialer(SMTPServer, SMTPPort, email, app_password)
+	payload, _ := json.Marshal(EmailRequest{
+		Subject: subject, From: "Zendo", To: to, HTML: body,
+	})
 
-	d.StartTLSPolicy = mail.MandatoryStartTLS
-
-	if err := d.DialAndSend(mailData); err != nil {
+	res, err := http.Post(emailUrl+"/api/send-email", "application/json", bytes.NewBuffer(payload))
+	if err != nil {
 		return err
 	}
+	defer res.Body.Close()
+
 	return nil
 }

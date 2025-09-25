@@ -167,6 +167,11 @@ func DeleteTeam(ctx context.Context, teamID, userID primitive.ObjectID) error {
 		return err
 	}
 
+	_, err = inviteCollection.DeleteMany(ctx, bson.M{"team_id": teamID})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

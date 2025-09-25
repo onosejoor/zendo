@@ -80,7 +80,9 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 
 	if len(body.Assignees) > 0 {
 		for _, assigneeId := range body.Assignees {
-			go setReminders(id.(primitive.ObjectID), body, ctx.Context(), assigneeId)
+			if assigneeId != userId {
+				go setReminders(id.(primitive.ObjectID), body, ctx.Context(), assigneeId)
+			}
 		}
 	}
 
