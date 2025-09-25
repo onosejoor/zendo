@@ -2,6 +2,7 @@ package team_controllers
 
 import (
 	"context"
+	"errors"
 	"log"
 	"main/configs/redis"
 	"main/models"
@@ -16,14 +17,7 @@ func CancelInviteController(ctx *fiber.Ctx) error {
 	teamId := ctx.Locals("teamId").(primitive.ObjectID)
 	inviteId := utils.HexToObjectID(ctx.Params("inviteId"))
 
-	if teamExist := models.CheckTeamExist(teamId, ctx.Context()); !teamExist {
-		return ctx.Status(404).JSON(fiber.Map{
-			"success": false,
-			"message": "Team does not exist",
-		})
-	}
-
-	err := models.DeleteInvite(inviteId, teamId, ctx.Context())
+	err := cancelInvite(teamId, inviteId)
 	if err != nil {
 		log.Println("ERROR REMOVING TEAM INVITE: ", err)
 		return ctx.Status(500).JSON(fiber.Map{
@@ -39,4 +33,11 @@ func CancelInviteController(ctx *fiber.Ctx) error {
 		"success": true, "message": "Invite Cancelled Successfully",
 	})
 
+}
+
+func cancelInvite(teamId, inviteId primitive.ObjectID) error {
+	if !models.CheckTeamExist(teamId, context.TODO()) {
+		return errors.New("team not found")
+	}
+	return models.DeleteInvite(inviteId, teamId, context.TODO())
 }

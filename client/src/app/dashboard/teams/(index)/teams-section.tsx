@@ -33,11 +33,18 @@ export default function TeamsSection() {
     <>
       <h1 className="font-semibold py-5">Teams You Collaborate With</h1>
       {teams.length > 0 ? (
-        <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-5">
-          {teams.map((team) => (
-            <TeamCard key={team._id} team={team} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-5">
+            {teams.map((team) => (
+              <TeamCard key={team._id} team={team} />
+            ))}
+          </div>
+          <PaginationBtn
+            page={page}
+            setPage={setPage}
+            dataLength={teams.length}
+          />
+        </>
       ) : (
         <div className="p-12 text-center">
           <div className="text-muted-foreground mb-4">
@@ -52,7 +59,6 @@ export default function TeamsSection() {
           <TeamCrudDialog />
         </div>
       )}
-      <PaginationBtn page={page} setPage={setPage} dataLength={teams.length} />
     </>
   );
 }
