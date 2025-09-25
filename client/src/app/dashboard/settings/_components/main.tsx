@@ -141,11 +141,11 @@ export default function Settings() {
 
               {/* Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Username</Label>
                 <Input
-                  id="name"
+                  id="username"
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your username"
                   value={username ?? ""}
                   onChange={handleChange}
                   required
