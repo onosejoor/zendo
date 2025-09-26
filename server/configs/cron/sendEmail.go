@@ -44,11 +44,18 @@ func SendEmailToGmail(to, subject, body string) error {
 		Subject: subject, From: "Zendo", To: to, HTML: body,
 	})
 
-	res, err := http.Post(emailUrl+"/api/send-email", "application/json", bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", emailUrl+"/api/send-email", bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-KEY", os.Getenv("EMAIL_API_TOKEN"))
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
