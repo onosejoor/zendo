@@ -2,14 +2,12 @@ package models
 
 import (
 	"context"
-	"errors"
 	"main/db"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Task struct {
@@ -102,38 +100,31 @@ func CheckAssignee(assignees []primitive.ObjectID, teamId primitive.ObjectID, ct
 func GetTaskReminderSent(taskId primitive.ObjectID, client *mongo.Database, ctx context.Context) (bool, error) {
 	remindersCollection := client.Collection("reminders")
 
-	var taskResult bson.M
-	taskProjection := bson.M{"_id": 0, "status": 1}
-
-	err := tasksCollection.FindOne(
+	completedCount, err := tasksCollection.CountDocuments(
 		ctx,
-		bson.M{"_id": taskId}, options.FindOne().SetProjection(taskProjection),
-	).Decode(&taskResult)
+		bson.M{"_id": taskId, "status": "completed"},
+	)
 	if err != nil {
 		return true, err
 	}
 
-	if taskResult["status"] == "completed" {
+	if completedCount > 0 {
 		return true, nil
 	}
 
-	var result bson.M
-
-	reminderProjection := bson.M{"_id": 0}
-
-	opts := options.FindOne().SetProjection(reminderProjection)
-
-	err = remindersCollection.FindOne(
+	reminderCount, err := remindersCollection.CountDocuments(
 		ctx,
-		bson.M{"taskId": taskId}, opts,
-	).Decode(&result)
+		bson.M{"taskId": taskId},
+	)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return true, err
-		}
-		return false, err
+		return true, err
 	}
-	return false, nil
+
+	if reminderCount > 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func GetTasksForTeam(ctx context.Context, teamId primitive.ObjectID, page, limit int) ([]TaskWithAssignees, error) {

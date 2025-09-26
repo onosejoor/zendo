@@ -120,14 +120,14 @@ func (params ReminderProps) sendEmailReminder() {
 		return
 	}
 
-	reminderDoesNotExists, err := models.GetTaskReminderSent(params.TaskID, client, params.Ctx)
+	reminderHandled, err := models.GetTaskReminderSent(params.TaskID, client, params.Ctx)
 	if err != nil {
 		log.Println("[Reminder] Error fetching task reminder flag:", err)
 		return
 	}
 
-	if reminderDoesNotExists {
-		log.Println("[Reminder] Already sent or does not exist for task:", params.TaskID.Hex())
+	if reminderHandled {
+		log.Println("[Reminder] Skipping reminder for task:", params.TaskID.Hex())
 		return
 	}
 
