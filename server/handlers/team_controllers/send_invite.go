@@ -49,12 +49,22 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 	}
 
 	userByEmail, err := models.GetUserByEmail(invitePayload.Email, ctx.Context())
-	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-		return ctx.Status(500).JSON(fiber.Map{"success": false, "message": "Internal error, check internet and try again"})
+
+	var userID primitive.ObjectID
+
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		userID = primitive.NilObjectID
+	} else if err != nil {
+		return ctx.Status(500).JSON(fiber.Map{
+			"success": false,
+			"message": "Internal error, please try again",
+		})
+	} else {
+		userID = userByEmail.ID
 	}
 
 	teamMember := &models.TeamMemberSchema{
-		UserID: userByEmail.ID,
+		UserID: userID,
 		TeamID: teamId,
 		Role:   invitePayload.Role,
 		Email:  invitePayload.Email,
@@ -73,7 +83,7 @@ func SendTeamInvite(ctx *fiber.Ctx) error {
 
 	inviteSchemaProps := &models.TeamInviteSchema{
 		Email:  invitePayload.Email,
-		UserID: userByEmail.ID,
+		UserID: userID,
 		TeamID: teamId,
 		Token:  token,
 		Status: "pending",
