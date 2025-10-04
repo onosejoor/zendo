@@ -1,3 +1,4 @@
+import Img from "@/components/Img";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -16,15 +17,30 @@ export function AssigneeCard({
   checked,
 }: Props) {
   return (
-    <div className="flex animate-in animation-duration-[200ms] items-center gap-2 group">
+    <div className="flex animate-in animation-duration-[200ms] items-center gap-5 group">
       <Input
         type="checkbox"
         checked={checked}
         onChange={() => handleToggleAssignee(assignee, checked)}
         className="size-4 text-green-600 rounded border-gray-300 focus:ring-accent-blue"
       />
+      <div className="flex gap-2 items-center">
+        <Img
+          src={assignee.avatar || ""}
+          alt={assignee.username}
+          className="size-7.5 object-cover rounded-full"
+        />
+        <div>
+          <p className="text-sm font-medium">
+            {assignee.username}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {assignee.email}
+          </p>
+        </div>
+      </div>
 
-      <Input readOnly value={assignee.username} className={`flex-1 h-8`} />
+      {/* <Input readOnly value={assignee.username} className={`flex-1 h-8`} /> */}
     </div>
   );
 }
@@ -59,18 +75,22 @@ export function AssigneePopover({
     });
   };
 
+  const totalAssigneesByname = assignees.length
+    ? assignees.map((a) => a.username).join(", ")
+    : "Select Task Assignees";
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 ">
       <Button
         onClick={() => setOpen(!open)}
         variant={"outline"}
         type="button"
         className="text-xs px-2.5 w-fit flex space-x-3 items-center"
       >
-        Select Task Assignees <ArrowDown />
+        {totalAssigneesByname} <ArrowDown className={open ? "rotate-180" : ""} />
       </Button>
       {open && (
-        <div className="animate-in fade-in zoom-in space-y-3 p-3 shadow-sm shadow-gray-300 rounded-md">
+        <div className="animate-in pl-5 border-l border-gray-100 fade-in zoom-in space-y-3 p-3">
           {members.map((member) => {
             const checked = assignees.find((t) => t._id == member._id);
             return (

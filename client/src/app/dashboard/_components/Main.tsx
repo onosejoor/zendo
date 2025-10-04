@@ -22,7 +22,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex justify-between sm:flex-row flex-col gap-5 sm:items-center">
           <div className="truncate">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 truncate">
               {error ? (
                 "Error getting user profile, refresh to try again."
               ) : (
