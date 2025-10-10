@@ -56,14 +56,14 @@ export default function TeamContainer({ teamId }: { teamId: string }) {
         <CardContent>
           <div className={"grid grid-cols-1 md:grid-cols-2 gap-6"}>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-baseline space-x-3">
                 <p className="text-sm font-medium text-muted-foreground">
                   Name:
                 </p>
                 <p className="text-foreground line-clamp-1 ">{team.name}</p>
               </div>
 
-              <div className="flex items-center space-x-3">
+              <div className="flex items-baseline space-x-3">
                 <p className="text-sm font-medium text-muted-foreground">
                   Description:
                 </p>

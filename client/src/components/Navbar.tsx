@@ -6,8 +6,9 @@ import { getSession } from "@/lib/session/session";
 
 export default function Nav() {
   const auth = use(getSession());
+
   return (
-    <header className="border-b bg-white/80 backdrop-blur-sm">
+    <header className="border-b sticky top-0 z-10 bg-gray-50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href={"/"}>
           <Img
@@ -18,7 +19,7 @@ export default function Nav() {
         </Link>
         <div className="space-x-4">
           {auth.isAuth ? (
-            <Link href="/dashboard" className="sm:inline hidden">
+            <Link href="/dashboard">
               <Button>Dashboard</Button>
             </Link>
           ) : (
