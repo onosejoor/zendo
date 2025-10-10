@@ -46,7 +46,7 @@ export default function HeroSection() {
                     "https://res.cloudinary.com/dog3ihaqs/image/upload/v1740561527/c5bgr7ybdhuqlkcn6vuc.jpg"
                   }
                   alt="Image"
-                  className="size-10 object-cover rounded-full border-2 border-blue-500"
+                  className="size-10 object-cover rounded-full border-2 border-white"
                 />
               </div>
             ))}
