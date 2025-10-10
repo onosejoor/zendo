@@ -13,7 +13,7 @@ export default function HeroSection() {
   const arrayToMapFrom = !isLoading ? data?.data.avatars || [] : [...Array(5)];
 
   return (
-    <header className="px-4 py-20 min-h-[90vh] bg-gray-50 bg-[url(https://www.transparenttextures.com/patterns/ag-square.png)]">
+    <header className="px-4 py-20 min-h-[90vh] bg-gray-50 bg-[url(/images/home-hero-texture.jpg)]">
       <div className="container mx-auto text-center space-y-6">
         <Badge variant={"default"} className="bg-blue-500">
           <CloudLightning /> Task management made simple
