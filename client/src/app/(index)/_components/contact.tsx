@@ -38,7 +38,10 @@ export const ContactSection = () => {
       />
 
       <div className="max-w-2xl mx-auto">
-        <form action={"https://hh.com"} className="space-y-4">
+        <form
+          action={"https://app.proforms.top/f/pr84642fa"}
+          className="space-y-4"
+        >
           <div className="space-y-2.5">
             <Label htmlFor="name">Name</Label>
             <Input
