@@ -61,6 +61,7 @@ func main() {
 
 	// stats
 	app.Get("/stats", middlewares.AuthMiddleware, handlers.GetStatsControllers)
+	app.Get("/home-stats", handlers.GetHomePageData)
 
 	// auth
 	routes.AuthRoutes(app)

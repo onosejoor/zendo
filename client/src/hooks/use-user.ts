@@ -12,3 +12,14 @@ export function useUser() {
     shouldRetryOnError: false,
   });
 }
+
+type UseHomeDataProps = {
+  success: boolean;
+  data: { total_users: number; avatars: string[] };
+};
+export function useHomeData() {
+  return useSWR<UseHomeDataProps>("/home-stats", fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
+}
