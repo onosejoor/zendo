@@ -21,8 +21,8 @@ export default function Dashboard() {
       <div className="space-y-8">
         {/* Header */}
         <div className="flex justify-between sm:flex-row flex-col gap-5 sm:items-center">
-          <div className="truncate">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div>
+            <h1 className="text-2xl break-words sm:text-3xl font-bold whitespace-break-spaces text-gray-900">
               {error ? (
                 "Error getting user profile, refresh to try again."
               ) : (

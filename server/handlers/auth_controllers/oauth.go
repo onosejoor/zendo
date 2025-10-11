@@ -8,8 +8,6 @@ import (
 	"main/cookies"
 	"main/db"
 	"main/models"
-	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -106,11 +104,5 @@ func createUser(p configs.GooglePayload, collection *mongo.Collection, ctx *fibe
 func generateUsername(email string) string {
 	name := strings.Split(email, "@")[0]
 
-	var randNumbers string
-
-	for range 5 {
-		randNumbers += strconv.Itoa(rand.Intn(10))
-	}
-
-	return name + randNumbers
+	return name
 }

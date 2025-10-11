@@ -30,7 +30,7 @@ export default function PendingInvites({ teamId }: { teamId: string }) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="ring-2 ring-blue-400 lg:w-4xl">
+      <DialogContent className="ring-2 ring-blue-400 lg:w-4xl max-h-[90vh] overflow-auto ">
         <DialogHeader>
           <DialogTitle>Pending Invites</DialogTitle>
           <DialogDescription className="text-muted-foreground">
