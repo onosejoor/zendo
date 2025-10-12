@@ -12,22 +12,29 @@ import {
 import { Fragment } from "react";
 
 export default function BreadCrumbs() {
-  const paths = usePathname();
-
-  const pathNames = paths.split("/").filter((f) => f.trim());
+  const pathname = usePathname();
+  const pathNames = pathname.split("/").filter(Boolean);
 
   return (
-    <Breadcrumb>
+    <Breadcrumb className="mb-5">
       <BreadcrumbList>
         {pathNames.map((path, idx) => {
-          const nextPath = pathNames[idx + 1];
+          const href = "/" + pathNames.slice(0, idx + 1).join("/");
+          const isLast = idx === pathNames.length - 1;
 
           return (
             <Fragment key={idx}>
-              <BreadcrumbItem key={idx}>
-                {generateCrumbs(nextPath, path)}
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{decodeURIComponent(path)}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink href={href}>
+                    {decodeURIComponent(path)}
+                  </BreadcrumbLink>
+                )}
               </BreadcrumbItem>
-              {nextPath && <BreadcrumbSeparator />}
+
+              {!isLast && <BreadcrumbSeparator />}
             </Fragment>
           );
         })}
@@ -35,14 +42,3 @@ export default function BreadCrumbs() {
     </Breadcrumb>
   );
 }
-
-function generateCrumbs(nextPath: string, path: string) {
-  return nextPath ? (
-    <BreadcrumbLink href={isDashboardSameRoute(path)}>{path}</BreadcrumbLink>
-  ) : (
-    <BreadcrumbPage>{path}</BreadcrumbPage>
-  );
-}
-
-const isDashboardSameRoute = (route: string) =>
-  route.includes("dashboard") ? `/${route}` : `/dashboard/${route}`;

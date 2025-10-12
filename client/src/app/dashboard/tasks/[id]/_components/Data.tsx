@@ -3,7 +3,7 @@ import { formatDate } from "@/app/dashboard/tasks/_components/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { mutateTasks, updateTask } from "@/lib/actions/tasks";
+import { handleToggleTask } from "@/lib/actions/tasks";
 import { getStatusBadge } from "@/lib/functions";
 import { checkExpired, cn, containsOnly } from "@/lib/utils";
 import {
@@ -15,29 +15,9 @@ import {
   Timer,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 
 export default function TaskHeader({ task }: { task: ITask }) {
   const isExpired = checkExpired(task.dueDate);
-
-  const handleToggleTask = async (task: ITask) => {
-    try {
-      const newStatus = task.status === "completed" ? "pending" : "completed";
-
-      const newTask = { ...task, status: newStatus };
-
-      const { message, success } = await updateTask(newTask as ITask);
-
-      const options = success ? "success" : "error";
-
-      if (success) {
-        mutateTasks(task._id, task.projectId);
-      }
-      toast[options](message);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "internal error");
-    }
-  };
 
   const description =
     task.description.length > 250

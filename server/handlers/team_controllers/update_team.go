@@ -1,7 +1,6 @@
 package team_controllers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -64,7 +63,7 @@ func UpdateTeamController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go redis.ClearTeamMembersCache(context.Background(), teamId)
+	redis.ClearTeamMembersCache(ctx.Context(), teamId)
 	prometheus.RecordRedisOperation("delete_cache")
 	return ctx.Status(200).JSON(fiber.Map{
 		"success": true,

@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Reminder struct {
@@ -23,12 +24,24 @@ func (reminder Reminder) CreateReminder(ctx context.Context) error {
 	client := db.GetClient()
 	collection := client.Collection("reminders")
 
-	_, err := collection.InsertOne(ctx, reminder)
-	if err != nil {
-		return err
+	filter := bson.M{
+		"taskId": reminder.TaskID,
+		"userId": reminder.UserID,
 	}
-	return nil
 
+	update := bson.M{
+		"$set": bson.M{
+			"dueDate":    reminder.DueDate,
+			"taskName":   reminder.TaskName,
+			"expiresAt":  reminder.Expires_At,
+			"created_at": time.Now(),
+		},
+	}
+
+	opts := options.Update().SetUpsert(true)
+
+	_, err := collection.UpdateOne(ctx, filter, update, opts)
+	return err
 }
 
 func DeleteReminder(ctx context.Context, taskId primitive.ObjectID, userId primitive.ObjectID) error {

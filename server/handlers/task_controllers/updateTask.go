@@ -1,6 +1,7 @@
 package task_controllers
 
 import (
+	"context"
 	"errors"
 	"log"
 	redis "main/configs/redis"
@@ -80,10 +81,15 @@ func UpdateTaskController(ctx *fiber.Ctx) error {
 			"message": "Error updating task",
 		})
 	}
+
 	if task.TeamID != primitive.NilObjectID {
-		go redis.ClearTeamMembersCache(ctx.Context(), task.TeamID)
+		redis.ClearTeamMembersCache(ctx.Context(), task.TeamID)
 	} else {
 		redis.DeleteTaskCache(ctx.Context(), user.ID.Hex())
+	}
+
+	if updatePayload.Status != "completed" && updatePayload.DueDate.After(time.Now().Add(10*time.Minute)) {
+		go setReminders(taskId, task, context.Background(), user.ID)
 	}
 
 	return ctx.Status(200).JSON(fiber.Map{

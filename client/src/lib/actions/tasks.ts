@@ -80,7 +80,11 @@ export const handleToggleTask = async (task: ITask) => {
   try {
     const newStatus = task.status === "completed" ? "pending" : "completed";
 
-    const newTask = { ...task, status: newStatus };
+    const newTask = {
+      ...task,
+      status: newStatus,
+      dueDate: dayjs(task.dueDate).format(),
+    };
 
     const { message, success } = await updateTask(newTask as ITask);
 

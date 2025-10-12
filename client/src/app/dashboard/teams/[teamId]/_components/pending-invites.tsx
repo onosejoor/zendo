@@ -51,7 +51,7 @@ export default function PendingInvites({ teamId }: { teamId: string }) {
                 >
                   <div className="flex not-last:pb-5 gap-3 items-center">
                     <div className="space-y-2">
-                      <h4 className="text-gray-800 font-medium">
+                      <h4 className="text-gray-800 truncate font-medium">
                         {invitee.email}
                       </h4>
                       <h4 className="text-gray-500 text-sm">

@@ -1,7 +1,6 @@
 package team_controllers
 
 import (
-	"context"
 	"log"
 	"main/configs/redis"
 	"main/models"
@@ -45,7 +44,7 @@ func RemoveTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go redis.ClearTeamMembersCache(context.Background(), teamId)
+	redis.ClearTeamMembersCache(ctx.Context(), teamId)
 	redis.ClearAllCache(ctx.Context(), user.ID.Hex())
 
 	return ctx.Status(200).JSON(fiber.Map{

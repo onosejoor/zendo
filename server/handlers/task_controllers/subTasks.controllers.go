@@ -39,7 +39,7 @@ func canModifyTask(task *models.Task, user *models.UserRes, ctx context.Context)
 
 func clearTaskCache(ctx context.Context, task *models.Task, userID primitive.ObjectID) {
 	if task.TeamID != primitive.NilObjectID {
-		go redis.ClearTeamMembersCache(context.Background(), task.TeamID)
+		redis.ClearTeamMembersCache(ctx, task.TeamID)
 	} else {
 		redis.DeleteTaskCache(ctx, userID.Hex())
 		prometheus.RecordRedisOperation("delete_task_cache")

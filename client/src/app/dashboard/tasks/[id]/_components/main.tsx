@@ -41,7 +41,7 @@ export default function TaskContainer({ taskId }: { taskId: string }) {
               Task: {task.title}
             </h1>
             <p className="text-muted-foreground mt-1">
-              <span className="text-foreground"> Description:</span>
+              <span className="text-foreground">Description: </span>
               {task.description || "No description"}
             </p>
           </div>

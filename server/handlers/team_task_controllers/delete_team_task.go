@@ -1,7 +1,6 @@
 package team_task_controllers
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"main/configs/prometheus"
@@ -38,7 +37,7 @@ func DeleteTeamTaskController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go redis.ClearTeamMembersCache(context.Background(), teamID)
+	redis.ClearTeamMembersCache(ctx.Context(), teamID)
 	prometheus.RecordRedisOperation("delete_team_task_cache")
 
 	return ctx.JSON(fiber.Map{
