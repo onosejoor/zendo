@@ -33,18 +33,32 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 			"success": false, "message": "Invalid Invite Token, or Token is Expired",
 		})
 	}
-	teamMember := claims.TeamMemberSchema
 
-	if teamMember.UserID == primitive.NilObjectID {
-		teamMember.UserID = user.ID
-	}
+	teamMember := claims.TeamMemberSchema
 
 	inviteDoc := models.CheckIfInviteExists(ctx.Context(), teamMember.Email, teamMember.TeamID)
 	if inviteDoc == nil {
 		return ctx.Status(404).JSON(fiber.Map{
-			"success": false, "message": "Your Invite Has Expired, or It has been councelled by the team owner",
+			"success": false, "message": "Your Invite Has Expired, or It has been cancelled by the team owner",
 		})
 	}
+
+	userDoc, err := models.GetUser(user.ID, ctx.Context())
+	if err != nil {
+		return ctx.Status(500).JSON(fiber.Map{
+			"success": false, "message": "Failed to verify user identity",
+		})
+	}
+
+	// Compare emails
+	if userDoc.Email != teamMember.Email {
+		return ctx.Status(403).JSON(fiber.Map{
+			"success": false,
+			"message": "This invite was not sent to your account. Please sign in with the invited email.",
+		})
+	}
+
+	teamMember.UserID = user.ID
 
 	_, err = teamMember.CreateTeamMember(ctx.Context())
 	if err != nil {
@@ -54,15 +68,15 @@ func CreateTeamMemberController(ctx *fiber.Ctx) error {
 		})
 	}
 
-	go func() {
-		err = models.DeleteMemberInvite(context.Background(), teamMember.Email, teamMember.TeamID)
-		if err != nil {
-			log.Println("Error removing member invite: ", err)
+	go func(email string, teamID primitive.ObjectID) {
+		if err := models.DeleteMemberInvite(context.Background(), email, teamID); err != nil {
+			log.Println("Error removing member invite:", err)
 		}
-	}()
+	}(teamMember.Email, teamMember.TeamID)
 
 	redis.ClearAllCache(ctx.Context(), teamMember.UserID.Hex())
 	redis.ClearTeamMembersCache(ctx.Context(), teamMember.TeamID)
+
 	return ctx.Status(201).JSON(fiber.Map{
 		"success": true, "team_id": teamMember.TeamID.Hex(), "message": "Team member created successfully",
 	})
