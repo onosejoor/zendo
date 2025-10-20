@@ -15,6 +15,7 @@ import (
 
 type ReminderProps struct {
 	TaskID   primitive.ObjectID
+	TeamID   primitive.ObjectID
 	DueDate  time.Time
 	UserID   primitive.ObjectID
 	TaskName string
@@ -94,9 +95,9 @@ func (params ReminderProps) ScheduleReminderJob() error {
 func calculateReminderTime(due time.Time) time.Time {
 	diff := time.Until(due)
 	switch {
-	case diff <= 10*time.Minute:
+	case diff <= 20*time.Minute:
 		adjusted := time.Now().Add(30 * time.Second)
-		log.Println("🟡 Due soon (<=10min). Reminder in 30s:", adjusted)
+		log.Println("🟡 Due soon (<=20min). Reminder in 30s:", adjusted)
 		return adjusted
 
 	case diff <= 1*time.Hour:
@@ -134,6 +135,7 @@ func (params ReminderProps) sendEmailReminder() {
 	htmlTemplate := GenerateHtmlTemplate(EmailProps{
 		Username: user.Username,
 		TaskId:   params.TaskID.Hex(),
+		TeamId:   params.TeamID.Hex(),
 		DueDate:  params.DueDate.Local(),
 		TaskName: params.TaskName,
 	})
@@ -172,7 +174,7 @@ func SetTasksCron(ctx context.Context) error {
 	cursor, err := collection.Find(ctx, bson.M{
 		"dueDate": bson.M{
 			"$gte": time.Now(),
-			"$lte": time.Now().Add(10 * time.Minute),
+			"$lte": time.Now().Add(20 * time.Minute),
 		},
 	})
 	if err != nil {
@@ -192,6 +194,7 @@ func SetTasksCron(ctx context.Context) error {
 		payload := ReminderProps{
 			TaskID:   reminder.TaskID,
 			TaskName: reminder.TaskName,
+			TeamID:   reminder.TeamID,
 			UserID:   reminder.UserID,
 			DueDate:  reminder.DueDate.Local(),
 			Ctx:      ctx,
@@ -206,21 +209,4 @@ func SetTasksCron(ctx context.Context) error {
 
 	log.Println("✅ total reminders added to cron: ", len(reminders))
 	return nil
-}
-
-func SetMultipleReminders(userIds []primitive.ObjectID, title string, dueDate time.Time, id primitive.ObjectID, ctx context.Context) {
-	for _, userId := range userIds {
-		reminderPayload := models.Reminder{
-			TaskID:     id,
-			TaskName:   title,
-			UserID:     userId,
-			DueDate:    dueDate.Local(),
-			Expires_At: dueDate.Local(),
-			CreatedAt:  time.Now().Local(),
-		}
-		err := reminderPayload.CreateReminder(ctx)
-		if err != nil {
-			log.Printf("CREATE REMINDER FAILED FOR USER %s, %v \n", userId, err)
-		}
-	}
 }

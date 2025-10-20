@@ -13,6 +13,7 @@ import (
 type Reminder struct {
 	ID         primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	TaskID     primitive.ObjectID `json:"taskId" bson:"taskId" validate:"required"`
+	TeamID     primitive.ObjectID `json:"teamId" bson:"teamId,omitempty"`
 	DueDate    time.Time          `json:"dueDate" bson:"dueDate" validate:"required"`
 	UserID     primitive.ObjectID `json:"userId" bson:"userId" validate:"required"`
 	TaskName   string             `json:"taskName" bson:"taskName" validate:"required"`
@@ -29,13 +30,19 @@ func (reminder Reminder) CreateReminder(ctx context.Context) error {
 		"userId": reminder.UserID,
 	}
 
+	set := bson.M{
+		"dueDate":    reminder.DueDate,
+		"taskName":   reminder.TaskName,
+		"expiresAt":  reminder.Expires_At,
+		"created_at": time.Now(),
+	}
+
+	if reminder.TeamID != primitive.NilObjectID {
+		set["teamId"] = reminder.TeamID
+	}
+
 	update := bson.M{
-		"$set": bson.M{
-			"dueDate":    reminder.DueDate,
-			"taskName":   reminder.TaskName,
-			"expiresAt":  reminder.Expires_At,
-			"created_at": time.Now(),
-		},
+		"$set": set,
 	}
 
 	opts := options.Update().SetUpsert(true)

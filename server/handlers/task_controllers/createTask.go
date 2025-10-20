@@ -98,6 +98,7 @@ func CreateTaskController(ctx *fiber.Ctx) error {
 func setReminders(id primitive.ObjectID, body models.Task, ctx context.Context, userId primitive.ObjectID) {
 
 	reminderPayload := models.Reminder{
+		TeamID:     body.TeamID,
 		TaskID:     id,
 		TaskName:   body.Title,
 		UserID:     userId,
@@ -111,8 +112,9 @@ func setReminders(id primitive.ObjectID, body models.Task, ctx context.Context, 
 		log.Println("CREATE REMINDER FAILED: ", err)
 	}
 
-	if !body.DueDate.After(time.Now().Local().Add(10*time.Minute)) && body.Status != "completed" {
+	if !body.DueDate.After(time.Now().Local().Add(20*time.Minute)) && body.Status != "completed" {
 		payload := cron.ReminderProps{
+			TeamID:   body.TeamID,
 			TaskID:   id,
 			TaskName: body.Title,
 			UserID:   userId,

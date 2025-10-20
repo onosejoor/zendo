@@ -14,6 +14,7 @@ type EmailProps struct {
 	Username string
 	DueDate  time.Time
 	TaskId   string
+	TeamId   string
 	TaskName string
 }
 
@@ -33,7 +34,11 @@ func GenerateHtmlTemplate(props EmailProps) string {
 
 	frontendUrl := fmt.Sprintf("%s/dashboard/tasks/%s", os.Getenv("FRONTEND_URL"), props.TaskId)
 
-	return fmt.Sprintf(configs.DUE_DATE_TEMPLATE, props.Username, props.TaskName, props.DueDate.Format(time.RFC822), frontendUrl)
+	if props.TeamId != "" {
+		frontendUrl = fmt.Sprintf("%s/dashboard/teams/%s/tasks/%s", os.Getenv("FRONTEND_URL"), props.TeamId, props.TaskId)
+	}
+
+	return fmt.Sprintf(configs.DUE_DATE_TEMPLATE, props.Username, props.TaskName, props.DueDate.Local().Format(time.RFC822), frontendUrl)
 }
 
 func SendEmailToGmail(to, subject, body string) error {
